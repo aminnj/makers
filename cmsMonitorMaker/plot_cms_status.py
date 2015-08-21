@@ -1,3 +1,10 @@
+#! /usr/bin/env python
+
+###########################################################
+# takes data from files produced by get_cms_status.py and
+# get_lumi.py to produce a nice plot.
+###########################################################
+
 import time
 import os
 from datetime import datetime
@@ -8,6 +15,10 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.patches as mpatches
 
+# moving average to smooth out curve. n is the number of datapoints on each
+# side of a given point to average over. fixvals tells it to not perform
+# average for all array values equal to something in fixvals. Use it to
+# pin things at 5 points
 def moving_avg(arr, n=2, fixvals=[]):
     arr_new = np.copy(arr)
     m = arr.size
@@ -22,12 +33,12 @@ def moving_avg(arr, n=2, fixvals=[]):
 
     return arr_new
 
-starttime = time.time()
+PLOT_LUMI = True
 
+starttime = time.time()
 datafile = "/home/users/bemarsh/public_html/monitoring/cms_status.txt"
 dataLastModified = os.path.getmtime(datafile)
-
-datafile_lum = '/home/users/bemarsh/scripts/monitoring/monitor_lumi.txt'
+datafile_lum = '/home/users/bemarsh/public_html/monitoring/monitor_lumi.txt'
 
 datefmt = mdates.DateFormatter("%H:%M")
 
@@ -88,33 +99,37 @@ while True:
 
     score = scoreB+scoreE+scoreS
 
-    fid = open(datafile_lum)
-    lines = [line.strip().split('\t') for line in fid.readlines()]
-    fid.close()
+    if PLOT_LUMI:
+        fid = open(datafile_lum)
+        lines = [line.strip().split('\t') for line in fid.readlines()]
+        fid.close()
 
-    time_vals_lumi = []
-    cms_lumi = []
-    atlas_lumi = []
+        time_vals_lumi = []
+        cms_lumi = []
+        atlas_lumi = []
 
-    for line in lines:
-        t = float(line[0])
-        if t < curtime - 24*60*60:
-            continue
-        time_vals_lumi.append(t)
-        cms_lumi.append(float(line[1]))
-        if len(line)>=3:
-            atlas_lumi.append(float(line[2]))
-        elif len(atlas_lumi)>0:
-            atlas_lumi.append(atlas_lumi[-1])
-        else:
-            atlas_lumi.append(0)
+        for line in lines:
+            t = float(line[0])
+            if t < curtime - 24*60*60:
+                continue
+            time_vals_lumi.append(t)
+            cms_lumi.append(float(line[1]))
+
+            # BUG: sometimes atlas lumi isn't read and tesseract gives blank string.
+            # temp workaround until I figure out why
+            if len(line)>=3:
+                atlas_lumi.append(float(line[2]))
+            elif len(atlas_lumi)>0:
+                atlas_lumi.append(atlas_lumi[-1])
+            else:
+                atlas_lumi.append(0)
             
-    cms_int_lumi = np.trapz(cms_lumi, x=time_vals_lumi) / 1000000   # in picobarns.
+        cms_int_lumi = np.trapz(cms_lumi, x=time_vals_lumi) / 1000000   # in picobarns.
 
-    time_vals_lumi = np.array([datetime.fromtimestamp(t) for t in time_vals_lumi])
-    time_vals_lumi = np.array(time_vals_lumi)
-    cms_lumi = moving_avg(np.array(cms_lumi),1)
-    atlas_lumi = moving_avg(np.array(atlas_lumi),1)
+        time_vals_lumi = np.array([datetime.fromtimestamp(t) for t in time_vals_lumi])
+        time_vals_lumi = np.array(time_vals_lumi)
+        cms_lumi = moving_avg(np.array(cms_lumi),1)
+        atlas_lumi = moving_avg(np.array(atlas_lumi),1)
 
     # colorB = '#e74c3c'
     # colorS = '#3498db'
@@ -141,18 +156,6 @@ while True:
     ax1.xaxis.set_major_formatter(datefmt)
     ax1.set_xlabel("Last updated "+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(curtime)))
 
-    ax2 = ax1.twinx()
-    atl_lumi_plot, = ax2.plot(time_vals_lumi,atlas_lumi,color='#F5AB35', label='ATLAS Lumi', linewidth=1.5)
-    cms_lumi_plot, = ax2.plot(time_vals_lumi,cms_lumi,color='#F62459', label='CMS Lumi', linewidth=1.5)
-    ax2.set_ylabel(r'Luminosity ($\mu b^{-1}/s$)')
-    ax2.set_ylim(0,1200)
-    ax2.set_yticks([300,600,900])
-    ax2.set_yticks([150,450,750,1050], minor=True)
-
-    ax1.set_xlim(time_vals[0], time_vals[-1])
-
-    fig.autofmt_xdate()
-
     curBscore = scoreB[-1]
     curEscore = scoreE[-1]
     curSscore = scoreS[-1]
@@ -160,27 +163,44 @@ while True:
     red_patch = mpatches.Patch(facecolor=colorB, label='Magnet ('+str(round(curBscore,2))+')', edgecolor='k')
     blue_patch = mpatches.Patch(facecolor=colorS, label='Subsystems ('+str(round(curSscore,2))+')', edgecolor='k')
     green_patch = mpatches.Patch(facecolor=colorE, label='Beam ('+str(round(curEscore,2))+')', edgecolor='k')
-    leg = plt.legend(handles=[red_patch, blue_patch, green_patch, cms_lumi_plot, atl_lumi_plot], fontsize='x-small')
+
+    if PLOT_LUMI:
+        ax2 = ax1.twinx()
+        atl_lumi_plot, = ax2.plot(time_vals_lumi,atlas_lumi,color='#F5AB35', label='ATLAS Lumi', linewidth=1.5)
+        cms_lumi_plot, = ax2.plot(time_vals_lumi,cms_lumi,color='#F62459', label='CMS Lumi', linewidth=1.5)
+        ax2.set_ylabel(r'Luminosity ($\mu b^{-1}/s$)')
+        ax2.set_ylim(0,1200)
+        ax2.set_yticks([300,600,900])
+        ax2.set_yticks([150,450,750,1050], minor=True)
+        leg = plt.legend(handles=[red_patch, blue_patch, green_patch, cms_lumi_plot, atl_lumi_plot], fontsize='x-small')
+    else:
+        leg = plt.legend(handles=[red_patch, blue_patch, green_patch], fontsize='x-small')
+        
+    ax1.set_xlim(time_vals[0], time_vals[-1])
+    fig.autofmt_xdate()
 
     badColor = '#96281B'
+    goodColor = 'g'
     if curBscore >= 5:
-        leg.get_texts()[0].set_color('g')
+        leg.get_texts()[0].set_color(goodColor)
     else:
         leg.get_texts()[0].set_color(badColor)
 
     if curSscore >= 5:
-        leg.get_texts()[1].set_color('g')
+        leg.get_texts()[1].set_color(goodColor)
     else:
         leg.get_texts()[1].set_color(badColor)
 
     if round(curEscore,2) >= 5:
-        leg.get_texts()[2].set_color('g')
+        leg.get_texts()[2].set_color(goodColor)
     else:
         leg.get_texts()[2].set_color(badColor)
 
     plt.title('24 hour CMS Functionality Score')
     plt.figtext(0.20,0.85,"current score = "+str(round(score[-1],2)))
-    plt.figtext(0.161, 0.81,r"int lumi past day = "+str(round(cms_int_lumi,1))+' pb$^{-1}$')
+    
+    if PLOT_LUMI:
+        plt.figtext(0.161, 0.81,r"int lumi past day = "+str(round(cms_int_lumi,1))+' pb$^{-1}$')
 
     plt.savefig("/home/users/bemarsh/public_html/monitoring/cms_status.png")
     plt.clf()

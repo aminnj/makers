@@ -35,6 +35,8 @@ def transform_image(im, x1, y1, x2, y2, scale, inverted=False):
 starttime = time.time()
 waittime = 60.0 * 2
 
+outname = '/home/users/bemarsh/public_html/monitoring/monitor_lumi.txt'
+
 while True:
 
     curtime = time.time()
@@ -53,7 +55,7 @@ while True:
     str_cms = pytesseract.image_to_string(im_cms).strip()
     str_atl = pytesseract.image_to_string(im_atl).strip()
 
-    fid = open("monitor_lumi.txt","a")
+    fid = open(outname,"a")
     fid.write('\t'.join([str(curtime),str_cms,str_atl])+'\n')
     fid.close()
 
