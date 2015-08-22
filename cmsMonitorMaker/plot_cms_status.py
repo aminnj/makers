@@ -14,6 +14,7 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.patches as mpatches
+from scipy import integrate
 
 # moving average to smooth out curve. n is the number of datapoints on each
 # side of a given point to average over. fixvals tells it to not perform
@@ -96,6 +97,9 @@ scoreS = moving_avg(scoreS, 4, fixvals=[5])
 
 score = scoreB+scoreE+scoreS
 
+atlas_int_lumi_vec = []
+cms_int_lumi_vec = []
+
 if PLOT_LUMI:
     fid = open(datafile_lum)
     lines = [line.strip().split('\t') for line in fid.readlines()]
@@ -121,7 +125,11 @@ if PLOT_LUMI:
         else:
             atlas_lumi.append(0)
         
-    cms_int_lumi = np.trapz(cms_lumi, x=time_vals_lumi) / 1000000   # in picobarns.
+    cms_int_lumi_vec = integrate.cumtrapz(cms_lumi, x=time_vals_lumi) / 1000000 # in picobarns
+    atlas_int_lumi_vec = integrate.cumtrapz(atlas_lumi, x=time_vals_lumi) / 1000000 # in picobarns
+
+
+    cms_int_lumi = cms_int_lumi_vec[-1]
 
     time_vals_lumi = np.array([datetime.fromtimestamp(t) for t in time_vals_lumi])
     time_vals_lumi = np.array(time_vals_lumi)
@@ -140,8 +148,11 @@ colorB = '#2171b5'
 colorS = '#6baed6'
 colorE = '#bdd7e7'
 
-fig = plt.figure(num=1, figsize=(8,6.5))
-ax1 = fig.add_subplot(111)
+fig = plt.figure(num=2, figsize=(10,10))
+plt.subplots_adjust(hspace=0.1)
+# ax1 = fig.add_subplot(111)
+# ax1 = fig.add_subplot(211)
+ax1 = plt.subplot2grid((5,1), (0,0), rowspan=4)
 ax1.stackplot(time_vals,scoreB,scoreS,scoreE, colors=[colorB,colorS,colorE])
 ax1.set_ylim(0,20)
 ax1.set_yticks([0,5,10,15])
@@ -152,6 +163,20 @@ ax1.xaxis.set_major_locator(mdates.HourLocator(interval=2))
 ax1.xaxis.set_minor_locator(mdates.HourLocator(interval=1))
 ax1.xaxis.set_major_formatter(datefmt)
 ax1.set_xlabel("Last updated "+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(curtime)))
+
+
+if PLOT_LUMI:
+    ax3 = plt.subplot2grid((5,1), (4,0), rowspan=1)
+    ax3.plot(time_vals_lumi[1:],cms_int_lumi_vec,color='#F5AB35', label='ATLAS Lumi', linewidth=1.5)
+    ax3.plot(time_vals_lumi[1:],atlas_int_lumi_vec,color='#F62459', label='CMS Lumi', linewidth=1.5)
+    ax3.yaxis.tick_right()
+    ax3.yaxis.set_label_position("right")
+    ax3.set_ylabel(r'Int. Lumi. ($pb^{-1}$)')
+    ax3.xaxis.set_major_locator(mdates.HourLocator(interval=2))
+    ax3.xaxis.set_minor_locator(mdates.HourLocator(interval=1))
+    ax3.xaxis.set_major_formatter(datefmt)
+    ax3.set_xlabel("Last updated "+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(curtime)))
+    plt.figtext(0.161, 0.295,r"$\int\/ \mathcal{L}\/ dt$ past day = "+str(round(cms_int_lumi,1))+' pb$^{-1}$')
 
 curBscore = scoreB[-1]
 curEscore = scoreE[-1]
@@ -169,9 +194,9 @@ if PLOT_LUMI:
     ax2.set_ylim(0,1200)
     ax2.set_yticks([300,600,900])
     ax2.set_yticks([150,450,750,1050], minor=True)
-    leg = plt.legend(handles=[red_patch, blue_patch, green_patch, cms_lumi_plot, atl_lumi_plot], fontsize='x-small')
+    leg = plt.legend(handles=[red_patch, blue_patch, green_patch, cms_lumi_plot, atl_lumi_plot], fontsize='small')
 else:
-    leg = plt.legend(handles=[red_patch, blue_patch, green_patch], fontsize='x-small')
+    leg = plt.legend(handles=[red_patch, blue_patch, green_patch], fontsize='small')
     
 ax1.set_xlim(time_vals[0], time_vals[-1])
 fig.autofmt_xdate()
@@ -196,8 +221,6 @@ else:
 plt.title('24 hour CMS Functionality Score')
 plt.figtext(0.20,0.85,"current score = "+str(round(score[-1],2)))
 
-if PLOT_LUMI:
-    plt.figtext(0.161, 0.81,r"int lumi past day = "+str(round(cms_int_lumi,1))+' pb$^{-1}$')
 
 plt.savefig("cms_status.svg", format='svg', dpi=1200)
 plt.clf()
