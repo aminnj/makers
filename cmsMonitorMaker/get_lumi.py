@@ -32,32 +32,25 @@ def transform_image(im, x1, y1, x2, y2, scale, inverted=False):
     return im
 
 
-starttime = time.time()
-waittime = 60.0 * 2
+outname = 'monitor_lumi.txt'
 
-outname = '/home/users/bemarsh/public_html/monitoring/monitor_lumi.txt'
+curtime = time.time()
 
-while True:
+fname = 'lhclumi.png'
+status = os.system("curl -s -S -o "+ fname +" https://vistar-capture.web.cern.ch/vistar-capture/lhclumi.png")
 
-    curtime = time.time()
+# if status!=0:
+#     print "ERROR: could not download CMS status image (https://cmspage1.web.cern.ch/cmspage1/data/page1.png)"
+#     sys.exit(0)
 
-    fname = '/home/users/bemarsh/tmp/lhclumi.png'
-    status = os.system("wget -q -O "+ fname +" https://vistar-capture.web.cern.ch/vistar-capture/lhclumi.png")
+im = Image.open(fname)
+im_cms = transform_image(im, 140, 435, 310, 465, 2, inverted=True)
+im_atl = transform_image(im, 140, 340, 310, 372, 2, inverted=True)
 
-    # if status!=0:
-    #     print "ERROR: could not download CMS status image (https://cmspage1.web.cern.ch/cmspage1/data/page1.png)"
-    #     sys.exit(0)
+str_cms = pytesseract.image_to_string(im_cms).strip()
+str_atl = pytesseract.image_to_string(im_atl).strip()
 
-    im = Image.open(fname)
-    im_cms = transform_image(im, 140, 435, 310, 465, 2, inverted=True)
-    im_atl = transform_image(im, 140, 340, 310, 372, 2, inverted=True)
-    
-    str_cms = pytesseract.image_to_string(im_cms).strip()
-    str_atl = pytesseract.image_to_string(im_atl).strip()
+fid = open(outname,"a")
+fid.write('\t'.join([str(curtime),str_cms,str_atl])+'\n')
+fid.close()
 
-    fid = open(outname,"a")
-    fid.write('\t'.join([str(curtime),str_cms,str_atl])+'\n')
-    fid.close()
-
-    time.sleep(waittime - (time.time()-starttime)%waittime)
-    
