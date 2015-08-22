@@ -7,9 +7,6 @@ import time
 import pytesseract
 import json
 
-print "path from within python:",sys.path
-
-
 def transform_image(im, x1, y1, x2, y2, scale, inverted=False, filter=True):
 
     im = im.crop((x1,y1,x2,y2))

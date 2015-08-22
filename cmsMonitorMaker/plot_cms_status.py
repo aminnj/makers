@@ -199,6 +199,6 @@ plt.figtext(0.20,0.85,"current score = "+str(round(score[-1],2)))
 if PLOT_LUMI:
     plt.figtext(0.161, 0.81,r"int lumi past day = "+str(round(cms_int_lumi,1))+' pb$^{-1}$')
 
-plt.savefig("cms_status.png")
+plt.savefig("cms_status.svg", format='svg', dpi=1200)
 plt.clf()
 
