@@ -1,9 +1,11 @@
 import json, urllib, os
 
+
 def playSound(filename):
     # There might be flags for aplay we want to use later
     os.system("aplay %s" % filename)
 
+sounds = True
 storage = "status.txt"
 url = "http://uaf-6.t2.ucsd.edu/~namin/monitoring/monitor.json"
 
@@ -28,9 +30,9 @@ fh.close()
 # Play some sounds
 if(isTakingData and not wasTakingData):
     print ">>> Starting collecting data!"
-    playSound("takingdata.wav")
+    if(sounds): playSound("takingdata.wav")
 elif("dump" in newStatus and "dump" not in prevStatus):
     print ">>> Beam dump!"
-    playSound("beamdump.wav")
+    if(sounds): playSound("beamdump.wav")
 else: pass
 
