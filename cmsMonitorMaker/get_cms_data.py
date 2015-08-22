@@ -137,8 +137,15 @@ data["cms_inst_lumi"] = float(str_cms)
 data["atl_inst_lumi"] = float(str_atl)
 data["bfield"] = Bfield
 data["timestamp"] = str(curtime)
+data["status"] = beam_stat
 data["systemsin"] = systemsin
 data["systemson"] = systemson
+data["isgood"] = {
+        "energy" : energy/6400.0 >= 0.99,
+        "bfield" : Bfield/3.8 >= 0.99,
+        "beams"  : "stable" in beam_stat.lower(),
+        "systems": len(systemsin)+len(systemson) >= 21,
+        }
 
 fid = open("monitor.json","w")
 fid.write( json.dumps(data,indent=4) )
