@@ -40,6 +40,7 @@ body {
 
 .section {
     padding: 20px 10px 20px 10px;
+    border-bottom: 2px solid #000;
 }
 
 #beers {
@@ -55,6 +56,14 @@ body {
     position: fixed;
     bottom: 0;
     width: 100%;
+}
+
+/* JQUERY UI TOOLTIP */
+.ui-tooltip {
+  font-size: inherit;
+  border: 0px solid #000;
+  border-radius: 0px;
+  box-shadow: 0px 0px 0px #fff;
 }
 
 
@@ -84,6 +93,11 @@ a:active {
     /* font-size: 1.5em; */
     border: 1px solid #000;
     outline: none;
+}
+.inputbar:focus {
+  border: 1px solid #33B333;
+  transition: 0.2s ease;
+  color: #33B333;
 }
 
 /* BUTTONS */
