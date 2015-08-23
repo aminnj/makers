@@ -4,38 +4,58 @@
 <title>lottoMaker</title>
 <link rel="icon" type="image/png" sizes="96x96" href="images/favicon.png">
 <link rel="stylesheet" href="style.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="main.js"></script>
 </head>
 
 <body>
 
 <div id="topBar">
-    <img class="moneylogo" src="images/moneylogo.png" />
+    <img class="moneylogo" src="images/moneybottlelogo.png" />
     <span class="thin">lotto</span>Maker
     <span class="thin">
         &emsp;
-        <a href="">show bets</a>&ensp;|&ensp;
-        <a href="">add bet</a>&ensp;|&ensp;
-        <a href="">show users</a>&ensp;|&ensp;
-        <a href="">stuff</a>
+        <a href="#" onClick="javascript:toggleBets()">bets</a>&ensp;|&ensp;
+        <a href="#" onClick="javascript:toggleCreateBet()">create bet</a>&ensp;|&ensp;
+        <a href="#" onClick="javascript:toggleUsers()">users</a>&ensp;
     </span>
 </div>
 <div id="colorstrip"></div>
 <div id="container">
 
-    <p class="content">
-    test
-    Nothing functions right now. I just spent a while re-figuring out CSS crap to make this look semi-nice.
-    </p>
 
-    <input type="text" class="inputbar" placeholder="Enter text" />
-    <button class="button" type="submit" form="form1" value="Submit">Submit</button>
-    <input type="text" class="inputbar" placeholder="Enter text" /><br>
-    <input type="text" class="inputbar" placeholder="Enter text" /><br>
-    <input type="text" class="inputbar" placeholder="Enter text" /><br>
-    <button class="button" type="submit" form="form1" value="Submit">Submit</button>
-    <button class="button" type="submit" form="form1" value="Submit">Remove</button>
-    <button class="button" type="submit" form="form1" value="Submit">Add</button>
 
+    <div id="createBet" class="section">
+        Create your bet. Enter up to 4 possibilities.<br>
+        <input type="text" class="inputbar" name="create_shortTitle" placeholder="Enter short title" />
+        <input type="text" class="inputbar" name="create_description" placeholder="Enter description" /><br>
+        <input type="text" class="inputbar" name="create_option1" placeholder="Enter option 1" />
+        <input type="text" class="inputbar" name="create_option2" placeholder="Enter option 2" />
+        <input type="text" class="inputbar" name="create_option3" placeholder="Enter option 3" />
+        <input type="text" class="inputbar" name="create_option4" placeholder="Enter option 4" />
+        <button type="submit" form="form1" value="Submit">Submit</button>
+
+        <hr>
+    </div>
+
+    <div id="bets" class="section">
+        here is where we display the bets<br>
+        <hr>
+    </div>
+
+
+    <div id="addBet" class="section">
+        here is where we add a bet<br>
+        <input type="text" class="inputbar" name="add_name" placeholder="First name" />
+        &emsp;&emsp;Change Bet: &nbsp;
+        <button type="submit" onClick="javascript:changeBeers(-1)" value="Submit">-</button>
+        <button type="submit" onClick="javascript:changeBeers(1)" value="Submit">+</button>
+        <div id="beers" class="section">
+            <!-- <img src="images/bottle.png" style="vertical-align:middle" height="35px"/> -->
+        </div>
+    </div>
+
+    <div id="messages" align="center" class="section"> </div>
 
 </div>
 
