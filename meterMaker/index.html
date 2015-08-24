@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>meterMaker</title>
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon.png">
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<script src="main.js"></script>
+
+</head>
+
+<body>
+
+<div id="topBar">
+    <img class="mainlogo" id="logo" src="images/meterlogo.svg" />
+    <span class="thin">meter</span>Maker
+    <span class="thin">
+        &emsp;
+        <a href="#" onClick="javascript:toggleMeters()">meters</a>&ensp;|&ensp;
+        <a href="#" onClick="javascript:toggleMaker()">maker</a>&ensp;
+    </span>
+</div>
+<div id="colorstrip"></div>
+<div id="container">
+
+
+  <div id="meters" class="section">
+    Here there will be meters as far as the eye can see
+ </div>
+    <div id="maker" class="section" style='display:none;'> </div>
+
+    <div id="messages" align="center"> </div>
+
+</div>
+
+</body>
+</html>
