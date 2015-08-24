@@ -30,7 +30,7 @@ fh.close()
 # Play some sounds
 if(isTakingData and not wasTakingData):
     print ">>> Starting collecting data!"
-    if(sounds): playSound("takingdata.wav")
+    if(sounds): playSound("datacollection.wav")
 elif("dump" in newStatus and "dump" not in prevStatus):
     print ">>> Beam dump!"
     if(sounds): playSound("beamdump_withvoice.wav")
