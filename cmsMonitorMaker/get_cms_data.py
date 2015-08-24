@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import Image
+from PIL import Image
 import os
 import sys
 import time
@@ -60,7 +60,11 @@ while True:
     #     print "ERROR: could not download LHC Op image (https://vistar-capture.web.cern.ch/vistar-capture/lhc3.png)"                                                                                                          
     #     sys.exit(0)
 
-    im = Image.open(fname)
+    try:
+        im = Image.open(fname)
+    except:
+        print "get_cms_data.py: Image open error"
+
     im_Bfield = transform_image(im, 710, 433, 782, 446, 4, inverted=True)
     try:
         Bstr = pytesseract.image_to_string(im_Bfield)
@@ -107,7 +111,9 @@ while True:
     
     im_beam = transform_image(im, 243, 58, 361, 79, 4, inverted=False)
     beam_stat = pytesseract.image_to_string(im_beam, config="-psm 8")
-    
+
+    if beam_stat.find('TABLE')!=-1:
+        beam_stat = 'STABLE'
 
     fid = open(outfile,"a")
     fid.write('\t'.join([str(curtime),str(Bfield),str(energy),beam_stat]+stat_c1+stat_c2)+'\n')

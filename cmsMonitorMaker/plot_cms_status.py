@@ -16,22 +16,19 @@ import matplotlib.dates as mdates
 import matplotlib.patches as mpatches
 
 # moving average to smooth out curve. n is the number of datapoints on each
-# side of a given point to average over. fixvals tells it to not perform
-# average for all array values equal to something in fixvals. Use it to
-# pin things at 5 points
-def moving_avg(arr, n=2, fixvals=[]):
+# side of a given point to average over. 
+def moving_avg(arr, n=2):
     arr_new = np.copy(arr)
     m = arr.size
+    weights = np.array(list(range(1,n+2))+list(range(n,0,-1)))
     for i in range(n, m-n):
-        if round(arr[i],2) not in fixvals:
-            arr_new[i] = np.sum(arr[i-n:i+n+1])/(2.0*n+1)
+        arr_new[i] = np.sum(arr[i-n:i+n+1]*weights)/np.sum(weights)
     for i in range(1,n):
-        if round(arr[i],2) not in fixvals:
-            arr_new[i] = np.sum(arr[0:2*i+1])/(2.0*i+1)        
-        if round(arr[m-i-1],2) not in fixvals:
-            arr_new[m-i-1] = np.sum(arr[m-2*i-1:m])/(2.0*i+1)        
+        arr_new[i] = np.sum(arr[0:2*i+1])/(2.0*i+1)
+        arr_new[m-i-1] = np.sum(arr[m-2*i-1:m])/(2.0*i+1)
 
     return arr_new
+
 
 PLOT_LUMI = True
 
@@ -93,9 +90,9 @@ while True:
     scoreE = 2.0*beam_vals + 3.0*E_vals/6500
     scoreS = 5.*(c1_vals*13+c2_vals*8)/21
 
-    scoreB = moving_avg(scoreB, 4, fixvals=[5])
-    scoreE = moving_avg(scoreE, 4, fixvals=[5])
-    scoreS = moving_avg(scoreS, 4, fixvals=[5])
+    scoreB = moving_avg(scoreB, 4)
+    scoreE = moving_avg(scoreE, 4)
+    scoreS = moving_avg(scoreS, 4)
 
     score = scoreB+scoreE+scoreS
 
@@ -113,16 +110,23 @@ while True:
             if t < curtime - 24*60*60:
                 continue
             time_vals_lumi.append(t)
-            cms_lumi.append(float(line[1]))
 
-            # BUG: sometimes atlas lumi isn't read and tesseract gives blank string.
+            # BUG: sometimes lumi isn't read and tesseract gives blank string.
             # temp workaround until I figure out why
-            if len(line)>=3:
+            try:
+                cms_lumi.append(float(line[1]))
+            except:
+                try: 
+                    cms_lumi.append(cms_lumi[-1])
+                except:
+                    cms_lumi.append(0)
+            try:
                 atlas_lumi.append(float(line[2]))
-            elif len(atlas_lumi)>0:
-                atlas_lumi.append(atlas_lumi[-1])
-            else:
-                atlas_lumi.append(0)
+            except:
+                try:
+                    atlas_lumi.append(atlas_lumi[-1])
+                except:
+                    atlas_lumi.append(0)
             
         cms_int_lumi = np.trapz(cms_lumi, x=time_vals_lumi) / 1000000   # in picobarns.
 
@@ -169,9 +173,12 @@ while True:
         atl_lumi_plot, = ax2.plot(time_vals_lumi,atlas_lumi,color='#F5AB35', label='ATLAS Lumi', linewidth=1.5)
         cms_lumi_plot, = ax2.plot(time_vals_lumi,cms_lumi,color='#F62459', label='CMS Lumi', linewidth=1.5)
         ax2.set_ylabel(r'Luminosity ($\mu b^{-1}/s$)')
-        ax2.set_ylim(0,1200)
-        ax2.set_yticks([300,600,900])
-        ax2.set_yticks([150,450,750,1050], minor=True)
+        baseunit = int(np.ceil(max(np.amax(cms_lumi),np.amax(atlas_lumi))/300)) * 100
+        if baseunit==0:
+            baseunit=100
+        ax2.set_ylim(0,4*baseunit)
+        ax2.set_yticks([baseunit,2*baseunit,3*baseunit])
+        ax2.set_yticks([0.5*baseunit,1.5*baseunit,2.5*baseunit,3.5*baseunit], minor=True)
         leg = plt.legend(handles=[red_patch, blue_patch, green_patch, cms_lumi_plot, atl_lumi_plot], fontsize='x-small')
     else:
         leg = plt.legend(handles=[red_patch, blue_patch, green_patch], fontsize='x-small')
@@ -202,6 +209,7 @@ while True:
     if PLOT_LUMI:
         plt.figtext(0.161, 0.81,r"int lumi past day = "+str(round(cms_int_lumi,1))+' pb$^{-1}$')
 
+    plt.savefig("/home/users/bemarsh/public_html/monitoring/cms_status.svg")    
     plt.savefig("/home/users/bemarsh/public_html/monitoring/cms_status.png")
     plt.clf()
     
