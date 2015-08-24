@@ -54,20 +54,20 @@ status2 = os.system("curl -s -S -o "+ fname2 +" https://vistar-capture.web.cern.
 #     sys.exit(0)
 
 
-    try:
-        im = Image.open(fname)
-    except:
-        # sometimes randomly get "cannot identify image" error
-        print "get_cms_data.py: Image open error"
-        sys.exit(0)
+try:
+    im = Image.open(fname)
+except:
+    # sometimes randomly get "cannot identify image" error
+    print "get_cms_data.py: Image open error"
+    sys.exit(0)
 
-    im_Bfield = transform_image(im, 710, 433, 782, 446, 4, inverted=True)
-    try:
-        Bstr = pytesseract.image_to_string(im_Bfield)
-        Bstr = Bstr.replace('—','-')    
-        Bfield = float(Bstr)
-    except:
-        Bfield = -1
+im_Bfield = transform_image(im, 710, 433, 782, 446, 4, inverted=True)
+try:
+    Bstr = pytesseract.image_to_string(im_Bfield)
+    Bstr = Bstr.replace('—','-')    
+    Bfield = float(Bstr)
+except:
+    Bfield = -1
 
 
 im_stat_c1 = []
