@@ -7,7 +7,7 @@ var ioptOld = -1;
 
 $.ajaxSetup({
     type: 'POST',
-    timeout: 2000,
+    timeout: 4000,
 });
 
 function toggleCreateBet() {
@@ -114,7 +114,6 @@ function changeBeers(delta) {
 }
 
 function addBet() {
-
     $.ajax({
             url: "./handler.py",
             type: "POST",
@@ -143,7 +142,6 @@ function addBetPanel(ibet, iopt) {
   ibetOld = ibet;
   ioptOld = iopt;
 
-  console.log(ibet + " " + iopt);
   var content = "";
   content += "Casting bet for option <b>" + bets[ibet]["options"][iopt]["name"] + "</b> of bet <b>"+bets[ibet]["shortTitle"]+"</b>";
   $("#addBetText").html(content);
@@ -157,10 +155,8 @@ function populateBets() {
     contents += "<span onClick='$(\"#betOptions"+ibet+"\").slideToggle()' >";
     contents += bets[ibet]["shortTitle"] + "</span>";
 
-
     contents += "<ul id='betOptions"+ibet+"' ";
-    // XXX REENABLE TO HIDE BY DEFAULT
-    // contents += " style='display:none;' ";
+    // contents += " style='display:none;' "; // XXX REENABLE TO HIDE BY DEFAULT
     contents += " > ";
 
     options = bets[ibet]["options"];
@@ -172,11 +168,9 @@ function populateBets() {
 
       for(var ibetter = 0; ibetter < option["betters"].length; ibetter++) {
         if(ibetter > 0) contents += ",";
-
         contents += "&ensp; <b>" + option["betters"][ibetter] + "</b> (" + option["amounts"][ibetter] + ")";
 
       }
-
 
       contents += "</li>";
     }
@@ -203,44 +197,7 @@ function populateUsers() {
   contents += "</ul>";
   $("#users").html(contents);
 
-//   for(var ibet = 0; ibet < bets.length; ibet++) {
-//     contents += "<span class='thick'>"+(ibet+1)+".</span> &emsp;";
-//     contents += "<span onClick='$(\"#betOptions"+ibet+"\").slideToggle()' >";
-//     contents += bets[ibet]["shortTitle"] + "</span>";
-
-
-//     contents += "<ul id='betOptions"+ibet+"' ";
-//     // XXX REENABLE TO HIDE BY DEFAULT
-//     // contents += " style='display:none;' ";
-//     contents += " > ";
-
-//     options = bets[ibet]["options"];
-//     for(var iopt = 0; iopt < options.length; iopt++) {
-//       option = options[iopt];
-//       contents += "<li id='bet"+ibet+"Options"+iopt+"' >"; // e.g., id="bet0Options2"
-//       contents += "[ <a href='#' onClick='javascript:addBetPanel("+ibet+","+iopt+")'>add bet</a> ] &ensp;";
-//       contents += option["name"] + ": &ensp;";
-
-//       for(var ibetter = 0; ibetter < option["betters"].length; ibetter++) {
-//         if(ibetter > 0) contents += ",";
-
-//         contents += "&ensp; <b>" + option["betters"][ibetter] + "</b> (" + option["amounts"][ibetter] + ")";
-
-//       }
-
-
-//       contents += "</li>";
-//     }
-//     contents += "</ul>";
-
-//     contents += "<br>";
-//     console.log(contents);
-
-//   }
-//   $("#betList").html(contents);
-
 }
-
 
 // initializations
 $(function()
@@ -256,8 +213,5 @@ function init() {
   changeBeers(0);
   loadBets();
   loadUsers();
-  // populateBets(bets);
 }
-
-
 
