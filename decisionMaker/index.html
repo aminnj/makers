@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>decisionMaker</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script>
+      function outputUpdate(value) {
+        $('#selected').html( "Number of options: " + value);
+      }
+      function makeDecision() {
+
+        $('#decisionResult').html( "Pick option <b>" + (1+Math.floor(Math.random()*$("input[type=range]").val())) + "</b>!" );
+
+      }
+
+      $(function() {
+        outputUpdate(2);
+      });
+
+    </script>
+
+  </head>
+
+  <body>
+
+    <div id="topBar">
+      <img class="mainlogo" id="logo" src="images/decisionlogo.png" />
+      <span class="thin">decision</span>Maker
+    </div>
+    <div id="colorstrip"></div>
+    <div id="container">
+
+      <br>
+      <div id="selected"> </div>
+      <br>
+      <input type="range" id="selection" min="2" value="2" max="10" step="1" list="options" oninput="outputUpdate(value)"></input>
+
+      <datalist id="options">
+      <option>2</option>
+      <option>3</option>
+      <option>4</option>
+      <option>5</option>
+      <option>6</option>
+      <option>7</option>
+      <option>8</option>
+      <option>9</option>
+      <option>10</option>
+      </datalist>  
+
+      <br>
+      <button onClick="javascript:makeDecision()">Make decision</button>
+
+      <div id="decisionResult">
+
+      </div>
+
+    </div>
+
+  </body>
+</html>
