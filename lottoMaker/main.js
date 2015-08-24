@@ -1,5 +1,6 @@
 var numBeers = 1;
 var isAnimating = false;
+var adminMode = false;
 var bets = [];
 var users = [];
 var ibetOld = -1;
@@ -153,7 +154,7 @@ function populateBets() {
   for(var ibet = 0; ibet < bets.length; ibet++) {
     contents += "<span class='thick'>"+(ibet+1)+".</span> &emsp;";
     contents += "<span onClick='$(\"#betOptions"+ibet+"\").slideToggle()' >";
-    contents += bets[ibet]["shortTitle"] + "</span>";
+    contents += "<a href='#'>" +bets[ibet]["shortTitle"] + "</a></span>";
 
     contents += "<ul id='betOptions"+ibet+"' ";
     // contents += " style='display:none;' "; // XXX REENABLE TO HIDE BY DEFAULT
@@ -200,12 +201,22 @@ function populateUsers() {
 }
 
 // initializations
-$(function()
-{
+$(function() {
   init();
 
   // enable tooltips in the createBet div
   $( "#createBet" ).tooltip({tooltipClass: "ui-tooltip"});
+  $( "#logo" ).dblclick(function() { 
+    $( "#admin" ).slideToggle(150); 
+    if(adminMode) {
+      adminMode = false;
+      logMessage("Left admin mode","red");
+    } else {
+      adminMode = true;
+      logMessage("Entered admin mode","green");
+    }
+  });
+
 });
 
 
