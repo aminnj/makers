@@ -35,9 +35,11 @@ def moving_avg(arr, n=2, fixvals=[]):
     return arr_new
 
 PLOT_LUMI = True
+NUM_HOURS = 48
 
 datafile = "cms_status.txt"
 datafile_lum = 'monitor_lumi.txt'
+
 
 datefmt = mdates.DateFormatter("%H:%M")
 
@@ -57,8 +59,8 @@ for i in range(len(lines)-1,-1,-1):
     line = lines[i]
     t = round(float(line[0]))
 
-    # only use past 24 hours
-    if t < curtime - 24*60*60:
+    # only use past NUM_HOURS hours
+    if t < curtime - NUM_HOURS*60*60:
         break
 
     B = float(line[1])
@@ -111,7 +113,7 @@ if PLOT_LUMI:
 
     for line in lines:
         t = float(line[0])
-        if t < curtime - 24*60*60:
+        if t < curtime - NUM_HOURS*60*60:
             continue
         time_vals_lumi.append(t)
         cms_lumi.append(float(line[1]))
@@ -167,8 +169,8 @@ ax1.set_xlabel("Last updated "+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime
 
 if PLOT_LUMI:
     ax3 = plt.subplot2grid((5,1), (4,0), rowspan=1)
-    ax3.plot(time_vals_lumi[1:],cms_int_lumi_vec,color='#F5AB35', label='ATLAS Lumi', linewidth=1.5)
-    ax3.plot(time_vals_lumi[1:],atlas_int_lumi_vec,color='#F62459', label='CMS Lumi', linewidth=1.5)
+    ax3.plot(time_vals_lumi[1:],atlas_int_lumi_vec,color='#F5AB35', label='ATLAS Lumi', linewidth=1.5)
+    ax3.plot(time_vals_lumi[1:],cms_int_lumi_vec,color='#F62459', label='CMS Lumi', linewidth=1.5)
     ax3.yaxis.tick_right()
     ax3.yaxis.set_label_position("right")
     ax3.set_ylabel(r'Int. Lumi. ($pb^{-1}$)')
@@ -176,7 +178,7 @@ if PLOT_LUMI:
     ax3.xaxis.set_minor_locator(mdates.HourLocator(interval=1))
     ax3.xaxis.set_major_formatter(datefmt)
     ax3.set_xlabel("Last updated "+time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(curtime)))
-    plt.figtext(0.161, 0.295,r"$\int\/ \mathcal{L}\/ dt$ past day = "+str(round(cms_int_lumi,1))+' pb$^{-1}$')
+    plt.figtext(0.161, 0.295,r"$\int\/ \mathcal{L}\/ dt$ past "+str(NUM_HOURS)+ "h = "+str(round(cms_int_lumi,1))+' pb$^{-1}$')
 
 curBscore = scoreB[-1]
 curEscore = scoreE[-1]
@@ -218,7 +220,7 @@ if round(curEscore,2) >= 5:
 else:
     leg.get_texts()[2].set_color(badColor)
 
-plt.title('24 hour CMS Functionality Score')
+plt.title('%i hour CMS Functionality Score' % NUM_HOURS)
 plt.figtext(0.20,0.85,"current score = "+str(round(score[-1],2)))
 
 
