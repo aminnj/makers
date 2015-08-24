@@ -33,6 +33,6 @@ if(isTakingData and not wasTakingData):
     if(sounds): playSound("takingdata.wav")
 elif("dump" in newStatus and "dump" not in prevStatus):
     print ">>> Beam dump!"
-    if(sounds): playSound("beamdump.wav")
+    if(sounds): playSound("beamdump_withvoice.wav")
 else: pass
 
