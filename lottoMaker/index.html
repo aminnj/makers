@@ -33,20 +33,22 @@
 <div id="colorstrip"></div>
 <div id="container">
 
-    <div id="addBet" class="section">
-        here is where we add a bet<br>
-        <input type="text" class="inputbar" name="add_name" placeholder="First name" />
+    <div id="addBet" class="section" style='display:none;'>
+        <div id="addBetText">
+        <!-- here is where we add a bet<br> -->
+      </div>
+        <input type="text" class="inputbar" id="addName" placeholder="First name" />
         &emsp;&emsp;Change Bet: &nbsp;
-        <button type="submit" onClick="javascript:changeBeers(-1)" value="Submit">-</button>
-        <button type="submit" onClick="javascript:changeBeers(1)" value="Submit">+</button>
-        <div id="beers"> </div>
+        <button onClick="javascript:changeBeers(-1)">-</button>
+        <button onClick="javascript:changeBeers(1)">+</button>
+        <div id="beers"> </div> &emsp;
+        <button onClick="javascript:addBet()">Add Bet</button>
     </div>
 
-    <div id="createBet" class="section">
+    <div id="createBet" class="section" style='display:none;'>
       Create your <span title="tooltip test">bet</span>. Enter up to 4 possibilities.<br>
         <form id="createBet_form" action="javascript:void(0)" onsubmit="javascript:createBet()">
-            <input type="text" class="inputbar" name="shortTitle" placeholder="Enter short title" />
-            <input type="text" class="inputbar" name="description" placeholder="Enter description" /><br>
+            <input type="text" class="inputbar" name="shortTitle" placeholder="Enter short title" /><br>
             <input type="text" class="inputbar" name="option1" placeholder="Enter option 1" />
             <input type="text" class="inputbar" name="option2" placeholder="Enter option 2" />
             <input type="text" class="inputbar" name="option3" placeholder="Enter option 3" />
@@ -61,9 +63,7 @@
         <div id="betList"> </div>
     </div>
 
-    <div id="users" class="section">
-        here is where we display the users and what they owe<br>
-    </div>
+    <div id="users" class="section" style='display:none;'> </div>
 
 
 

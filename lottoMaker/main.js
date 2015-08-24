@@ -1,6 +1,9 @@
 var numBeers = 1;
 var isAnimating = false;
 var bets = [];
+var users = [];
+var ibetOld = -1;
+var ioptOld = -1;
 
 $.ajaxSetup({
     type: 'POST',
@@ -14,7 +17,7 @@ function toggleBets() {
     $('#bets').slideToggle(250);
 }
 function toggleAddBet() {
-    $('#bets').slideToggle(250);
+    $('#addBet').slideToggle(250);
 }
 function toggleUsers() {
     $('#users').slideToggle(250);
@@ -42,6 +45,24 @@ function loadBets() {
                     bets = data["bets"];
                     console.log(data);
                     populateBets();
+                },
+            error: function(data) {
+                    logMessage("Error connecting to CGI script.","red");
+                    console.log(data);
+                },
+       });
+}
+function loadUsers() {
+    $.ajax({
+            url: "./handler.py",
+            type: "POST",
+            data: { "action": "getUsers" },
+            dataType: "json", 
+            success: function(data) {
+                    logMessage("Successfully loaded user information", "green");
+                    users = data["users"];
+                    console.log(data);
+                    populateUsers();
                 },
             error: function(data) {
                     logMessage("Error connecting to CGI script.","red");
@@ -92,6 +113,43 @@ function changeBeers(delta) {
     }
 }
 
+function addBet() {
+
+    $.ajax({
+            url: "./handler.py",
+            type: "POST",
+            data: {"action":"addBet", "amount":numBeers, "name":$('#addName').val(), "ibet":ibetOld, "iopt":ioptOld},
+            success: function(data){
+                    logMessage(data);
+                    if(data.indexOf("Success") > -1) {
+                      loadBets();
+                      loadUsers();
+                    }
+                },
+            error: function(data){
+                    logMessage("Error connecting to CGI script.","red");
+                    console.log(data);
+                },
+       });
+
+}
+
+function addBetPanel(ibet, iopt) {
+  //only toggle if we click on the same "add bet"
+  if((ibet == ibetOld && iopt == ioptOld) || (ibetOld == -1 && ioptOld == -1)) {
+    toggleAddBet();
+  }
+
+  ibetOld = ibet;
+  ioptOld = iopt;
+
+  console.log(ibet + " " + iopt);
+  var content = "";
+  content += "Casting bet for option <b>" + bets[ibet]["options"][iopt]["name"] + "</b> of bet <b>"+bets[ibet]["shortTitle"]+"</b>";
+  $("#addBetText").html(content);
+
+}
+
 function populateBets() {
   var contents = "";
   for(var ibet = 0; ibet < bets.length; ibet++) {
@@ -108,11 +166,18 @@ function populateBets() {
     options = bets[ibet]["options"];
     for(var iopt = 0; iopt < options.length; iopt++) {
       option = options[iopt];
-      // e.g., id="bet0Options2"
-      contents += "<li id='bet"+ibet+"Options"+iopt+"' >";
-      contents += "[ <a href='#' onClick=''>add bet</a> ] &ensp;";
-      // contents += " [ add bet ] [ info ] ";
-      contents += option["name"];
+      contents += "<li id='bet"+ibet+"Options"+iopt+"' >"; // e.g., id="bet0Options2"
+      contents += "[ <a href='#' onClick='javascript:addBetPanel("+ibet+","+iopt+")'>add bet</a> ] &ensp;";
+      contents += option["name"] + ": &ensp;";
+
+      for(var ibetter = 0; ibetter < option["betters"].length; ibetter++) {
+        if(ibetter > 0) contents += ",";
+
+        contents += "&ensp; <b>" + option["betters"][ibetter] + "</b> (" + option["amounts"][ibetter] + ")";
+
+      }
+
+
       contents += "</li>";
     }
     contents += "</ul>";
@@ -122,6 +187,57 @@ function populateBets() {
 
   }
   $("#betList").html(contents);
+
+}
+
+function populateUsers() {
+  var contents = "";
+
+  contents += "<ul>";
+  for(var iuser = 0; iuser < users.length; iuser++) {
+    contents += "<li>";
+    contents += "<b>"+users[iuser][0]+"</b> has bet ";
+    contents += "<b>"+users[iuser][1]+"</b> beers in total";
+    contents += "</li>";
+  }
+  contents += "</ul>";
+  $("#users").html(contents);
+
+//   for(var ibet = 0; ibet < bets.length; ibet++) {
+//     contents += "<span class='thick'>"+(ibet+1)+".</span> &emsp;";
+//     contents += "<span onClick='$(\"#betOptions"+ibet+"\").slideToggle()' >";
+//     contents += bets[ibet]["shortTitle"] + "</span>";
+
+
+//     contents += "<ul id='betOptions"+ibet+"' ";
+//     // XXX REENABLE TO HIDE BY DEFAULT
+//     // contents += " style='display:none;' ";
+//     contents += " > ";
+
+//     options = bets[ibet]["options"];
+//     for(var iopt = 0; iopt < options.length; iopt++) {
+//       option = options[iopt];
+//       contents += "<li id='bet"+ibet+"Options"+iopt+"' >"; // e.g., id="bet0Options2"
+//       contents += "[ <a href='#' onClick='javascript:addBetPanel("+ibet+","+iopt+")'>add bet</a> ] &ensp;";
+//       contents += option["name"] + ": &ensp;";
+
+//       for(var ibetter = 0; ibetter < option["betters"].length; ibetter++) {
+//         if(ibetter > 0) contents += ",";
+
+//         contents += "&ensp; <b>" + option["betters"][ibetter] + "</b> (" + option["amounts"][ibetter] + ")";
+
+//       }
+
+
+//       contents += "</li>";
+//     }
+//     contents += "</ul>";
+
+//     contents += "<br>";
+//     console.log(contents);
+
+//   }
+//   $("#betList").html(contents);
 
 }
 
@@ -139,6 +255,7 @@ $(function()
 function init() {
   changeBeers(0);
   loadBets();
+  loadUsers();
   // populateBets(bets);
 }
 
