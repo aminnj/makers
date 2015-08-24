@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>lottoMaker</title>
+<link rel="icon" type="image/png" sizes="96x96" href="images/favicon.png">
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<script src="main.js"></script>
+
+<style>
+  label {
+    display: inline-block;
+    width: 5em;
+  }
+</style>
+
+</head>
+
+<body>
+
+<div id="topBar">
+    <img class="moneylogo" id="logo" src="images/moneybottlelogo.png" />
+    <span class="thin">lotto</span>Maker
+    <span class="thin">
+        &emsp;
+        <a href="#" onClick="javascript:toggleBets()">bets</a>&ensp;|&ensp;
+        <a href="#" onClick="javascript:toggleCreateBet()">create bet</a>&ensp;|&ensp;
+        <a href="#" onClick="javascript:toggleUsers()">users</a>&ensp;
+    </span>
+    <span id="admin" style="color:#33B333; display:none;">&emsp;&emsp;admin mode</span>
+</div>
+<div id="colorstrip"></div>
+<div id="container">
+
+    <div id="addBet" class="section" style='display:none;'>
+        <div id="addBetText">
+        <!-- here is where we add a bet<br> -->
+      </div>
+        <input type="text" class="inputbar" id="addName" placeholder="First name" />
+        &emsp;&emsp;Change Bet: &nbsp;
+        <button onClick="javascript:changeBeers(-1)">-</button>
+        <button onClick="javascript:changeBeers(1)">+</button>
+        <div id="beers"> </div> &emsp;
+        <button onClick="javascript:addBet()">Add Bet</button>
+    </div>
+
+    <div id="createBet" class="section" style='display:none;'>
+      Create your <span title="tooltip test">bet</span>. Enter up to 4 possibilities.<br>
+        <form id="createBet_form" action="javascript:void(0)" onsubmit="javascript:createBet()">
+            <input type="text" class="inputbar" name="shortTitle" placeholder="Enter short title" /><br>
+            <input type="text" class="inputbar" name="option1" placeholder="Enter option 1" />
+            <input type="text" class="inputbar" name="option2" placeholder="Enter option 2" />
+            <input type="text" class="inputbar" name="option3" placeholder="Enter option 3" />
+            <input type="text" class="inputbar" name="option4" placeholder="Enter option 4" />
+            <button type="submit" form="createBet_form" value="Submit">Create Bet</button>
+        </form>
+
+    </div>
+
+    <div id="bets" class="section">
+      <p class="thick">Current bets</p>
+        <div id="betList"> </div>
+    </div>
+
+    <div id="users" class="section" style='display:none;'> </div>
+
+
+
+    <div id="messages" align="center"> </div>
+
+</div>
+
+</body>
+</html>
