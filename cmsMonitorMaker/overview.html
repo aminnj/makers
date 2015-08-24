@@ -1,32 +1,45 @@
+<!DOCTYPE html>
 <html>
-    <head>
-        <meta http-equiv="refresh" content="300" />
-        <style type="text/css">
-            #container {
-                position: relative; 
-                float: center;
-                padding-right: 5px;
-            }
-            #container2 {
-                padding-top: 70px;
-            }
-        </style> 
-    </head>
+  <head>
+    <meta http-equiv="refresh" content="300" />
+    <title>cmsMonitorMaker</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 
-    <div id="container">
-        <a href="monitor.json"> <img src="cms_status.svg" width="800" /> </a>
+  </head>
+
+  <body>
+
+    <div id="topBar">
+      <img class="mainlogo" id="logo" src="images/monitorlogo.png" />
+      <span class="thin">cmsMonitor</span>Maker
+      <span class="thin">
+        &emsp;
+        <a href="#" onClick="$('cmsMonitor').slideToggle(250);">cool meter</a>&ensp;|&ensp;
+        <a href="#" onClick="$('otherMonitors').slideToggle(250);">sucky lhc meters</a>&ensp;
+      </span>
     </div>
 
-    <div id="container2">
-        <br><br>
+    <div id="colorstrip"></div>
 
+    <div id="container">
+
+
+      <div id="cmsMonitor" class="section">
+        <a href="monitor.json"> <img src="cms_status.svg" width="800" /> </a>
+      </div>
+
+      <div id="otherMonitors" class="section" style='display:none;'>
         <a href="https://op-webtools.web.cern.ch/op-webtools/vistar/vistars.php?usr=LHCCMS">
-            <img src="https://cmspage1.web.cern.ch/cmspage1/data/page1.png" width="300" />
+          <img src="https://cmspage1.web.cern.ch/cmspage1/data/page1.png" width="300" />
         </a>
         <br>
         <a href="https://op-webtools.web.cern.ch/op-webtools/vistar/vistars.php?usr=LHC1">
-            <img src="https://vistar-capture.web.cern.ch/vistar-capture/lhc1.png" width="300" />
+          <img src="https://vistar-capture.web.cern.ch/vistar-capture/lhc1.png" width="300" />
         </a>
+      </div>
+
     </div>
 
+  </body>
 </html>
