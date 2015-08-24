@@ -16,6 +16,8 @@ picture="cms_status.svg"
 json="monitor.json"
 overview="overview.html"
 outdir="monitoring"
+style="style.css"
+image="monitorlogo.png"
 user=$USER
 
 if [[ ${HOST} == *uaf-* ]]; then 
@@ -23,11 +25,11 @@ if [[ ${HOST} == *uaf-* ]]; then
     cp $picture $outdir/
     cp $json $outdir/
     cp $overview $outdir/
+    cp $image $outdir/
+    cp $style $outdir/
 else
     # scp to public_html
-    scp $picture $user@uaf-6.t2.ucsd.edu:~/public_html/$outdir/
-    scp $json $user@uaf-6.t2.ucsd.edu:~/public_html/$outdir/
-    scp $overview $user@uaf-6.t2.ucsd.edu:~/public_html/$outdir/
+    scp $picture $json $overview $image $style $user@uaf-6.t2.ucsd.edu:~/public_html/$outdir/
 fi
 
 echo ">>> Output in uaf-6.t2.ucsd.edu/~$user/$outdir/$overview"
