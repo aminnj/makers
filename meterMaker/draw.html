@@ -3,6 +3,7 @@
   <head>
   <script type="text/javascript" src="http://livejs.com/live.js"></script>
     <style>
+      -webkit-font-smoothing: none;
       body {
         margin: 0px;
         padding: 0px;
@@ -10,60 +11,63 @@
     </style>
   </head>
   <body>
-    <canvas id="myCanvas" width="300" height="180" style="border:1px solid #000000;"></canvas>
+    <canvas id="myCanvas" width="400px" height="300px" style="border:1px solid #000000;"></canvas>
     <script>
 
+
       var canvas = document.getElementById('myCanvas');
-      var context = canvas.getContext('2d');
+      var context = canvas.getContext('2d')
       var centerX = canvas.width / 2;
-      var centerY = canvas.height * 0.8;
-      var radius = 100;
+      var centerY = canvas.height * 0.7;
       var pi = Math.PI;
       var cos = Math.cos;
       var sin = Math.sin;
 
-      function drawArc(r, t0, dt) {
-        context.arc(centerX, centerY, r, t0+Math.PI, t0+Math.PI+dt, false);
-      }
-      function drawLine(r, t0) {
-        context.lineTo(100,200);
+      var fullMeterRadians = 1.2*pi; // angle subtended by whole meter
+      var fullMeterStart = -0.1*pi; //start angle of meter (0 points to the east, pi/2 points north)
 
-      }
-      function drawSlice(rOuter, rInner, f0, f1, color1, color2) {
-        var theta0 = f0*pi+pi;
-        var theta1 = f1*pi+pi;
+      context.font = "bold 14px sans-serif";
+      context.textAlign = "center";
+
+      function drawSlice(context, rOuter, rInner, f0, f1, color1, color2, label) {
+        var theta0 = f0*fullMeterRadians+pi;
+        var theta1 = f1*fullMeterRadians+pi;
 
         context.beginPath();
         context.moveTo(centerX-rInner*cos(theta0-pi),centerY-rInner*sin(theta0-pi));
-        // console.log(centerX-rInner*cos(theta0),centerY-rInner*sin(theta0));
         context.arc(centerX, centerY, rOuter, theta0, theta1, false);
-        // context.lineTo(centerX-50, centerY-50);
         context.lineTo(centerX-rInner*cos(theta1-pi),centerY-rInner*sin(theta1-pi));
 
         context.arc(centerX, centerY, rInner, theta1, theta0, true);
         context.closePath();
+
 
         color2 = color2 || color1;
         var grad = context.createRadialGradient(centerX,centerY,rInner,centerX,centerY,rOuter);
         grad.addColorStop(0,color1);
         grad.addColorStop(1,color2);
 
-        // context.fillStyle = color;
+        // text
+        context.save();
+        context.fillStyle = "#000";
+        context.translate(centerX-1.1*rOuter*cos((theta0+theta1)/2-pi),centerY-1.1*rOuter*sin((theta0+theta1)/2-pi));
+        context.rotate((theta0+theta1)/2+pi/2);
+        context.fillText(label,0,0);
+        context.restore();
+
         context.fillStyle = grad;
         context.fill();
         context.lineWidth = 1;
         context.strokeStyle = '#000';
-        // context.stroke();
-
 
       }
 
-      function drawPointer(rOuter, rInner, f0) {
-        var theta0 = f0*pi+3*pi/2;
+      function drawPointer(context, rOuter, rInner, f0) {
+        var theta0 = f0*fullMeterRadians+3*pi/2;
         var theta1 = theta0+pi;
 
         context.beginPath();
-        context.moveTo(centerX-rOuter*cos(f0*pi),centerY-rOuter*sin(f0*pi));
+        context.moveTo(centerX-rOuter*cos(f0*fullMeterRadians),centerY-rOuter*sin(f0*fullMeterRadians));
         context.arc(centerX, centerY, rInner, theta0, theta1, false);
 
         context.closePath();
@@ -89,22 +93,21 @@
           return rgb;
       }
       
+      // easiest way is to shift everything
+      context.translate(centerX,centerY);
+      context.rotate(fullMeterStart);
+      context.translate(-centerX,-centerY);
 
-      console.log(getShade("#f98000",-0.3));
-
-      var rOuter = 100;
+      var rOuter = 150;
       var rInner = rOuter*0.6;
-      drawSlice(rOuter , rInner , 0.0   , 0.2 , "#00af00", getShade("#00af00",-0.15));
-      drawSlice(rOuter , rInner , 0.204 , 0.4 , "#80d600", getShade("#80d600",-0.15));
-      drawSlice(rOuter , rInner , 0.404 , 0.6 , "#fff000", getShade("#fff000",-0.15));
-      drawSlice(rOuter , rInner , 0.604 , 0.8 , "#f98000", getShade("#f98000",-0.15));
-      drawSlice(rOuter , rInner , 0.804 , 1.0 , "#e60000", getShade("#e60000",-0.15));
-      drawPointer(250, 0.4);
+      drawSlice(context, rOuter , rInner , 0.0   , 0.2 , "#00af00", getShade("#00af00",-0.15), "pretty long long 1");
+      drawSlice(context, rOuter , rInner , 0.204 , 0.4 , "#80d600", getShade("#80d600",-0.15), "pretty long long 2");
+      drawSlice(context, rOuter , rInner , 0.404 , 0.6 , "#fff000", getShade("#fff000",-0.15), "pretty long long 3");
+      drawSlice(context, rOuter , rInner , 0.604 , 0.8 , "#f98000", getShade("#f98000",-0.15), "pretty long long 4");
+      drawSlice(context, rOuter , rInner , 0.804 , 1.0 , "#e60000", getShade("#e60000",-0.15), "pretty long long 5");
 
       var f0 = 0.4;
-      drawPointer(rOuter*0.7, rOuter*0.1, f0);
-
-
+      drawPointer(context, rOuter*0.75, rOuter*0.08, f0);
 
     </script>
   </body>
