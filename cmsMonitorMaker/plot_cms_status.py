@@ -90,9 +90,9 @@ scoreB = 5.*B_vals/3.801
 scoreE = 2.0*beam_vals + 3.0*E_vals/6500
 scoreS = 5.*(c1_vals*13+c2_vals*8)/21
 
-scoreB = moving_avg(scoreB, 4)
-scoreE = moving_avg(scoreE, 4)
-scoreS = moving_avg(scoreS, 4)
+scoreB = moving_avg(scoreB, 3)
+scoreE = moving_avg(scoreE, 3)
+scoreS = moving_avg(scoreS, 3)
 
 score = scoreB+scoreE+scoreS
 
