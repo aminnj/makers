@@ -31,7 +31,7 @@ newLastDump = info["lastbeamdump"]
 isTakingData = beams and bfield and systems
 if isTakingData:
     alreadyTalked = 1
-else if newStatus != "stable":
+elif newStatus != "stable":
     alreadyTalked = 0
 else:
     alreadyTalked = prevAlreadyTalked
