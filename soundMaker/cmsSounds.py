@@ -16,7 +16,8 @@ fh = open(storage,"r")
 info = fh.read().lower().strip()
 prevStatus = info.split()[0]
 prevLastDump = info.split()[1]
-wasTakingData = sum(map(int, info.split()[2:])) == 3
+prevAlreadyTalked = int(info.split()[2])
+wasTakingData = sum(map(int, info.split()[3:])) == 3
 fh.close()
 
 # Get new status
@@ -28,12 +29,18 @@ bfield = info["isgood"]["bfield"]
 systems = info["isgood"]["systems"]
 newLastDump = info["lastbeamdump"]
 isTakingData = beams and bfield and systems
+if isTakingData:
+    alreadyTalked = 1
+else if newStatus != "stable":
+    alreadyTalked = 0
+else:
+    alreadyTalked = prevAlreadyTalked
 fh = open(storage,"w")
-fh.write(newStatus + " " + newLastDump + " " + str(int(beams)) + " " + str(int(bfield)) + " " + str(int(systems)))
+fh.write(newStatus + " " + newLastDump + " " + str(alreadyTalked) + " " + str(int(beams)) + " " + str(int(bfield)) + " " + str(int(systems)))
 fh.close()
 
 # Play some sounds
-if(isTakingData and not wasTakingData):
+if(isTakingData and not prevAlreadyTalked):
     print ">>> Starting collecting data!"
     if(sounds): playSound("datacollection.wav")
 elif prevLastDump != newLastDump:
