@@ -1,113 +1,84 @@
 <!DOCTYPE HTML>
 <html>
   <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <script type="text/javascript" src="http://livejs.com/live.js"></script>
-    <style>
-      -webkit-font-smoothing: none;
-      body {
-        margin: 0px;
-        padding: 0px;
-      }
-    </style>
+  <script type="text/javascript" src="main.js"></script>
   </head>
   <body>
-    <canvas id="myCanvas" width="400px" height="300px" style="border:1px solid #000000;"></canvas>
+    <div id="canvases"> </div>
     <script>
 
 
-      var canvas = document.getElementById('myCanvas');
-      var context = canvas.getContext('2d')
-      var centerX = canvas.width / 2;
-      var centerY = canvas.height * 0.7;
-      var pi = Math.PI;
-      var cos = Math.cos;
-      var sin = Math.sin;
+      function init() {
+        for(var i = 0; i < meters.length; i++) {
+          var canv = $("<canvas />", { id: 'canvas'+i}).attr({'width':400,'height':300});
+          var canvas = canv.get(0);
+          canv.css('border', 'solid 1px red');
+          $('body').append(canv); 
+          drawGraph(canvas, meters[i]);
 
-      var fullMeterRadians = 1.2*pi; // angle subtended by whole meter
-      var fullMeterStart = -0.1*pi; //start angle of meter (0 points to the east, pi/2 points north)
+          canvas.addEventListener("mousedown", getMouse, false);
 
-      context.font = "bold 14px sans-serif";
-      context.textAlign = "center";
-
-      function drawSlice(context, rOuter, rInner, f0, f1, color1, color2, label) {
-        var theta0 = f0*fullMeterRadians+pi;
-        var theta1 = f1*fullMeterRadians+pi;
-
-        context.beginPath();
-        context.moveTo(centerX-rInner*cos(theta0-pi),centerY-rInner*sin(theta0-pi));
-        context.arc(centerX, centerY, rOuter, theta0, theta1, false);
-        context.lineTo(centerX-rInner*cos(theta1-pi),centerY-rInner*sin(theta1-pi));
-
-        context.arc(centerX, centerY, rInner, theta1, theta0, true);
-        context.closePath();
-
-
-        color2 = color2 || color1;
-        var grad = context.createRadialGradient(centerX,centerY,rInner,centerX,centerY,rOuter);
-        grad.addColorStop(0,color1);
-        grad.addColorStop(1,color2);
-
-        // text
-        context.save();
-        context.fillStyle = "#000";
-        context.translate(centerX-1.1*rOuter*cos((theta0+theta1)/2-pi),centerY-1.1*rOuter*sin((theta0+theta1)/2-pi));
-        context.rotate((theta0+theta1)/2+pi/2);
-        context.fillText(label,0,0);
-        context.restore();
-
-        context.fillStyle = grad;
-        context.fill();
-        context.lineWidth = 1;
-        context.strokeStyle = '#000';
+          canvs.push(canv);
+        };
 
       }
 
-      function drawPointer(context, rOuter, rInner, f0) {
-        var theta0 = f0*fullMeterRadians+3*pi/2;
-        var theta1 = theta0+pi;
+      function getMouse(event) {
+        var canvIdx = parseInt(event.target.id.replace(/[^0-9]/gi, ''));
+        var canvas = canvs[canvIdx].get(0);
+        var rect = canvas.getBoundingClientRect();
+        var centerX = centerWidthRatio * canvas.width;
+        var centerY = centerHeightRatio * canvas.height;
+        var mx = event.clientX - rect.left;
+        var my = event.clientY - rect.top;
 
-        context.beginPath();
-        context.moveTo(centerX-rOuter*cos(f0*fullMeterRadians),centerY-rOuter*sin(f0*fullMeterRadians));
-        context.arc(centerX, centerY, rInner, theta0, theta1, false);
+        var theta0 = Math.atan2(my-centerY, mx-centerX)+Math.PI;
+        var f0 = (theta0-fullMeterStart)%(2*Math.PI)/fullMeterRadians;
 
-        context.closePath();
+        if(f0 > 0.0 && f0 < 1.0) {
+        // update position of pointer
+          meters[canvIdx]["pointer"] = f0;
+          drawGraph(canvas, meters[canvIdx]);
+        }
 
-        context.fillStyle = "#000";
-        context.fill();
 
       }
 
-      // takes rgb and fraction, negative to make darker
-      function getShade(hex, lum) {
-          hex = String(hex).replace(/[^0-9a-f]/gi, '');
-          if (hex.length < 6) {
-              hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-          }
-          lum = lum || 0;
-          var rgb = "#", c, i;
-          for (i = 0; i < 3; i++) {
-              c = parseInt(hex.substr(i*2,2), 16);
-              c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
-              rgb += ("00"+c).substr(c.length);
-          }
-          return rgb;
-      }
-      
-      // easiest way is to shift everything
-      context.translate(centerX,centerY);
-      context.rotate(fullMeterStart);
-      context.translate(-centerX,-centerY);
+      var meters = [
+        {
+          "min": 0.0, "max": 0.0, "pointer": 0.3, "slices": [ 
+          { "fraction": 0.2, "color": "#f3f303", "label": "first slice" },
+          { "fraction": 0.3, "color": "#7372a1", "label": "second slice" },
+          { "fraction": 0.1, "color": "#f98000", "label": "random slice" },
+          { "fraction": 0.4, "color": "#02aab0", "label": "third slice" },
+          ]
+        },
+        {
+          "min": 0.0, "max": 0.0, "pointer": 0.4, "slices": [ 
+          { "fraction": 0.2, "color": "#00af00", "label": "first slice" },
+          { "fraction": 0.2, "color": "#80d600", "label": "second slice" },
+          { "fraction": 0.2, "color": "#fff000", "label": "random slice" },
+          { "fraction": 0.2, "color": "#f98000", "label": "third slice" },
+          { "fraction": 0.2, "color": "#e60000", "label": "third slice" },
+          ]
+        },
+        {
+          "min": 0.0, "max": 0.0, "pointer": 0.9, "slices": [ 
+          { "fraction": 0.8, "color": "#f00000", "label": "bad" },
+          { "fraction": 0.2, "color": "#00f000", "label": "good" },
+          ]
+        }
+      ];
 
-      var rOuter = 150;
-      var rInner = rOuter*0.6;
-      drawSlice(context, rOuter , rInner , 0.0   , 0.2 , "#00af00", getShade("#00af00",-0.15), "pretty long long 1");
-      drawSlice(context, rOuter , rInner , 0.204 , 0.4 , "#80d600", getShade("#80d600",-0.15), "pretty long long 2");
-      drawSlice(context, rOuter , rInner , 0.404 , 0.6 , "#fff000", getShade("#fff000",-0.15), "pretty long long 3");
-      drawSlice(context, rOuter , rInner , 0.604 , 0.8 , "#f98000", getShade("#f98000",-0.15), "pretty long long 4");
-      drawSlice(context, rOuter , rInner , 0.804 , 1.0 , "#e60000", getShade("#e60000",-0.15), "pretty long long 5");
+      console.log("reloaded");
 
-      var f0 = 0.4;
-      drawPointer(context, rOuter*0.75, rOuter*0.08, f0);
+      var canvs = [];
+      $(function() {
+        init();
+      });
+
 
     </script>
   </body>
