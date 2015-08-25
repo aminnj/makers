@@ -42,17 +42,12 @@ curtime = time.time()
 
 fname = 'cmspage1.png'
 status = os.system("curl -s -S -o "+ fname +" https://cmspage1.web.cern.ch/cmspage1/data/page1.png")
-fname2 = 'lhcop.png'
-status2 = os.system("curl -s -S -o "+ fname2 +" https://vistar-capture.web.cern.ch/vistar-capture/lhc3.png")                                                                                                                                 
+fname2 = 'lhcbeamdump.png'
+status2 = os.system("curl -s -S -o "+ fname2 +" https://vistar-capture.web.cern.ch/vistar-capture/lhcbds.png")         
 
 # if status!=0:
 #     print "ERROR: could not download CMS status image (https://cmspage1.web.cern.ch/cmspage1/data/page1.png)"
 #     sys.exit(0)
-
-# if status2!=0:                                                                                            
-#     print "ERROR: could not download LHC Op image (https://vistar-capture.web.cern.ch/vistar-capture/lhc3.png)"                                                                                                          
-#     sys.exit(0)
-
 
 try:
     im = Image.open(fname)
@@ -112,19 +107,40 @@ beam_stat = pytesseract.image_to_string(im_beam, config="-psm 8")
 if beam_stat.find('TABLE')!=-1:
     beam_stat = 'STABLE'
 
-
 fid = open(outfile,"a")
 fid.write('\t'.join([str(curtime),str(Bfield),str(energy),beam_stat]+stat_c1+stat_c2)+'\n')
 fid.close()
+
+
+### BEAM DUMP ###
+
+
+fname = 'lhcbeamdump.png'
+status = os.system("curl -s -S -o "+ fname +" https://vistar-capture.web.cern.ch/vistar-capture/lhcbds.png")         
+
+# if status!=0:
+#     print "ERROR: could not download LHC beam dump image (https://vistar-capture.web.cern.ch/vistar-capture/lhcbds.png)"
+#     sys.exit(0)
+
+try:
+    im = Image.open(fname)
+except:
+    # sometimes randomly get "cannot identify image" error
+    print "get_cms_data.py: Image open error"
+    sys.exit(0)
+
+im_beam1 = transform_image(im, 281, 115, 384, 132, 4, inverted=True, filter=False)
+dump_time = pytesseract.image_to_string(im_beam1, config="-psm 8")
+
+
+### LUMINOSITY ###
+
 
 curtime = time.time()
 outname = 'monitor_lumi.txt'
 fname = 'lhclumi.png'
 status = os.system("curl -s -S -o "+ fname +" https://vistar-capture.web.cern.ch/vistar-capture/lhclumi.png")
 
-# if status!=0:
-#     print "ERROR: could not download CMS status image (https://cmspage1.web.cern.ch/cmspage1/data/page1.png)"
-#     sys.exit(0)
 
 im = Image.open(fname)
 im_cms = transform_image(im, 140, 435, 310, 465, 2, inverted=True)
@@ -151,6 +167,7 @@ data["timestamp"] = str(curtime)
 data["status"] = beam_stat
 data["systemsin"] = systemsin
 data["systemson"] = systemson
+data["lastbeamdump"] = dump_time
 data["isgood"] = {
         "energy" : energy/6400.0 >= 0.99,
         "bfield" : Bfield/3.8 >= 0.99,
