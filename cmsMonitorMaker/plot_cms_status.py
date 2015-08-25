@@ -197,9 +197,9 @@ if PLOT_LUMI:
     atl_lumi_plot, = ax2.plot(time_vals_lumi,atlas_lumi,color='#F5AB35', label='ATLAS Lumi', linewidth=1.5)
     cms_lumi_plot, = ax2.plot(time_vals_lumi,cms_lumi,color='#F62459', label='CMS Lumi', linewidth=1.5)
     ax2.set_ylabel(r'Luminosity ($\mu b^{-1}/s$)')
-    baseunit = int(np.ceil(max(np.amax(cms_lumi),np.amax(atlas_lumi))/300.)) * 100
+    baseunit = int(np.ceil(max(np.amax(cms_lumi),np.amax(atlas_lumi))/30.)) * 10
     if baseunit==0:
-        baseunit = 100
+        baseunit = 10
     ax2.set_ylim(0,4*baseunit)
     ax2.set_yticks([baseunit, 2*baseunit, 3*baseunit])
     ax2.set_yticks([0.5*baseunit, 1.5*baseunit, 2.5*baseunit, 3.5*baseunit], minor=True)
