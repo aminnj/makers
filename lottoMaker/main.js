@@ -1,5 +1,4 @@
 var numBeers = 1;
-var isAnimating = false;
 var adminMode = false;
 var bets = [];
 var users = [];
@@ -25,13 +24,10 @@ function toggleUsers() {
 }
 
 function logMessage(msg,color) {
-    if(isAnimating) return; // comment this out if you want to see all messages
     color = color || "black";
     $('#messages').fadeIn(250);
     document.getElementById("messages").innerHTML = "<font color='"+color+"'>"+msg+"</font>";
-
-    isAnimating = true;
-    $('#messages').delay(1500).fadeOut( 300, function(obj) { isAnimating = false} );
+    $('#messages').stop().fadeIn(10).fadeOut( { "duration": 1500 } );
 
 }
 

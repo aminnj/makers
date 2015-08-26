@@ -8,13 +8,36 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
     <script>
+      var smartassComments = [
+      "Pick option THEOPT1, not THEOPT2.",
+      "Option THEOPT2 sucks. Consider THEOPT1 instead.",
+      "If THEOPT2 doesn't work, try THEOPT1.",
+      "Dude. Just do THEOPT1.",
+      "Are you stupid? Clearly THEOPT1 is the best.",
+      "I don't like you. Try again.",
+      "Go away and come back later.",
+      "Pick one yourself.",
+      "Are you kidding me? Do THEOPT1.",
+      "I don't get paid enough for this. Just do THEOPT1.",
+      "Life sucks when you're a bot, but it gets better when choosing THEOPT1.",
+      "Pick THEOPT1.",
+      "I don't always choose THEOPT1, but when I do, THEOPT2 is my backup.",
+      "My sources tell me that THEOPT1 is superior.",
+      "Option THEOPT1 is certain to bring success.",
+      "Without a doubt, THEOPT1 is the way to go.",
+      "Error.",
+      ];
       function outputUpdate(value) {
         $('#selected').html( "Number of options: " + value);
       }
       function makeDecision() {
-
-        $('#decisionResult').html( "Pick option <b>" + (1+Math.floor(Math.random()*$("input[type=range]").val())) + "</b>!" );
-
+        // $('#decisionResult').html( "Pick option <b>" + (1+Math.floor(Math.random()*$("input[type=range]").val())) + "</b>!" );
+        var theopt1 = 1+Math.floor(Math.random()*$("input[type=range]").val());
+        var theopt2 = theopt1; // secondary one for use in the text, like "Pick 1, but not 2!"
+        while(theopt2 == theopt1) {
+          theopt2 = 1+Math.floor(Math.random()*$("input[type=range]").val());
+        }
+        $('#decisionResult').html( smartassComments[Math.floor(Math.random()*smartassComments.length)].replace("THEOPT1","<b>"+theopt1+"</b>").replace("THEOPT2","<b>"+theopt2+"</b>") );
       }
 
       $(function() {

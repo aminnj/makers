@@ -1,9 +1,10 @@
 <!DOCTYPE HTML>
 <html>
   <head>
+    <link rel="stylesheet" href="style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-  <script type="text/javascript" src="http://livejs.com/live.js"></script>
-  <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="http://livejs.com/live.js"></script>
+    <script type="text/javascript" src="main.js"></script>
   </head>
   <body>
     <div id="canvases"> </div>
@@ -13,55 +14,35 @@
       function init() {
         for(var i = 0; i < meters.length; i++) {
           var canv = $("<canvas />", { id: 'canvas'+i}).attr({'width':400,'height':300});
+          fontSize = 16;
+
           var canvas = canv.get(0);
           canv.css('border', 'solid 1px red');
           $('body').append(canv); 
           drawGraph(canvas, meters[i]);
-
-          canvas.addEventListener("mousedown", getMouse, false);
-
+          canvas.addEventListener("mousedown", handleMouse, false);
           canvs.push(canv);
-        };
-
-      }
-
-      function getMouse(event) {
-        var canvIdx = parseInt(event.target.id.replace(/[^0-9]/gi, ''));
-        var canvas = canvs[canvIdx].get(0);
-        var rect = canvas.getBoundingClientRect();
-        var centerX = centerWidthRatio * canvas.width;
-        var centerY = centerHeightRatio * canvas.height;
-        var mx = event.clientX - rect.left;
-        var my = event.clientY - rect.top;
-
-        var theta0 = Math.atan2(my-centerY, mx-centerX)+Math.PI;
-        var f0 = (theta0-fullMeterStart)%(2*Math.PI)/fullMeterRadians;
-
-        if(f0 > 0.0 && f0 < 1.0) {
-        // update position of pointer
-          meters[canvIdx]["pointer"] = f0;
-          drawGraph(canvas, meters[canvIdx]);
         }
-
-
       }
+
+
 
       var meters = [
         {
           "min": 0.0, "max": 0.0, "pointer": 0.3, "slices": [ 
-          { "fraction": 0.2, "color": "#f3f303", "label": "first slice" },
-          { "fraction": 0.3, "color": "#7372a1", "label": "second slice" },
-          { "fraction": 0.1, "color": "#f98000", "label": "random slice" },
-          { "fraction": 0.4, "color": "#02aab0", "label": "third slice" },
+          { "fraction": 0.2, "color": "#f3f303", "label": "yellow" },
+          { "fraction": 0.3, "color": "#7372a1", "label": "purple" },
+          { "fraction": 0.1, "color": "#f98000", "label": "orange" },
+          { "fraction": 0.4, "color": "#02aab0", "label": "blue" },
           ]
         },
         {
           "min": 0.0, "max": 0.0, "pointer": 0.4, "slices": [ 
-          { "fraction": 0.2, "color": "#00af00", "label": "first slice" },
-          { "fraction": 0.2, "color": "#80d600", "label": "second slice" },
-          { "fraction": 0.2, "color": "#fff000", "label": "random slice" },
-          { "fraction": 0.2, "color": "#f98000", "label": "third slice" },
-          { "fraction": 0.2, "color": "#e60000", "label": "third slice" },
+          { "fraction": 0.2, "color": "#00af00", "label": "very good" },
+          { "fraction": 0.2, "color": "#80d600", "label": "moderately good" },
+          { "fraction": 0.2, "color": "#fff000", "label": "neutral" },
+          { "fraction": 0.2, "color": "#f98000", "label": "bad" },
+          { "fraction": 0.2, "color": "#e60000", "label": "very very bad" },
           ]
         },
         {
@@ -81,5 +62,7 @@
 
 
     </script>
+
+    <div id="messages" align="center"> </div>
   </body>
 </html>      

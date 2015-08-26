@@ -1,10 +1,13 @@
-var isAnimating = false;
 var rOuterInnerRatio = 0.6;
 var fullMeterRadians = 1.2*Math.PI; // angle subtended by whole meter
 var fullMeterStart = -0.1*Math.PI; //start angle of meter (0 points to the east, pi/2 points north)
 var centerWidthRatio = 0.5; // fraction of width at which to put centerX
-var centerHeightRatio = 0.7; // fraction of height at which to put centerY
+var centerHeightRatio = 0.78; // fraction of height at which to put centerY
 var rHeightRatio = 0.5; // fraction of height to make the outer radius
+var fontSize = 16;
+
+var canvs = [];
+var meters = [];
 
 $.ajaxSetup({
     type: 'POST',
@@ -19,13 +22,10 @@ function toggleMaker() {
 }
 
 function logMessage(msg,color) {
-    if(isAnimating) return; // comment this out if you want to see all messages
     color = color || "black";
     $('#messages').fadeIn(250);
     document.getElementById("messages").innerHTML = "<font color='"+color+"'>"+msg+"</font>";
-
-    isAnimating = true;
-    $('#messages').delay(1500).fadeOut( 300, function(obj) { isAnimating = false} );
+    $('#messages').stop().fadeIn(10).fadeOut( { "duration": 1500 } );
 
 }
 
@@ -47,21 +47,23 @@ function getShade(hex, lum) {
 
 function drawGraph(canvas, graphDict) {
   var context = canvas.getContext("2d")
-
   var centerX = canvas.width * centerWidthRatio;
   var centerY = canvas.height * centerHeightRatio;
   var rOuter = canvas.height * rHeightRatio;
   var rInner = rOuter*rOuterInnerRatio;
+
+  var params = { "rOuter": rOuter, "rInner": rInner, "fullMeterRadians": fullMeterRadians, "fullMeterStart": fullMeterStart, "centerX": centerX, "centerY": centerY };
   
   // reset canvas
   context.clearRect(0, 0, canvas.width, canvas.height);
+
+  var text = graphDict["title"] || "";
+  drawTitle(context, text, params);
 
   // easiest way is to shift everything
   context.translate(centerX,centerY);
   context.rotate(fullMeterStart);
   context.translate(-centerX,-centerY);
-
-  var params = { "rOuter": rOuter, "rInner": rInner, "fullMeterRadians": fullMeterRadians, "fullMeterStart": fullMeterStart, "centerX": centerX, "centerY": centerY };
 
   var sumFrac = 0.0;
   for(var i = 0; i < graphDict["slices"].length; i++) {
@@ -75,6 +77,18 @@ function drawGraph(canvas, graphDict) {
   context.translate(centerX,centerY);
   context.rotate(-fullMeterStart);
   context.translate(-centerX,-centerY);
+}
+
+function drawTitle(context, text, params) {
+  var centerX = params["centerX"];
+  var centerY = params["centerY"];
+
+  context.font = "bold "+Math.floor(fontSize*1.5)+"px sans-serif";
+  context.textAlign = "center";
+  context.save();
+  context.fillStyle = "#000";
+  context.fillText(text,centerX,centerY*0.1);
+  context.restore();
 }
 
 function drawSlice(context, f0, f1, color1, label, params) {
@@ -104,7 +118,7 @@ function drawSlice(context, f0, f1, color1, label, params) {
 
   // text
   label = label || "";
-  context.font = "bold 16px sans-serif";
+  context.font = "bold "+fontSize+"px sans-serif";
   context.textAlign = "center";
   context.save();
   context.fillStyle = "#000";
@@ -117,6 +131,7 @@ function drawSlice(context, f0, f1, color1, label, params) {
   context.fill();
   context.lineWidth = 1;
   context.strokeStyle = '#000';
+  context.stroke();
 }
 
 function drawPointer(context, f0, params) {
@@ -146,3 +161,106 @@ function drawPointer(context, f0, params) {
   context.fill();
 }
 
+function handleMouse(event) {
+
+  var canvIdx = parseInt(event.target.id.replace(/[^0-9]/gi, ''));
+  var canvas = canvs[canvIdx].get(0);
+  var rect = canvas.getBoundingClientRect();
+  var centerX = centerWidthRatio * canvas.width;
+  var centerY = centerHeightRatio * canvas.height;
+  var mx = event.clientX - rect.left;
+  var my = event.clientY - rect.top;
+
+  var theta0 = Math.atan2(my-centerY, mx-centerX)+Math.PI;
+  var f0 = (theta0-fullMeterStart)%(2*Math.PI)/fullMeterRadians;
+
+  // update position of pointer
+  if(f0 > 0.0 && f0 < 1.0) {
+    movePointer(canvIdx, f0, true);
+  }
+
+}
+
+function movePointer(canvIdx, fnew, shouldUpdate) {
+    shouldUpdate = shouldUpdate || false; // update the data file?
+
+    var fold = meters[canvIdx]["pointer"];
+    var fcurr = fold;
+    var istep = 0;
+    var nsteps = 30;
+
+    var interval = setInterval(function() {
+      meters[canvIdx]["pointer"] = fcurr;
+      drawGraph(canvs[canvIdx].get(0), meters[canvIdx]);
+      fcurr += (fnew-fold)/nsteps;
+      istep++;
+      if( istep > nsteps) {
+        clearInterval(interval); 
+        // do stuff here when we click on a new pointer position
+        console.log(meters[canvIdx]);
+
+        return; 
+      }
+    }, 10);
+
+    if(shouldUpdate) {
+      updateMeter(canvIdx, fnew);
+    }
+
+    logMessage("changed pointer position of canvas " + canvIdx + " to " + (100*fnew).toFixed(0) + "%");
+}
+
+function drawMeters() {
+  canvs = [];
+
+  $('#canvases').empty(); 
+  for(var i = 0; i < meters.length; i++) {
+    var canv = $("<canvas />", { id: 'canvas'+i}).attr({'width':400,'height':300});
+    fontSize = 16;
+
+    var canvas = canv.get(0);
+    // canv.css('border', 'solid 1px red');
+    $('#canvases').append(canv); 
+    drawGraph(canvas, meters[i]);
+    canvas.addEventListener("mousedown", handleMouse, false);
+    canvs.push(canv);
+  }
+}
+
+function updateMeter(meterIdx, pointerFraction) {
+  $.ajax({
+      url: "./handler.py",
+      type: "POST",
+      data: { "action": "updateMeter", "meterIdx": meterIdx, "pointerFraction": pointerFraction },
+      success: function(data) {
+      logMessage("Successfully updated meter information", "green");
+    },
+    error: function(data) {
+    logMessage("Error connecting to CGI script.","red");
+    console.log(data);
+    },
+  });
+}
+
+function loadMeters() {
+  $.ajax({
+      url: "./handler.py",
+      type: "POST",
+      data: { "action": "getMeters" },
+      dataType: "json", 
+      success: function(data) {
+      logMessage("Successfully updated meter information", "green");
+      meters = data["meters"];
+      drawMeters();
+    },
+    error: function(data) {
+    logMessage("Error connecting to CGI script.","red");
+    console.log(data);
+    },
+  });
+}
+
+$(function() {
+  loadMeters();
+  setInterval(loadMeters, 30000);
+});
