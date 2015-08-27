@@ -31,7 +31,49 @@
     <div id="meters" class="section"> 
       <div id="canvases"> </div>
     </div>
-    <div id="maker" class="section" style='display:none;'> </div>
+
+    <div id="maker" class="section" style='display:none;'>
+      Make up to 6 slices. Pathological entries are ignored. Leave "Fraction"
+      blank to split up slices evenly automatically.
+        <form id="createMeter_form" action="javascript:void(0)" onsubmit="javascript:createMeter()">
+            <input type="text" class="inputbar" name="shortTitle" placeholder="Enter short title" /><br>
+
+            <input type="text" class="inputbar" name="label1" placeholder="Enter label 1" />
+            <input type="text" class="inputbar" name="fraction1" placeholder="Fraction" style="width:80px;" />
+            <input type="text" class="inputbar" name="rgb1" placeholder="Hex code" style="width:80px;" id="rgb1" />
+            <input type="color" id="color1" onchange="$('#rgb1').val($('#color1').val())"/><br>
+
+            <input type="text" class="inputbar" name="label2" placeholder="Enter label 2" /> 
+            <input type="text" class="inputbar" name="fraction2" placeholder="Fraction" style="width:80px;" />
+            <input type="text" class="inputbar" name="rgb2" placeholder="Hex code" style="width:80px;" id="rgb2" />
+            <input type="color" id="color2" onchange="$('#rgb2').val($('#color2').val())"/><br>
+
+            <input type="text" class="inputbar" name="label3" placeholder="Enter label 3" /> 
+            <input type="text" class="inputbar" name="fraction3" placeholder="Fraction" style="width:80px;" />
+            <input type="text" class="inputbar" name="rgb3" placeholder="Hex code" style="width:80px;" id="rgb3" />
+            <input type="color" id="color3" onchange="$('#rgb3').val($('#color3').val())"/><br>
+
+            <input type="text" class="inputbar" name="label4" placeholder="Enter label 4" /> 
+            <input type="text" class="inputbar" name="fraction4" placeholder="Fraction" style="width:80px;" />
+            <input type="text" class="inputbar" name="rgb4" placeholder="Hex code" style="width:80px;" id="rgb4" />
+            <input type="color" id="color4" onchange="$('#rgb4').val($('#color4').val())"/><br>
+
+            <input type="text" class="inputbar" name="label5" placeholder="Enter label 5" /> 
+            <input type="text" class="inputbar" name="fraction5" placeholder="Fraction" style="width:80px;" />
+            <input type="text" class="inputbar" name="rgb5" placeholder="Hex code" style="width:80px;" id="rgb5" />
+            <input type="color" id="color5" onchange="$('#rgb5').val($('#color5').val())"/><br>
+
+            <input type="text" class="inputbar" name="label6" placeholder="Enter label 6" /> 
+            <input type="text" class="inputbar" name="fraction6" placeholder="Fraction" style="width:80px;" />
+            <input type="text" class="inputbar" name="rgb6" placeholder="Hex code" style="width:80px;" id="rgb6" />
+            <input type="color" id="color6" onchange="$('#rgb6').val($('#color6').val())"/><br>
+
+            <input type="text" class="inputbar" name="pointerFraction" placeholder="Initial pointer fraction [0,1]" /><br>
+
+            <button type="submit" form="createMeter_form" value="Submit">Create Meter</button>
+        </form>
+
+    </div>
 
     <div id="messages" align="center"> </div>
 

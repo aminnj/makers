@@ -23,7 +23,6 @@ function toggleMaker() {
 
 function logMessage(msg,color) {
     color = color || "black";
-    $('#messages').fadeIn(250);
     document.getElementById("messages").innerHTML = "<font color='"+color+"'>"+msg+"</font>";
     $('#messages').stop().fadeIn(10).fadeOut( { "duration": 1500 } );
 
@@ -242,6 +241,29 @@ function updateMeter(meterIdx, pointerFraction) {
   });
 }
 
+function createMeter() {
+    var formObj = {};
+    formObj["action"] = "createMeter";
+    var inputs = $("#createMeter_form").serializeArray();
+    $.each(inputs, function (i, input) {
+        formObj[input.name] = input.value;
+    });
+    console.log(formObj);
+    $.ajax({
+            url: "./handler.py",
+            type: "POST",
+            data: formObj,
+            success: function(data){
+                    logMessage(data);
+                    loadMeters();
+                },
+            error: function(data){
+                    logMessage("Error connecting to CGI script.","red");
+                    console.log(data);
+                },
+       });
+}
+
 function loadMeters() {
   $.ajax({
       url: "./handler.py",
@@ -249,7 +271,6 @@ function loadMeters() {
       data: { "action": "getMeters" },
       dataType: "json", 
       success: function(data) {
-      logMessage("Successfully updated meter information", "green");
       meters = data["meters"];
       drawMeters();
     },
@@ -263,4 +284,5 @@ function loadMeters() {
 $(function() {
   loadMeters();
   setInterval(loadMeters, 30000);
+
 });
