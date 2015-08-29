@@ -44,6 +44,7 @@ def createBet(input):
 
     bet = {}
     bet["shortTitle"] = input["shortTitle"]
+    bet["status"] = "ongoing"
     # bet["description"] = input["description"] if "description" in input else ""
     bet["options"] = []
     for opt in optionKeys:
@@ -90,6 +91,24 @@ def addBet(input):
 
     return "Shouldn't get here"
 
+def markWinner(input):
+    global data
+
+    ibet = int(input["ibet"])
+    iopt = int(input["iopt"])
+
+    # names and amounts for ibet,iopt
+    try:
+        names = data["bets"][ibet]["options"][iopt]["betters"]
+        amounts = data["bets"][ibet]["options"][iopt]["amounts"]
+    except:
+        return "Invalid bet number and/or bet option. You gave me ibet=%i,iopt=%i." % (ibet, iopt)
+
+    data["bets"][ibet]["status"] = "complete"
+    data["bets"][ibet]["winner"] = iopt
+
+    return "Successfully completed bet #%i (option #%i)" % (ibet+1, iopt+1)
+
 def getUsers():
     global data
     users = { }
@@ -122,6 +141,7 @@ input = inputToDict(form)
 # input = {"action": "getBets"}
 # input = {"action": "addBet", "name":"test", "ibet":0,"iopt":0, "amount":5}
 # input = {"action": "getUsers"}
+# input = {"action": "markWinner", "ibet":"2", "iopt":"1"}
 
 loadBets()
 if(input['action'] == "createBet"):
@@ -134,5 +154,8 @@ if(input['action'] == "getBets"):
     print getBets()
 if(input['action'] == "getUsers"):
     print getUsers()
+if(input['action'] == "markWinner"):
+    print markWinner(input)
+    writeBets()
 
 # print getBets()

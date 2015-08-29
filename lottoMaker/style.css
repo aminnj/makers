@@ -50,6 +50,7 @@ body {
 
 .thin { font-weight: 300; }
 .thick { font-weight: 900; }
+.alert { font-weight: 900; color: #33B333; }
 
 /* MESSAGES */
 #messages {

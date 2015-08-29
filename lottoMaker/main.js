@@ -38,7 +38,6 @@ function loadBets() {
             data: { "action": "getBets" },
             dataType: "json", 
             success: function(data) {
-                    logMessage("Successfully loaded bet information", "green");
                     bets = data["bets"];
                     console.log(data);
                     populateBets();
@@ -56,7 +55,6 @@ function loadUsers() {
             data: { "action": "getUsers" },
             dataType: "json", 
             success: function(data) {
-                    logMessage("Successfully loaded user information", "green");
                     users = data["users"];
                     console.log(data);
                     populateUsers();
@@ -110,6 +108,25 @@ function changeBeers(delta) {
     }
 }
 
+function markWinner(ibet, iopt) {
+    console.log(ibet, iopt);
+    $.ajax({
+            url: "./handler.py",
+            type: "POST",
+            data: {"action":"markWinner", "ibet":ibet, "iopt":iopt},
+            success: function(data){
+                    logMessage(data);
+                    if(data.indexOf("Success") > -1) {
+                      loadBets();
+                    }
+                },
+            error: function(data){
+                    logMessage("Error connecting to CGI script.","red");
+                    console.log(data);
+                },
+       });
+
+}
 function addBet() {
     $.ajax({
             url: "./handler.py",
@@ -148,19 +165,32 @@ function addBetPanel(ibet, iopt) {
 function populateBets() {
   var contents = "";
   for(var ibet = 0; ibet < bets.length; ibet++) {
-    contents += "<span class='thick'>"+(ibet+1)+".</span> &emsp;";
+    isComplete = bets[ibet]["status"] != "ongoing";
+    iOptWinner = bets[ibet]["winner"]
+
+    contents += "<span class='thick'>"+(ibet+1)+". &emsp;";
+    if(isComplete) contents += "[ <span class='alert'> DONE </span> ] ";
+    contents += "</span>";
     contents += "<span onClick='$(\"#betOptions"+ibet+"\").slideToggle()' >";
     contents += "<a href='#'>" +bets[ibet]["shortTitle"] + "</a></span>";
 
     contents += "<ul id='betOptions"+ibet+"' ";
-    // contents += " style='display:none;' "; // XXX REENABLE TO HIDE BY DEFAULT
+    contents += " style='display:none;' "; // XXX REENABLE TO HIDE BY DEFAULT
     contents += " > ";
 
     options = bets[ibet]["options"];
     for(var iopt = 0; iopt < options.length; iopt++) {
       option = options[iopt];
-      contents += "<li id='bet"+ibet+"Options"+iopt+"' >"; // e.g., id="bet0Options2"
-      contents += "[ <a href='#' onClick='javascript:addBetPanel("+ibet+","+iopt+")'>add bet</a> ] &ensp;";
+      contents += "<li>";
+
+      if(adminMode) contents += "[ <a href='#' onClick='javascript:markWinner("+ibet+","+iopt+")'>mark winner</a> ] &ensp;";
+
+      if(isComplete) {
+          if(iopt == iOptWinner) contents += "[ <span class='alert'>WINNER</span> ] &ensp;";
+      } else {
+          contents += "[ <a href='#' onClick='javascript:addBetPanel("+ibet+","+iopt+")'>add bet</a> ] &ensp;";
+      }
+
       contents += option["name"] + ": &ensp;";
 
       for(var ibetter = 0; ibetter < option["betters"].length; ibetter++) {
@@ -172,9 +202,7 @@ function populateBets() {
       contents += "</li>";
     }
     contents += "</ul>";
-
     contents += "<br>";
-    console.log(contents);
 
   }
   $("#betList").html(contents);
@@ -206,9 +234,11 @@ $(function() {
     $( "#admin" ).slideToggle(150); 
     if(adminMode) {
       adminMode = false;
+      populateBets();
       logMessage("Left admin mode","red");
     } else {
       adminMode = true;
+      populateBets();
       logMessage("Entered admin mode","green");
     }
   });
