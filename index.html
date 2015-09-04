@@ -13,7 +13,7 @@
             }
             .logo {
                 position: relative;
-                top: 8px;
+                /*top: 8px;*/
                 padding: 0px 10px 0px 10px;
                 height:40px;
             }
@@ -29,6 +29,7 @@
             }
             .thin { font-size: xx-large; font-weight: 300; }
             .thick { font-size: xx-large; font-weight: 900; }
+            .right { float:right; position:relative;  }
 
             #maintitle {
                 text-align: center;
@@ -41,8 +42,9 @@
                 top: 50%;
                 left: 50%;
                 width:20em;
-                height:16em;
-                margin-top: -10em; /*set to a negative number 1/2 of your height*/
+                height:17em;
+                margin-top: -9em; /*set to a negative number 1/2 of your height*/
+                padding: 1% 1% 1% 1%;
                 margin-left: -10em; /*set to a negative number 1/2 of your width*/
                 border: 2px solid #000;
                 background-color: #eee;
@@ -61,40 +63,47 @@
 
         <div id="container">
             <img class="logo" src="cmsMonitorMaker/monitorlogo.png" />
-            <a href="cmsMonitorMaker">
+            <a href="cmsMonitorMaker" class="right">
                 <span class="thin">cmsMonitor</span><span class="thick">Maker</span>
             </a>
             <br>
 
             <img class="logo" src="lottoMaker/images/moneybottlelogo.png" />
-            <a href="lottoMaker">
+            <a href="lottoMaker" class="right">
                 <span class="thin">lotto</span><span class="thick">Maker</span>
             </a>
             <br>
 
             <img class="logo" src="soundMaker/soundlogo.png" />
-            <a href="soundMaker">
+            <a href="soundMaker" class="right">
                 <span class="thin">sound</span><span class="thick">Maker</span>
             </a>
             <br>
 
             <img class="logo" src="meterMaker/images/meterlogo.svg" />
-            <a href="meterMaker">
+            <a href="meterMaker" class="right">
                 <span class="thin">meter</span><span class="thick">Maker</span>
             </a>
             <br>
 
             <img class="logo" src="decisionMaker/images/decisionlogo.png" />
-            <a href="decisionMaker">
+            <a href="decisionMaker" class="right">
                 <span class="thin">decision</span><span class="thick">Maker</span>
             </a>
             <br>
 
             <img class="logo" src="misc/images/slidelogo.png" />
-            <a href="https://github.com/cmstas/Software/tree/master/slideMaker">
+            <a href="https://github.com/cmstas/Software/tree/master/slideMaker" class="right">
                 <span class="thin">slide</span><span class="thick">Maker</span>
             </a>
             <br>
+
+            <img class="logo" src="misc/images/crablogo.png" />
+            <a href="#todo" class="right">
+                <span class="thin">publisher</span><span class="thick">Maker</span>
+            </a>
+            <br>
+
         </div>
 
     </body>
