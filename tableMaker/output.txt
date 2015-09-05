@@ -1,0 +1,8 @@
+col1 | col2 | col3 | col4 | col 5
+
+mrc 1 2 $\mt$ |                  | c            | d | e
+a                | b                | c            | d | $\pt$
+a                | mrc 2 1 $\mtmin$ | mrc 3 3 this is met: $\met$ |   |  
+a                |                  |              |   |  
+a                | b                |              |   |  
+
