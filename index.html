@@ -4,6 +4,8 @@
 
         <title>Makers</title>
         <link rel="icon" type="image/png" sizes="96x96" href="misc/images/coglogo.png">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
 
         <style>
             @import url(http://fonts.googleapis.com/css?family=Lato:300,400,900);
@@ -51,8 +53,8 @@
                 top: 50%;
                 left: 50%;
                 width:20em;
-                height:17em;
-                margin-top: -9em; /*set to a negative number 1/2 of your height*/
+                height:19em;
+                margin-top: -10em; /*set to a negative number 1/2 of your height*/
                 padding: 1% 1% 1% 1%;
                 margin-left: -10em; /*set to a negative number 1/2 of your width*/
                 border: 2px solid #000;
@@ -61,6 +63,16 @@
             }
         </style>
 
+        <script>
+            var degrees = 0;
+            $(function() {
+                    var interval = setInterval(function() {
+                        $('.mainlogo').css({ 'transform' : 'rotate('+ degrees +'deg)'});
+                        degrees += 1;
+                        if(degrees > 360) clearInterval(interval);
+                    },30);
+            });
+        </script>
 
     </head>
 
@@ -72,9 +84,10 @@
         </div>
 
         <div id="container">
-            <img class="logo" src="cmsMonitorMaker/monitorlogo.png" />
-            <a href="cmsMonitorMaker" class="right">
-                <span class="thin">cmsMonitor</span><span class="thick">Maker</span>
+
+            <img class="logo" src="misc/images/slidelogo.png" />
+            <a href="https://github.com/cmstas/Software/tree/master/slideMaker" class="right">
+                <span class="thin">slide</span><span class="thick">Maker</span>
             </a>
             <br>
 
@@ -84,15 +97,21 @@
             </a>
             <br>
 
-            <img class="logo" src="soundMaker/soundlogo.png" />
-            <a href="soundMaker" class="right">
-                <span class="thin">sound</span><span class="thick">Maker</span>
+            <img class="logo" src="tableMaker/images/tablelogo.png" />
+            <a href="https://github.com/aminnj/makers/tree/master/tableMaker" class="right">
+                <span class="thin">table</span><span class="thick">Maker</span>
             </a>
             <br>
-
+            
             <img class="logo" src="meterMaker/images/meterlogo.svg" />
             <a href="meterMaker" class="right">
                 <span class="thin">meter</span><span class="thick">Maker</span>
+            </a>
+            <br>
+
+            <img class="logo" src="soundMaker/soundlogo.png" />
+            <a href="https://github.com/aminnj/makers/tree/master/soundMaker" class="right">
+                <span class="thin">sound</span><span class="thick">Maker</span>
             </a>
             <br>
 
@@ -102,15 +121,16 @@
             </a>
             <br>
 
-            <img class="logo" src="misc/images/slidelogo.png" />
-            <a href="https://github.com/cmstas/Software/tree/master/slideMaker" class="right">
-                <span class="thin">slide</span><span class="thick">Maker</span>
-            </a>
-            <br>
 
             <img class="logo" src="misc/images/crablogo.png" />
             <a href="https://github.com/aminnj/publisherMaker" class="right">
                 <span class="thin">publisher</span><span class="thick">Maker</span>
+            </a>
+            <br>
+
+            <img class="logo" src="cmsMonitorMaker/monitorlogo.png" />
+            <a href="cmsMonitorMaker" class="right">
+                <span class="thin">cmsMonitor</span><span class="thick">Maker</span>
             </a>
             <br>
 
