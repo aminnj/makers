@@ -1,10 +1,10 @@
-## tableMaker
+# tableMaker
 This takes a simple markup of a table in a text file and converts it to valid LaTeX. Format of markup
 is given in the Syntax section below.
 
-### Instructions
+## Instructions
 There are three modes of operation:
-#### Standalone
+### Standalone
 You can do
 `python tableMaker.py output.txt` where output.txt is the text file with the table you want to convert.
 This produces "output.pdf" (matches the text file name with different extension). 
@@ -29,7 +29,7 @@ complete=True, you get a full LaTeX document, ready for compilation. When it is 
 
 
 
-### Syntax
+## Syntax
 Here is the output.txt file that produces output.pdf
 
 ```
