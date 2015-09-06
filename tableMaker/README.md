@@ -30,7 +30,7 @@ complete=True, you get a full LaTeX document, ready for compilation. When it is 
 
 
 ## Syntax
-Here is the output.txt file that produces output.pdf
+Here is the output.txt file and the resulting table
 
 ```
 \textbf{col1} | \textbf{col2} | \textbf{col3}  | \textbf{col4} | \textbf{col5}
@@ -42,8 +42,8 @@ a             | b             | c              | d             | e
 a             | b             | c              | d             | e
 ```
 
-output.pdf looks like
-![output.pdf](/images/output.png)
+
+![output.pdf](https://raw.githubusercontent.com/aminnj/makers/master/tableMaker/images/output.png)
 
 * You can specify normal latex (note the textbf and $$)
 * Yes, $\met$ is built in, as is $\pt$, $\mt$, and $\mtmin$. :)
