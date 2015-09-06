@@ -41,6 +41,10 @@ a             | mrc 2 1 rows  | mrc 3 3 $\met$ | d             | e
 a             | b             | c              | d             | e
 a             | b             | c              | d             | e
 ```
+
+output.pdf looks like
+![output.pdf](/images/output.png)
+
 * You can specify normal latex (note the textbf and $$)
 * Yes, $\met$ is built in, as is $\pt$, $\mt$, and $\mtmin$. :)
 * `mrc # # [text]` is the format to specify a multirow/column environment. First number specifies the number

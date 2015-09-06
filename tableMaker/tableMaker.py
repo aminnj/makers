@@ -130,6 +130,7 @@ def makePDF(content,fname):
         print "_"*40
         print "\n".join(out.split("\n")[-30:])
     else:
+        status,out = commands.getstatusoutput("pdfcrop %s %s" % (basename+".pdf", basename+".pdf"))
         print "[TM] %s created" % (basename+".pdf")
 
 def getString(fname, complete=True):
