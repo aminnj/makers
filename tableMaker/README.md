@@ -49,7 +49,7 @@ a             | b             | c              | d             | e
 ![output.pdf](https://raw.githubusercontent.com/aminnj/makers/master/tableMaker/images/output.png)
 
 * You can specify normal latex (note the textbf and $$)
-* Yes, $\met$ is built in, as is $\pt$, $\mt$, and $\mtmin$. :)
+* Yes, $\met$ is built in, as is $\pt$, $\mt$, $\Ht$, and $\mtmin$. :)
 * `mrc # # [text]` is the format to specify a multirow/column environment. First number specifies the number
   of rows, second specifies the number of columns, and third ([text]) is simply the content to put into the box.
   Note that this code is placed in the top left cell that will comprise the combined box. Look at output.pdf 
