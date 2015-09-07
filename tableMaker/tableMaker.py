@@ -37,7 +37,7 @@ def listToRanges(a,addOne=True):
     return ranges
 
 
-def makeTable(lines, complete=True):
+def makeTableTeX(lines, complete=True):
     # clean lines and get maximum number of columns
     rows = []
     maxcols = -1
@@ -119,11 +119,13 @@ def makeTable(lines, complete=True):
 
 def makePDF(content,fname):
     basename = ".".join(fname.split(".")[:-1])
+    basedir = "/".join(fname.split("/")[:-1])
+    print basename, basedir
     fh = open(basename+".tex","w")
     fh.write(content)
     fh.close()
 
-    status,out = commands.getstatusoutput("pdflatex -interaction=nonstopmode %s" % (basename+".tex"))
+    status,out = commands.getstatusoutput("pdflatex -interaction=nonstopmode -output-directory=%s %s" % (basedir, basename+".tex"))
     # print out
     if(" Error" in out):
         print "[TM] ERROR: Tried to compile, but failed. Last few lines of printout below."
@@ -131,15 +133,19 @@ def makePDF(content,fname):
         print "\n".join(out.split("\n")[-30:])
     else:
         status,out = commands.getstatusoutput("pdfcrop %s %s" % (basename+".pdf", basename+".pdf"))
-        print "[TM] %s created" % (basename+".pdf")
+        print "[TM] Created %s" % (basename+".pdf")
 
 def getString(fname, complete=True):
     # complete=True returns full blown compileable document
     # complete=False just returns the tabular part for embedding
     fh = open(fname,"r")
-    content = makeTable(fh.readlines(), complete)
+    content = makeTableTeX(fh.readlines(), complete)
     fh.close()
     return content
+
+def makeTable(fname):
+    content = getString(fname)
+    makePDF(content, fname)
 
 
 if __name__=='__main__':
@@ -149,14 +155,14 @@ if __name__=='__main__':
             fname = sys.argv[-1]
 
         fh = open(fname,"r")
-        content = makeTable(fh.readlines())
+        content = makeTableTeX(fh.readlines())
         fh.close()
 
         makePDF(content, fname)
     else:
         lines = []
         for item in sys.stdin: lines.append(item)
-        content = makeTable(lines)
+        content = makeTableTeX(lines)
 
         print content
 

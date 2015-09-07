@@ -27,6 +27,9 @@ This takes in the same text file and returns the LaTeX string. When
 complete=True, you get a full LaTeX document, ready for compilation. When it is False, you only get the "\begin{tabular} ... \end{tabular}" part, so you can embed the table in other LaTeX code if desired.
 
 
+*Alternatively, if you are lazy and don't care about the details, you can do `tm.makeTable("tables/table1.txt")` to produce `tables/table1.pdf`! Easy peasy.*
+
+
 
 
 ## Syntax
