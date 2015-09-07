@@ -11,6 +11,7 @@ beginStr = """
 \\newcommand{\\mt}{m_\\mathrm{T}}
 \\newcommand{\\pt}{p_\\mathrm{T}}
 \\newcommand{\\mtmin}{m_{T}^\\mathrm{min}}
+\\newcommand{\\Ht}{h_{T}}
 \\renewcommand{\\arraystretch}{1.2}
 \\begin{document}
 \\pagenumbering{gobble}% remove (eat) page numbers
@@ -120,7 +121,6 @@ def makeTableTeX(lines, complete=True):
 def makePDF(content,fname):
     basename = ".".join(fname.split(".")[:-1])
     basedir = "/".join(fname.split("/")[:-1])
-    print basename, basedir
     fh = open(basename+".tex","w")
     fh.write(content)
     fh.close()
