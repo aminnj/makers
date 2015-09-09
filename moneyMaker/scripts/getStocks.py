@@ -88,8 +88,10 @@ def saveStock(stock, yearStart, yearEnd):
     pickle.dump(dOld, fh)
     fh.close()
 
+    print "[MM] %s: Successfully saved data for time period (%i-%i)." % (stock, yearStart, yearEnd)
 
 
-saveStock("AAPL", 2001, 2015)
-saveStock("AAPL", 2002, 2004)
+
+# saveStock("AAPL", 2001, 2015)
+# saveStock("AAPL", 2002, 2004)
 
