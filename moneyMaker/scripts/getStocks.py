@@ -26,7 +26,7 @@ def saveStock(stock, yearStart, yearEnd):
         timeFirstDay = time.mktime(firstDay.timetuple())
         timeLastDay = time.mktime(lastDay.timetuple())
 
-        if ( timeFirstDay > dOld["firstTime"] and timeLastDay < dOld["lastTime"] ):
+        if ( (timeFirstDay > dOld["firstTime"]) and (timeLastDay < dOld["lastTime"]) ):
             print "[MM] %s: Already saved specified time period (%i-%i)." % (stock, yearStart, yearEnd)
             return
 
