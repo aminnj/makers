@@ -39,7 +39,7 @@ def makeHist(vals, filename, title=None, nbins=50):
     fig.savefig("%s" % (filename), bbox_inches='tight')
     print "Saved hist %s" % filename
 
-def makeCandlestick(stock, filename, title=None):
+def makeCandlestick(stock, filename, title=None, shading={}):
     if not title:
         title = filename.split("/")[-1]
         title = ".".join(title.split(".")[:-1])
@@ -63,4 +63,11 @@ def makeCandlestick(stock, filename, title=None):
     mf.candlestick_ohlc(ax, quotes, width=0.6)
     ax.xaxis_date()
     ax.autoscale_view()
+
+    if(shading):
+        # keys are the days, vals are the shade color
+        for day in shading.keys():
+            plt.axvspan(day-0.5,day+0.5, color=shading[day], alpha=0.2,lw=0)
+
+
     fig.savefig("%s" % (filename), bbox_inches='tight')
