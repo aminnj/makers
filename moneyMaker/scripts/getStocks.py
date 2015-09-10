@@ -147,7 +147,6 @@ def getStock(ticker, d1, d2):
     day1, day2 = tuple2inum(d1), tuple2inum(d2)
 
     for day in dOld["days"].keys():
-        print day1, day, day2
         if( day1 <= day <= day2 ):
             d["days"][day] = dOld["days"][day]
 
