@@ -3,17 +3,14 @@ import pickle, gzip
 from matplotlib.dates import date2num, num2date
 from matplotlib.cbook import iterable
 
+import utils as u
+
 # conventions: d1, d2 are 3-tuples of year,month,day
 #              dt1, dt2, are datetime objects
 #              day1, day2, are ints, given by #days+1 since 01-01-01
 # => http://matplotlib.org/api/dates_api.html#matplotlib.dates.date2num
 
 storageDir = "../data/"
-
-def date2inum(dt): return int(date2num(dt))
-def tuple2inum(dt):
-    dt = datetime.datetime(*dt)
-    return int(date2num(dt))
 
 def saveStock(ticker, d1, d2):
     ticker = ticker.upper()
@@ -48,7 +45,7 @@ def saveStock(ticker, d1, d2):
         if(dt2.weekday() > 4): dt2 -= datetime.timedelta(days=dt2.weekday()-4)
 
         
-        d1new, d2new = date2inum(dt1), date2inum(dt2)
+        d1new, d2new = u.date2inum(dt1), u.date2inum(dt2)
 
         # print dt1, dt2, dt1.weekday(), dt2.weekday()
         # print d1new, d2new, dOld["day1"], dOld["day2"]
@@ -82,7 +79,7 @@ def saveStock(ticker, d1, d2):
         openPrice,closePrice,highPrice,lowPrice,adjustedClosePrice = map(lambda x: round(float(x),2), (openPrice,closePrice,highPrice,lowPrice,adjClosePrice))
         volume = int(volume)
         date = datetime.datetime.strptime(dateString,"%Y-%m-%d") # looks like 2001-01-17
-        day = date2inum(date)
+        day = u.date2inum(date)
         
         d["days"][day] = { 
                 "o": openPrice,
@@ -106,7 +103,7 @@ def saveStock(ticker, d1, d2):
     # if data already exists, then add only the new dates to it
     if(alreadyExists):
         for day in d["days"].keys():
-            if ( not (date2inum(datetime.datetime(*d1)) <= day <= date2inum(datetime.datetime(*d2))) ): dOld[day] = d[day]
+            if ( not (u.date2inum(datetime.datetime(*d1)) <= day <= u.date2inum(datetime.datetime(*d2))) ): dOld[day] = d[day]
 
         # stretch out the ranges when adding the new dates, if needed
         if(dOld["day1"] <= d["day1"]):
@@ -144,7 +141,7 @@ def getStock(ticker, d1, d2):
 
 
     dt1, dt2 = datetime.datetime(*d1), datetime.datetime(*d2)
-    day1, day2 = tuple2inum(d1), tuple2inum(d2)
+    day1, day2 = u.tuple2inum(d1), u.tuple2inum(d2)
 
     for day in dOld["days"].keys():
         if( day1 <= day <= day2 ):
