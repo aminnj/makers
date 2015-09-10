@@ -39,7 +39,8 @@ def makeHist(vals, filename, title=None, nbins=50):
     fig.savefig("%s" % (filename), bbox_inches='tight')
     print "Saved hist %s" % filename
 
-def makeCandlestick(stock, filename, title=None, shading={}):
+def makeCandlestick(quotes, filename, title=None, shading={}):
+    # each element of quotes is [day, open, high, low, close]
     if not title:
         title = filename.split("/")[-1]
         title = ".".join(title.split(".")[:-1])
@@ -47,11 +48,6 @@ def makeCandlestick(stock, filename, title=None, shading={}):
     fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
     fig.suptitle(title, fontsize=20)
     fig.subplots_adjust(bottom=0.2)
-    quotes = []
-    for day in stock.keys():
-        vals = stock[day]
-        o, h, l, c = vals["o"], vals["h"], vals["l"], vals["c"]
-        quotes.append( [day, o,h,l,c] )
 
     mondays = md.WeekdayLocator(md.MONDAY)    # major ticks on the mondays
     alldays = md.DayLocator()                 # minor ticks on the days
