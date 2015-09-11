@@ -9,7 +9,7 @@ import utils as u
 plotdir = "../plots/"
 
 # stock = gs.getStock("AAPL", 2005, 2010)
-stock = gs.getStock("DIS", (2008, 6, 20), (2009, 10, 7))["days"]
+stock = gs.getStock("DIS", (2008, 6, 20), (2010, 10, 7))["days"]
 
 quotes = []
 normquotes = []
@@ -38,16 +38,15 @@ quotes = np.array(quotes)
 
 km = skc.KMeans(n_clusters=5)
 clusters = km.fit_predict( normquotes[:,[1,2,3,4]] )
-print clusters
 
-shading = {}
+shading = []
 colors = list("krbgcmyw") # only allows up to 8 colors :(
 
 for i,day in enumerate(quotes[:,0]):
-    shading[day] = colors[clusters[i]]
+    shading.append([ day, colors[clusters[i]] ])
 
 
 
 
-u.makeCandlestick(quotes, "../plots/candlestick.png", shading=shading)
+u.makeCandlestick(quotes, "../plots/candlestick.png", shading=shading, window=[(2009,7,10),(2009,8,10)])
 

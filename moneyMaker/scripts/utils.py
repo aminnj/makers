@@ -39,7 +39,22 @@ def makeHist(vals, filename, title=None, nbins=50):
     fig.savefig("%s" % (filename), bbox_inches='tight')
     print "Saved hist %s" % filename
 
-def makeCandlestick(quotes, filename, title=None, shading={}):
+def makeCandlestick(quotes, filename, title=None, shading=None, window=None):
+    if window:
+        newquotes = []
+        day1, day2 = map(tuple2inum,window)
+        for quote in quotes:
+            if( day1 <= quote[0] <= day2 ): newquotes.append(quote)
+        quotes = newquotes
+
+        if shading:
+            newshading = []
+            for elem in shading:
+                if( day1 <= elem[0] <= day2 ): newshading.append(elem)
+            shading = newshading
+
+
+
     # each element of quotes is [day, open, high, low, close]
     if not title:
         title = filename.split("/")[-1]
@@ -56,14 +71,13 @@ def makeCandlestick(quotes, filename, title=None, shading={}):
     ax.xaxis.set_major_locator(mondays)
     ax.xaxis.set_minor_locator(alldays)
     ax.xaxis.set_major_formatter(weekFormatter)
-    mf.candlestick_ohlc(ax, quotes, width=0.6)
+    mf.candlestick_ohlc(ax, quotes, width=0.5)
     ax.xaxis_date()
     ax.autoscale_view()
 
-    if(shading):
-        # keys are the days, vals are the shade color
-        for day in shading.keys():
-            plt.axvspan(day-0.5,day+0.5, color=shading[day], alpha=0.2,lw=0)
+    if shading:
+        for day, color in shading:
+            plt.axvspan(day-0.5,day+0.5, color=color, alpha=0.2,lw=0)
 
 
     fig.savefig("%s" % (filename), bbox_inches='tight')
