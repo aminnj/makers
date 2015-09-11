@@ -665,3 +665,13 @@ def bb(prices, period, num_std_dev=2.0):
         bbs[idx, 5] = (prices[idx] - bbs[idx, 2]) / bbs[idx, 4]
 
     return bbs
+
+def bbtimes(timeprices, period, num_std_dev=2.0):
+    times = timeprices[:,0]
+    prices = timeprices[:,1]
+    bbprices = bb(prices, period, num_std_dev) # feed the function only the prices
+    times = times[-len(bbprices):] # make sure times and bb output have same length from the end
+    return np.c_[ times, bbprices ] # add the time back in as a column
+
+# timeprices = np.array([ [1,86.16], [2,89.09], [3,88.78], [4,90.32], [5,89.07], [6,91.15], [7,89.44] ])
+# print bbtimes(timeprices,3)

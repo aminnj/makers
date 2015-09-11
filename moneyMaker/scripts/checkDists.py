@@ -15,8 +15,8 @@ stock = gs.getStock("DIS", (2008, 6, 20), (2010, 10, 7))["days"]
 quotes = []
 normquotes = []
 fractions = []
-close = []
-for day in stock.keys():
+timesclose = []
+for day in sorted(stock.keys()):
     vals = stock[day]
     o, h, l, c = vals["o"], vals["h"], vals["l"], vals["c"]
 
@@ -30,16 +30,16 @@ for day in stock.keys():
     normquotes.append( [day,no,nh,nl,nc] )
     # fractions.append( abs(o-c)/(h-l) ) # what fraction of (high-low) is |open-close|?
     fractions.append( ((o+c)/2 - l)/(h-l) ) # how far from the low is the center of the body?
-    close.append(c)
+    timesclose.append([day,c])
 
 # makeHist(prices[:,0], "openhist.png")
 
 u.makeHist(fractions, "../plots/fractions.png", title="|o-c|/(h-l)", nbins=50)
 
-close = np.array(close)
-bbands = ind.bb(close, 14)
-u.makeHist(bbands[:,0], "../plots/bbands_upper.png", title="Bollinger Bands", nbins=50)
-u.makeHist(bbands[:,2], "../plots/bbands_lower.png", title="Bollinger Bands", nbins=50)
+timesclose = np.array(timesclose)
+bbands = ind.bbtimes(timesclose, 14)
+u.makePlot(bbands[:,0],bbands[:,1], "../plots/bbands_upper.png", title="Bollinger Bands")
+u.makePlot(bbands[:,0],bbands[:,3], "../plots/bbands_lower.png", title="Bollinger Bands")
 
 normquotes = np.array(normquotes)
 quotes = np.array(quotes)
