@@ -26,7 +26,7 @@ def inum2date(dt):
 ### PLOTTING ###
 def web(filename,user="namin"):
     os.system("scp %s %s@uaf-6.t2.ucsd.edu:~/public_html/dump/" % (filename, user))
-    print "Copied to uaf-6.t2.ucsd.edu/~%s/dump/%s" % (filename, user)
+    print "Copied to uaf-6.t2.ucsd.edu/~%s/dump/%s" % (filename.split("/")[-1], user)
 
 def makeHist(vals, filename, title=None, nbins=50):
     # vals is a 1d array of values
