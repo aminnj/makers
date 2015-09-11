@@ -1,4 +1,4 @@
-import time, datetime
+import time, datetime, os
 import numpy as np
 import matplotlib as mpl
 mpl.use('Agg')
@@ -26,7 +26,7 @@ def inum2date(dt):
 ### PLOTTING ###
 def web(filename,user="namin"):
     os.system("scp %s %s@uaf-6.t2.ucsd.edu:~/public_html/dump/" % (filename, user))
-    print "Copied to uaf-6.t2.ucsd.edu/~%s/dump/%s" % (filename.split("/")[-1], user)
+    print "Copied to uaf-6.t2.ucsd.edu/~%s/dump/%s" % (user, filename.split("/")[-1])
 
 def makeHist(vals, filename, title=None, nbins=50):
     # vals is a 1d array of values
@@ -52,45 +52,59 @@ def makePlot(vx, vy, filename, title=None):
     fig.savefig("%s" % (filename), bbox_inches='tight')
     print "Saved plot %s" % filename
 
-def makeCandlestick(quotes, filename, title=None, shading=None, window=None):
+def keepIfBetween(vals, tuple1, tuple2, idx=0):
+    # return the elements in vals for which the date (val[idx]) is in specified range
+    day1, day2 = tuple2inum(tuple1), tuple2inum(tuple2)
+
+    # ndarray
+    if(type(vals) is np.ndarray): return vals[ (day1 <= vals[:,0]) & (vals[:,0] <= day2) ]
+
+    # list
+    return [val for val in vals if day1 <= val[0] <= day2]
+
+
+def makeCandlestick(quotes, filename, title=None, shading=None, bbands=None, window=None, averages=None):
     if window:
-        newquotes = []
-        day1, day2 = map(tuple2inum,window)
-        for quote in quotes:
-            if( day1 <= quote[0] <= day2 ): newquotes.append(quote)
-        quotes = newquotes
-
-        if shading:
-            newshading = []
-            for elem in shading:
-                if( day1 <= elem[0] <= day2 ): newshading.append(elem)
-            shading = newshading
-
-
+        quotes = keepIfBetween(quotes, window[0], window[1])
+        if shading is not None: shading = keepIfBetween(shading, window[0], window[1])
+        if bbands is not None: bbands = keepIfBetween(bbands, window[0], window[1])
+        if averages is not None: averages = [keepIfBetween(avg, window[0], window[1]) for avg in averages]
 
     # each element of quotes is [day, open, high, low, close]
     if not title:
         title = filename.split("/")[-1]
         title = ".".join(title.split(".")[:-1])
 
-    fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
+    fig, ax = plt.subplots( nrows=1, ncols=1 , figsize=(12,8) )  # create figure & 1 axis
     fig.suptitle(title, fontsize=20)
     fig.subplots_adjust(bottom=0.2)
 
-    mondays = md.WeekdayLocator(md.MONDAY)    # major ticks on the mondays
-    alldays = md.DayLocator()                 # minor ticks on the days
-    weekFormatter = md.DateFormatter('%b %d') # e.g., Jan 12
-    dayFormatter = md.DateFormatter('%d')     # e.g., 12
-    ax.xaxis.set_major_locator(mondays)
-    ax.xaxis.set_minor_locator(alldays)
-    ax.xaxis.set_major_formatter(weekFormatter)
-    mf.candlestick_ohlc(ax, quotes, width=0.5)
+    # mondays = md.WeekdayLocator(md.MONDAY)    # major ticks on the mondays
+    # alldays = md.DayLocator()                 # minor ticks on the days
+    # weekFormatter = md.DateFormatter('%b %d') # e.g., Jan 12
+    # dayFormatter = md.DateFormatter('%d')     # e.g., 12
+    # ax.xaxis.set_major_locator(mondays)
+    # ax.xaxis.set_minor_locator(alldays)
+    # ax.xaxis.set_major_formatter(weekFormatter)
+    mf.candlestick_ohlc(ax, quotes, width=0.6)
+
     ax.xaxis_date()
     ax.autoscale_view()
 
-    if shading:
+    ax.xaxis.set_major_formatter(md.DateFormatter("%d %b"))
+    fig.autofmt_xdate()
+
+    if shading is not None:
         for day, color in shading:
             plt.axvspan(day-0.5,day+0.5, color=color, alpha=0.2,lw=0)
+    
+    if bbands is not None:
+        ax.plot(bbands[:,0],bbands[:,1],'r',lw=1,alpha=0.7) # upper
+        ax.plot(bbands[:,0],bbands[:,2],'k--',lw=1,alpha=0.5) # middle
+        ax.plot(bbands[:,0],bbands[:,3],'r',lw=1,alpha=0.7) # lower
 
+    if averages is not None:
+        for i,avg in enumerate(averages):
+            ax.plot(avg[:,0],avg[:,1],color=(0.1*i,0,0.4+0.08*i),lw=1,alpha=0.7) # upper
 
     fig.savefig("%s" % (filename), bbox_inches='tight')
