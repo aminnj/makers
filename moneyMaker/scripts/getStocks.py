@@ -103,15 +103,16 @@ def saveStock(ticker, d1, d2):
     # if data already exists, then add only the new dates to it
     if(alreadyExists):
         for day in d["days"].keys():
-            if ( not (u.date2inum(datetime.datetime(*d1)) <= day <= u.date2inum(datetime.datetime(*d2))) ): dOld[day] = d[day]
+            if ( not (u.tuple2inum(d1) <= day <= u.tuple2inum(d2)) ): dOld[day] = d[day]
 
         # stretch out the ranges when adding the new dates, if needed
-        if(dOld["day1"] <= d["day1"]):
-            d["day1"] = dOld["day1"]
-            d["d1"] = dOld["d1"]
-        if(dOld["day2"] <= d["day2"]):
-            d["day2"] = dOld["day2"]
-            d["d2"] = dOld["d2"]
+
+        if(d["day1"] <= dOld["day1"]):
+            dOld["day1"] = d["day1"]
+            dOld["d1"] = d["d1"]
+        if(d["day2"] >= dOld["day2"]):
+            dOld["day2"] = d["day2"]
+            dOld["d2"] = d["d2"]
     else: dOld = d
 
     fh = gzip.open(pickleFile, "wb")

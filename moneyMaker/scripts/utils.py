@@ -21,7 +21,12 @@ def tuple2inum(dt):
 def inum2date(dt):
     # takes #days+1 since 01-01-01
     # return datetime object
-    return int(num2date(dt))
+    return num2date(dt)
+def inum2tuple(dt):
+    # takes #days+1 since 01-01-01
+    # return (y,m,d) tuple
+    dt = inum2date(dt)
+    return (dt.year, dt.month, dt.day)
 
 ### PLOTTING ###
 def web(filename,user="namin"):
@@ -63,10 +68,10 @@ def keepIfBetween(vals, tuple1, tuple2, idx=0):
     return [val for val in vals if day1 <= val[0] <= day2]
 
 
-def makeCandlestick(quotes, filename, title=None, shading=None, bbands=None, window=None, averages=None):
+def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, window=None, averages=None):
     if window:
         quotes = keepIfBetween(quotes, window[0], window[1])
-        if shading is not None: shading = keepIfBetween(shading, window[0], window[1])
+        if shadings is not None: shadings = [keepIfBetween(shading, window[0], window[1]) for shading in shadings]
         if bbands is not None: bbands = keepIfBetween(bbands, window[0], window[1])
         if averages is not None: averages = [keepIfBetween(avg, window[0], window[1]) for avg in averages]
 
@@ -94,9 +99,20 @@ def makeCandlestick(quotes, filename, title=None, shading=None, bbands=None, win
     ax.xaxis.set_major_formatter(md.DateFormatter("%d %b"))
     fig.autofmt_xdate()
 
-    if shading is not None:
-        for day, color in shading:
-            plt.axvspan(day-0.5,day+0.5, color=color, alpha=0.2,lw=0)
+    if shadings is not None:
+        for i,shading in enumerate(shadings):
+            for j in range(len(shading)):
+                dayleft = shading[j][0]
+                if(j == len(shading)-1): dayright = dayleft+1
+                else: dayright = shading[j+1][0]
+
+                # bottom 90% for shading 1
+                if(i == 0):
+                    plt.axvspan(dayleft-0.5,dayright-0.5, 0.0,0.9, color=shading[j][1], alpha=0.35,lw=0)
+                elif(i == 1):
+                    plt.axvspan(dayleft-0.5,dayright-0.5, 0.9,1.0, color=shading[j][1], alpha=0.35,lw=0)
+                else:
+                    pass
     
     if bbands is not None:
         ax.plot(bbands[:,0],bbands[:,1],'r',lw=1,alpha=0.7) # upper
@@ -105,6 +121,7 @@ def makeCandlestick(quotes, filename, title=None, shading=None, bbands=None, win
 
     if averages is not None:
         for i,avg in enumerate(averages):
-            ax.plot(avg[:,0],avg[:,1],color=(0.1*i,0,0.4+0.08*i),lw=1,alpha=0.7) # upper
+            # ax.plot(avg[:,0],avg[:,1],color=(0.1*i,0,0.4+0.08*i),lw=1,alpha=0.7) # upper
+            ax.plot(avg[:,0],avg[:,1],color=(1.0,1.0-0.1*i,0.0),lw=1,alpha=0.7) # upper
 
     fig.savefig("%s" % (filename), bbox_inches='tight')
