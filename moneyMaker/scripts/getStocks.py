@@ -2,6 +2,7 @@ import urllib2, time, datetime
 import pickle, gzip
 from matplotlib.dates import date2num, num2date
 from matplotlib.cbook import iterable
+from pprint import pprint
 
 import utils as u
 
@@ -43,14 +44,8 @@ def saveStock(ticker, d1, d2):
         # move d1 up to be monday
         if(dt1.weekday() > 4): dt1 += datetime.timedelta(days=7-dt1.weekday())
         if(dt2.weekday() > 4): dt2 -= datetime.timedelta(days=dt2.weekday()-4)
-
         
         d1new, d2new = u.date2inum(dt1), u.date2inum(dt2)
-
-        # print dt1, dt2, dt1.weekday(), dt2.weekday()
-        # print d1new, d2new, dOld["day1"], dOld["day2"]
-        # print num2date(dOld["day1"])
-        # print num2date(dOld["day1"]).weekday()
 
         if ( (d1new >= dOld["day1"]) and (d2new <= dOld["day2"]) ):
             print "[MM] %s: Already saved specified time period [(%i,%i,%i)-(%i,%i,%i)]." % (ticker, d1[0],d1[1],d1[2], d2[0],d2[1],d2[2])
@@ -103,10 +98,9 @@ def saveStock(ticker, d1, d2):
     # if data already exists, then add only the new dates to it
     if(alreadyExists):
         for day in d["days"].keys():
-            if ( not (u.tuple2inum(d1) <= day <= u.tuple2inum(d2)) ): dOld[day] = d[day]
+            dOld["days"][day] = d["days"][day]
 
         # stretch out the ranges when adding the new dates, if needed
-
         if(d["day1"] <= dOld["day1"]):
             dOld["day1"] = d["day1"]
             dOld["d1"] = d["d1"]
@@ -119,7 +113,7 @@ def saveStock(ticker, d1, d2):
     pickle.dump(dOld, fh)
     fh.close()
 
-    d1, d2 = d["d1"], d["d2"]
+    d1, d2 = dOld["d1"], dOld["d2"]
     print "[MM] %s: Successfully saved data for time period [(%i,%i,%i)-(%i,%i,%i)]." % (ticker, d1[0],d1[1],d1[2], d2[0],d2[1],d2[2])
 
 def getStock(ticker, d1, d2):
@@ -151,5 +145,5 @@ def getStock(ticker, d1, d2):
     return d
 
 # saveStock("INTC", (2005,1,11), (2015,2,17))
-# getStock("INTC", (2006,1,8), (2006,2,8))
+# getStock("INTC", (2006,2,3), (2006,2,23))
 
