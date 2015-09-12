@@ -211,13 +211,14 @@ def sma(prices, period):
     # only required for the commented code below
     #k = period
 
-    for idx in range(sma_range):
+    for idx in range(num_prices):
         # this is the code, but using np.mean below is faster and simpler
         #for period_num in range(period):
         #    smas[idx] += prices[idx + period_num]
         #smas[idx] /= k
 
-        smas[idx] = np.mean(prices[idx:idx + period])
+        if idx >= period:
+            smas[idx-period] = np.mean(prices[idx-period:idx])
 
     return smas
 
@@ -653,16 +654,19 @@ def bb(prices, period, num_std_dev=2.0):
 
     simple_ma = sma(prices, period)
 
-    for idx in range(bb_range):
-        std_dev = np.std(prices[idx:idx + period])
+    for idx in range(num_prices):
+        if idx >= period:
 
-        # upper, middle, lower bands, bandwidth, range and %B
-        bbs[idx, 0] = simple_ma[idx] + std_dev * num_std_dev
-        bbs[idx, 1] = simple_ma[idx]
-        bbs[idx, 2] = simple_ma[idx] - std_dev * num_std_dev
-        bbs[idx, 3] = (bbs[idx, 0] - bbs[idx, 2]) / bbs[idx, 1]
-        bbs[idx, 4] = bbs[idx, 0] - bbs[idx, 2]
-        bbs[idx, 5] = (prices[idx] - bbs[idx, 2]) / bbs[idx, 4]
+            index = idx - period
+            std_dev = np.std(prices[index:index + period])
+
+            # upper, middle, lower bands, bandwidth, range and %B
+            bbs[index, 0] = simple_ma[index] + std_dev * num_std_dev
+            bbs[index, 1] = simple_ma[index]
+            bbs[index, 2] = simple_ma[index] - std_dev * num_std_dev
+            bbs[index, 3] = (bbs[index, 0] - bbs[index, 2]) / bbs[index, 1]
+            bbs[index, 4] = bbs[index, 0] - bbs[index, 2]
+            bbs[index, 5] = (prices[idx-1] - bbs[index, 2]) / bbs[index, 4]
 
     return bbs
 
@@ -679,6 +683,55 @@ def ematimes(timeprices, period, ema_type=0):
     emaprices = ema(prices, period, ema_type) # feed the function only the prices
     times = times[-len(emaprices):] # make sure times and bb output have same length from the end
     return np.c_[ times, emaprices ] # add the time back in as a column
+
+def crossovertimes(matimes):
+    # takes a list of moving averages and returns a list where
+    # each element is a (day,code) pair. code=1 if trendlines crossed upwards
+    # code=0 if trendlines crossed downwards
+
+    # shortest first
+    mas = sorted(matimes, key=lambda e: len(e))
+    mintimesteps = len(mas[0])
+    macrossover = [[] for i in range(mintimesteps)]
+    for ima,ma in enumerate(mas):
+        ma = ma[-mintimesteps:]
+        for it in range(mintimesteps): macrossover[it].append( ma[it] )
+
+    # each element of emacrossover represents one day, meaning it is an array of (time,price) pairs for each MA
+    # find out if the prices are increasing or decreasing between the MAs for each day
+    macrossover = np.array(macrossover)
+
+    crossover = [] # each element will be a pair (day, code) where code=1 for increasing, -1 for decreasing, or 0 otherwise
+    for dayinfo in macrossover:
+        prices = dayinfo[:,1]
+        day = dayinfo[0][0]
+        isIncreasing = all(x<y for x,y in zip(prices, prices[1:]))
+        isDecreasing = all(x>y for x,y in zip(prices, prices[1:]))
+
+        if(isIncreasing): crossover.append([day, 1])
+        elif(isDecreasing): crossover.append([day, -1])
+        else: crossover.append([day, 0])
+
+    prevcode = -999
+    crossovertimes = [] # each element will be a pair (day, code) where code=1 if trendlines crossed upwards, or 0 if trendlines crossed downwards
+    wasRising = False
+    for day, code in crossover:
+        if   prevcode == 0 and code == 1 and not wasRising: # none to rising
+            crossovertimes.append([day,1])
+            wasRising = True
+        elif prevcode == -1 and code == 1: # falling to rising
+            crossovertimes.append([day,1])
+            wasRising = True
+        elif prevcode == 0 and code == -1 and wasRising:  # none to falling
+            crossovertimes.append([day,0])
+            wasRising = False
+        elif prevcode == 1 and code == -1: # rising to falling
+            crossovertimes.append([day,0])
+            wasRising = False
+        else: pass
+
+        prevcode = code
+    return crossovertimes
 
 # timeprices = np.array([ [1,86.16], [2,89.09], [3,88.78], [4,90.32], [5,89.07], [6,91.15], [7,89.44] ])
 # print bbtimes(timeprices,3)

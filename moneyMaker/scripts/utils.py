@@ -28,6 +28,17 @@ def inum2tuple(dt):
     dt = inum2date(dt)
     return (dt.year, dt.month, dt.day)
 
+def keepIfBetween(vals, tuple1, tuple2, idx=0):
+    # return the elements in vals for which the date (val[idx]) is in specified range
+    day1, day2 = tuple2inum(tuple1), tuple2inum(tuple2)
+
+    # ndarray
+    if(type(vals) is np.ndarray): return vals[ (day1 <= vals[:,0]) & (vals[:,0] <= day2) ]
+
+    # list
+    return [val for val in vals if day1 <= val[0] <= day2]
+
+
 ### PLOTTING ###
 def web(filename,user="namin"):
     os.system("scp %s %s@uaf-6.t2.ucsd.edu:~/public_html/dump/" % (filename, user))
@@ -57,16 +68,6 @@ def makePlot(vx, vy, filename, title=None):
     fig.savefig("%s" % (filename), bbox_inches='tight')
     print "Saved plot %s" % filename
 
-def keepIfBetween(vals, tuple1, tuple2, idx=0):
-    # return the elements in vals for which the date (val[idx]) is in specified range
-    day1, day2 = tuple2inum(tuple1), tuple2inum(tuple2)
-
-    # ndarray
-    if(type(vals) is np.ndarray): return vals[ (day1 <= vals[:,0]) & (vals[:,0] <= day2) ]
-
-    # list
-    return [val for val in vals if day1 <= val[0] <= day2]
-
 
 def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, window=None, averages=None):
     if window:
@@ -84,13 +85,6 @@ def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, wi
     fig.suptitle(title, fontsize=20)
     fig.subplots_adjust(bottom=0.2)
 
-    # mondays = md.WeekdayLocator(md.MONDAY)    # major ticks on the mondays
-    # alldays = md.DayLocator()                 # minor ticks on the days
-    # weekFormatter = md.DateFormatter('%b %d') # e.g., Jan 12
-    # dayFormatter = md.DateFormatter('%d')     # e.g., 12
-    # ax.xaxis.set_major_locator(mondays)
-    # ax.xaxis.set_minor_locator(alldays)
-    # ax.xaxis.set_major_formatter(weekFormatter)
     mf.candlestick_ohlc(ax, quotes, width=0.6)
 
     ax.xaxis_date()
@@ -100,19 +94,16 @@ def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, wi
     fig.autofmt_xdate()
 
     if shadings is not None:
+        # split up bands to give more real estate to the first band and less to subsequent ones
+        ycutoffs = np.sqrt(np.sqrt(np.sqrt([np.linspace(0.0,1.0,num=len(shadings)+1)][0]))) # values like 0.0, 0.87, 0.95, 1.0 if num=4
         for i,shading in enumerate(shadings):
             for j in range(len(shading)):
                 dayleft = shading[j][0]
-                if(j == len(shading)-1): dayright = dayleft+1
+                if(j == len(shading)-1): dayright = ax.get_xlim()[1]
                 else: dayright = shading[j+1][0]
 
-                # bottom 90% for shading 1
-                if(i == 0):
-                    plt.axvspan(dayleft-0.5,dayright-0.5, 0.0,0.9, color=shading[j][1], alpha=0.35,lw=0)
-                elif(i == 1):
-                    plt.axvspan(dayleft-0.5,dayright-0.5, 0.9,1.0, color=shading[j][1], alpha=0.35,lw=0)
-                else:
-                    pass
+
+                plt.axvspan(dayleft-0.5,dayright-0.5, ycutoffs[i],ycutoffs[i+1], color=shading[j][1], alpha=0.35,lw=0)
     
     if bbands is not None:
         ax.plot(bbands[:,0],bbands[:,1],'r',lw=1,alpha=0.7) # upper
@@ -121,7 +112,6 @@ def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, wi
 
     if averages is not None:
         for i,avg in enumerate(averages):
-            # ax.plot(avg[:,0],avg[:,1],color=(0.1*i,0,0.4+0.08*i),lw=1,alpha=0.7) # upper
             ax.plot(avg[:,0],avg[:,1],color=(1.0,1.0-0.1*i,0.0),lw=1,alpha=0.7) # upper
 
     fig.savefig("%s" % (filename), bbox_inches='tight')
