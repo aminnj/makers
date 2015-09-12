@@ -41,8 +41,8 @@ def keepIfBetween(vals, tuple1, tuple2, idx=0):
 
 ### PLOTTING ###
 def web(filename,user="namin"):
-    os.system("scp %s %s@uaf-6.t2.ucsd.edu:~/public_html/dump/" % (filename, user))
-    print "Copied to uaf-6.t2.ucsd.edu/~%s/dump/%s" % (user, filename.split("/")[-1])
+    os.system("scp %s %s@uaf-6.t2.ucsd.edu:~/public_html/dump/ >& /dev/null" % (filename, user))
+    print "[MM] Copied to uaf-6.t2.ucsd.edu/~%s/dump/%s" % (user, filename.split("/")[-1])
 
 def makeHist(vals, filename, title=None, nbins=50):
     # vals is a 1d array of values
@@ -114,4 +114,5 @@ def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, wi
         for i,avg in enumerate(averages):
             ax.plot(avg[:,0],avg[:,1],color=(1.0,1.0-0.1*i,0.0),lw=1,alpha=0.7) # upper
 
-    fig.savefig("%s" % (filename), bbox_inches='tight')
+    print "[MM] Printing image into %s" % filename
+    fig.savefig("%s" % (filename), bbox_inches='tight', format='png')

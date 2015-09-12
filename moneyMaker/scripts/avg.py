@@ -14,7 +14,7 @@ plotdir = "../plots/"
 # stock = gs.getStock("SNDK", (2008, 6, 20), (2010, 10, 7))["days"]
 
 stock = gs.getStock("WMT", (2008, 6, 20), (2015, 11, 7))["days"] # for calculating
-d1,d2 = (2013,3,10),(2014,6,15) # for plotting
+d1,d2 = (2014,3,10),(2014,6,15) # for plotting
 
 
 quotes = []
@@ -40,6 +40,7 @@ bbands = ind.bbtimes(timesclose, 20)
 emas = []
 for i in [1,3,4,8]:
     emas.append( ind.ematimes(timesclose,10*i) )
+
 
 # bbands discards early dates since it can't do a moving average for those
 # we reshape the other arrays to match up with bbands' size

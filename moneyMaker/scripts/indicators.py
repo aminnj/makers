@@ -297,7 +297,8 @@ def wma(prices, period):
     return wmas
 
 
-def ema(prices, period, ema_type=0):
+# default type = 1 matches up with mathematica's ema with alpha=2/(1+period)
+def ema(prices, period, ema_type=1):
     """
     Exponencial Moving Average (EMA) are used to smooth the data in an array to
     help eliminate noise and identify trends.
