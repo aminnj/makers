@@ -717,6 +717,7 @@ def crossovertimes(matimes):
     crossovertimes = [] # each element will be a pair (day, code) where code=1 if trendlines crossed upwards, or 0 if trendlines crossed downwards
     wasRising = False
     for day, code in crossover:
+        day = int(day)
         if   prevcode == 0 and code == 1 and not wasRising: # none to rising
             crossovertimes.append([day,1])
             wasRising = True
