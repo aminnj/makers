@@ -676,9 +676,9 @@ def bbtimes(timeprices, period, num_std_dev=2.0):
 def ematimes(timeprices, period, ema_type=0):
     times = timeprices[:,0]
     prices = timeprices[:,1]
-    bbprices = ema(prices, period, ema_type) # feed the function only the prices
-    times = times[-len(bbprices):] # make sure times and bb output have same length from the end
-    return np.c_[ times, bbprices ] # add the time back in as a column
+    emaprices = ema(prices, period, ema_type) # feed the function only the prices
+    times = times[-len(emaprices):] # make sure times and bb output have same length from the end
+    return np.c_[ times, emaprices ] # add the time back in as a column
 
 # timeprices = np.array([ [1,86.16], [2,89.09], [3,88.78], [4,90.32], [5,89.07], [6,91.15], [7,89.44] ])
 # print bbtimes(timeprices,3)

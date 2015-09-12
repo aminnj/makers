@@ -96,7 +96,7 @@ def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, wi
     ax.xaxis_date()
     ax.autoscale_view()
 
-    ax.xaxis.set_major_formatter(md.DateFormatter("%d %b"))
+    ax.xaxis.set_major_formatter(md.DateFormatter("%d %b '%y"))
     fig.autofmt_xdate()
 
     if shadings is not None:
