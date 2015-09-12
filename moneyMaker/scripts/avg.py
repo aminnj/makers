@@ -6,6 +6,7 @@ import sklearn.cluster as skc
 import getStocks as gs
 import utils as u
 import indicators as ind
+import cluster as cl
 
 plotdir = "../plots/"
 
@@ -13,8 +14,9 @@ plotdir = "../plots/"
 # stock = gs.getStock("SNDK", (2008, 6, 20), (2015, 11, 7))["days"]
 # stock = gs.getStock("SNDK", (2008, 6, 20), (2010, 10, 7))["days"]
 
-stock = gs.getStock("WMT", (2008, 6, 20), (2015, 11, 7))["days"] # for calculating
-d1,d2 = (2014,3,10),(2014,6,15) # for plotting
+# stock = gs.getStock("WMT", (2014, 2, 14), (2014, 3, 25))["days"] # for calculating
+stock = gs.getStock("WMT", (2009, 2, 15), (2014, 5, 1))["days"] # for calculating
+d1,d2 = (2013,8,9),(2014,4,25) # for plotting
 
 
 quotes = []
@@ -47,30 +49,21 @@ for i in [1,3,4,8]:
 normquotes = np.array(normquotes[-len(bbands):])
 quotes = np.array(quotes[-len(bbands):])
 
-km = skc.KMeans(n_clusters=5)
-# add more and more columns to data (c_ just puts columns side by side)
-data = np.c_[ normquotes[:,[1,2,3,4]] ]
-data = np.c_[ data, bbands[:,1]-quotes[:,1] ] # subtract out opening prices from bbands
-data = np.c_[ data, bbands[:,2]-quotes[:,1] ]
-data = np.c_[ data, bbands[:,3]-quotes[:,1] ]
+times, clusters = cl.clusterCandles(normquotes, nclusters=5, ncandles=3)
 
-clusters = km.fit_predict(data)
-colors = list("rbgkcmywrbgkcmyw") # only allows up to 16 colors, but it repeats after 8
-
+colors = list("rbgkcmyw") # only allows up to 8
 clustershading = []
-for i,day in enumerate(quotes[:,0]):
+for i, day in enumerate(times):
     clustershading.append([ day, colors[clusters[i]] ])
-
 
 crossovershading = []
 for day, rising in ind.crossovertimes(emas):
     crossovershading.append([day, 'g' if rising else 'r'])
 
-
-u.makeCandlestick(quotes, "../plots/candlestick.png", title="WMT (2009)", \
+u.makeCandlestick(quotes, "../plots/candlestick.svg", title="WMT (2009)", \
         shadings=[clustershading,crossovershading], \
         bbands=bbands, \
         window=[d1,d2], \
-        averages=emas )
-u.web("../plots/candlestick.png")
-
+        averages=emas, \
+        )
+u.web("../plots/candlestick.svg")

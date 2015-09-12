@@ -99,7 +99,7 @@ def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, wi
         for i,shading in enumerate(shadings):
             for j in range(len(shading)):
                 dayleft = shading[j][0]
-                if(j == len(shading)-1): dayright = ax.get_xlim()[1]
+                if(j == len(shading)-1): dayright = ax.get_xlim()[1]+0.6
                 else: dayright = shading[j+1][0]
 
 
@@ -115,4 +115,4 @@ def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, wi
             ax.plot(avg[:,0],avg[:,1],color=(1.0,1.0-0.1*i,0.0),lw=1,alpha=0.7) # upper
 
     print "[MM] Printing image into %s" % filename
-    fig.savefig("%s" % (filename), bbox_inches='tight', format='png')
+    fig.savefig("%s" % (filename), bbox_inches='tight')
