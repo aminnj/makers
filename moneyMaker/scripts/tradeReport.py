@@ -46,6 +46,7 @@ class Ledger:
     def getTrades(self): return self.trades
     def getAssets(self): return self.assets
     def getMoney(self): return self.money
+    def getNumTrades(self): return len(self.trades)
     def getProfit(self): 
         self.profitReport(False)
         return self.profit
@@ -60,9 +61,7 @@ class Ledger:
         elif(amount*price > self.money):  # buy as much as possible if not rich enough
             amount = int(self.money / price)
 
-        if(amount == 0):
-            print "[Ledger] You're too broke to buy %s" % ticker
-            return
+        if(amount == 0): return
 
         if(ticker not in self.assets): self.assets[ticker] = 0
 
@@ -77,7 +76,6 @@ class Ledger:
 
         if(ticker not in self.assets):
             self.assets[ticker] = 0
-            print "[Ledger] Bro, you gotta buy %s before you can sell" % ticker
             return
 
         if(amount is None):  # sell as much as possible if unspecified

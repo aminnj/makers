@@ -10,14 +10,12 @@ import cluster as cl
 
 plotdir = "../plots/"
 
-# stock = gs.getStock("AAPL", 2005, 2010)
-# stock = gs.getStock("SNDK", (2008, 6, 20), (2015, 11, 7))["days"]
-# stock = gs.getStock("SNDK", (2008, 6, 20), (2010, 10, 7))["days"]
 
-# stock = gs.getStock("WMT", (2014, 2, 14), (2014, 3, 25))["days"] # for calculating
-stock = gs.getStock("WMT", (2009, 2, 15), (2014, 5, 1))["days"] # for calculating
-d1,d2 = (2013,8,9),(2014,4,25) # for plotting
+# stock = gs.getStock("WMT", (2009, 2, 15), (2014, 5, 3))["days"] # for calculating
+# d1,d2 = (2013,8,9),(2014,4,25) # for plotting
 
+stock = gs.getStock("MCD", (2006, 1, 1), (2008, 10, 5))["days"] # for calculating
+d1,d2 = (2007,8,1),(2008,3,5) # for plotting
 
 quotes = []
 normquotes = []
@@ -43,11 +41,14 @@ emas = []
 for i in [1,3,4,8]:
     emas.append( ind.ematimes(timesclose,10*i) )
 
+quotes = np.array(quotes)
+rsis = ind.rsitimes(quotes[:,[0,1,4]],20)
+
 
 # bbands discards early dates since it can't do a moving average for those
 # we reshape the other arrays to match up with bbands' size
 normquotes = np.array(normquotes[-len(bbands):])
-quotes = np.array(quotes[-len(bbands):])
+quotes = quotes[-len(bbands):]
 
 times, clusters = cl.clusterCandles(normquotes, nclusters=5, ncandles=3)
 
@@ -60,10 +61,11 @@ crossovershading = []
 for day, rising in ind.crossovertimes(emas):
     crossovershading.append([day, 'g' if rising else 'r'])
 
-u.makeCandlestick(quotes, "../plots/candlestick.svg", title="WMT (2009)", \
+u.makeCandlestick(quotes, "../plots/candlestick.png", title="WMT (2009)", \
         shadings=[clustershading,crossovershading], \
         bbands=bbands, \
         window=[d1,d2], \
         averages=emas, \
+        rsis=rsis, \
         )
-u.web("../plots/candlestick.svg")
+u.web("../plots/candlestick.png")

@@ -204,7 +204,7 @@ def sma(prices, period):
         # show error message
         raise SystemExit('Error: num_prices < period')
 
-    sma_range = num_prices - period + 1
+    sma_range = num_prices - period
 
     smas = np.zeros(sma_range)
 
@@ -682,8 +682,25 @@ def ematimes(timeprices, period, ema_type=0):
     times = timeprices[:,0]
     prices = timeprices[:,1]
     emaprices = ema(prices, period, ema_type) # feed the function only the prices
-    times = times[-len(emaprices):] # make sure times and bb output have same length from the end
+    times = times[-len(emaprices):] # make sure times and ema output have same length from the end
     return np.c_[ times, emaprices ] # add the time back in as a column
+
+def rsitimes(timeopenclose, period):
+    # give a ndarray of time,openprice,closeprice
+    # get the rsi at each time slice
+    times = timeopenclose[:,0]
+    openprices = timeopenclose[:,1]
+    closeprices = timeopenclose[:,2]
+
+    rsis = rsi(closeprices)
+
+    # updown = closeprices-openprices
+    # updaygains = (closeprices-openprices)[updown>=0]
+    # print updaygains
+    # print updown
+    # rsis = 100.0 - 100.0/(1+sma(openprices,period)/sma(closeprices,period))
+    times = times[-len(rsis):]
+    return np.c_[ times, rsis ]
 
 def crossovertimes(matimes):
     # takes a list of moving averages and returns a list where
