@@ -38,6 +38,18 @@ def keepIfBetween(vals, tuple1, tuple2, idx=0):
     # list
     return [val for val in vals if day1 <= val[0] <= day2]
 
+### MISC ###
+def dictToList(stock):
+    # takes dict where keys are the days and vals are a dict of ohlc prices
+    # returns a sorted ndarray of elements like [day,o,h,l,c]
+    daysdicts = stock["days"]
+    quotes = []
+    for day in sorted(daysdicts.keys()):
+        vals = daysdicts[day]
+        o, h, l, c = vals["o"], vals["h"], vals["l"], vals["c"]
+        quotes.append( [day,o,h,l,c] )
+    return np.array(quotes)
+
 
 ### PLOTTING ###
 def web(filename,user="namin"):
