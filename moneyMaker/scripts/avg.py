@@ -42,8 +42,7 @@ for i in [1,3,4,8]:
     emas.append( ind.ematimes(timesclose,10*i) )
 
 quotes = np.array(quotes)
-rsis = ind.rsitimes(quotes[:,[0,1,4]],20)
-
+rsis = ind.rsitimes(quotes[:,[0,1]],14)
 
 # bbands discards early dates since it can't do a moving average for those
 # we reshape the other arrays to match up with bbands' size

@@ -12,7 +12,7 @@ symbol = "NFLX"
 stock = gs.getStock(symbol, (2011, 6, 1), (2015, 6, 1)) # for calculating
 quotes = u.dictToList(stock) # [day,o,h,l,c]
 
-timesclose = quotes[:,[0,3]]
+timesclose = quotes[:,[0,4]]
 emas = []
 for i in [1,2]: emas.append( ind.ematimes(timesclose,10*i) )
 
