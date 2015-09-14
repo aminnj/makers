@@ -75,6 +75,15 @@ def saveStock(ticker, d1, d2, verbose=False):
         volume = int(volume)
         date = datetime.datetime.strptime(dateString,"%Y-%m-%d") # looks like 2001-01-17
         day = u.date2inum(date)
+
+        # adjust the damn values to deal with stock splitting
+        # see: http://ichart.yahoo.com/table.csv?a=6&b=15&c=2015&d=8&e=14&f=2015&s=ACUR&y=0&g=d&ignore=.csv
+        # scale all stocks up by scale factor = adjclose/close
+        sf = adjustedClosePrice/closePrice
+        openPrice *= sf
+        closePrice *= sf
+        highPrice *= sf
+        lowPrice *= sf
         
         d["days"][day] = { 
                 "o": openPrice,
