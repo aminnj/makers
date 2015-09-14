@@ -24,9 +24,10 @@ def crossover(quotes):
     return dBuy, dSell
 
 symbols = [line.strip() for line in open("../data/nasdaqlisted.txt").readlines()]
-symbols = ["NFLX", "WMT"]
-d1, d2 = (2011, 6, 1), (2015, 6, 1)
+# symbols = ["NFLX", "WMT"]
+symbols = symbols[:100]
+d1, d2 = (2006, 6, 1), (2015, 6, 1)
 
 bt = btbm.Backtest(symbols, d1, d2, crossover, money=1000.0, filename="test.txt")
 bt.doBenchmark()
-pprint(bt.getReport())
+# pprint(bt.getReport())

@@ -28,7 +28,16 @@ class Backtest:
     def getSymbols(self): return self.symbols
     def getDates(self): return (self.d1, self.d2)
     def getReport(self): return self.report
-    def getProgress(self): return 1.0*self.isymbol/self.nsymbols
+
+    def drawProgressBar(self):
+        width = 40
+        fraction = 1.0*self.isymbol/self.nsymbols
+        if(fraction > 1): fraction = 1
+        if(fraction < 0): fraction = 0
+        filled = int(round(fraction*width))
+        print "\r[{0}{1}]".format("#" * filled, "-" * (width-filled)),
+        print "%d%%" % (round(fraction*100)),
+        sys.stdout.flush()
 
     def performChecks(self):
         if(self.money < 1.0):
@@ -48,19 +57,25 @@ class Backtest:
 
 
 
-    def doBenchmark(self):
+    def doBenchmark(self, progressBar=True):
         if self.performChecks():
             print "[BT] Can't benchmark"
             return
 
         for isymbol,symbol in enumerate(self.symbols):
             self.isymbol = isymbol
+            if(progressBar): self.drawProgressBar()
 
             stock = gs.getStock(symbol,self.d1,self.d2)
             quotes = u.dictToList(stock) # [day,o,h,l,c]
-            if(len(quotes) < 10): continue
+            if(len(quotes) < 25): continue
 
-            dBuy, dSell = self.strategy(quotes)
+            try:
+                dBuy, dSell = self.strategy(quotes)
+            except:
+                print "[BT] Problem running user strategy"
+                continue
+
             if(len(dBuy.keys()) < 1): continue # pointless if we don't buy
             if(len(dSell.keys()) < 1): continue # pointless if we don't sell -- then it's just BAH
 
