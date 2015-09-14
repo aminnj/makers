@@ -13,7 +13,7 @@ import utils as u
 
 storageDir = "../data/"
 
-def saveStock(ticker, d1, d2):
+def saveStock(ticker, d1, d2, verbose=False):
     ticker = ticker.upper()
     pickleFile = "%s/%s.pklz" % (storageDir, ticker)
 
@@ -34,7 +34,7 @@ def saveStock(ticker, d1, d2):
         fh.close()
         alreadyExists = True
     except:
-        print "[MM] %s: No existing data file. Making one now." % ticker
+        if(verbose): print "[MM] %s: No existing data file. Making one now." % ticker
 
     # check to see if the requested dates are already within datafile, to reduce API calls
     if(alreadyExists):
@@ -48,7 +48,7 @@ def saveStock(ticker, d1, d2):
         d1new, d2new = u.date2inum(dt1), u.date2inum(dt2)
 
         if ( (d1new >= dOld["day1"]) and (d2new <= dOld["day2"]) ):
-            print "[MM] %s: Already saved specified time period [(%i,%i,%i)-(%i,%i,%i)]." % (ticker, d1[0],d1[1],d1[2], d2[0],d2[1],d2[2])
+            if(verbose): print "[MM] %s: Already saved specified time period [(%i,%i,%i)-(%i,%i,%i)]." % (ticker, d1[0],d1[1],d1[2], d2[0],d2[1],d2[2])
             return
 
     urlFmt = 'http://ichart.yahoo.com/table.csv?a=%d&b=%d&c=%d&d=%d&e=%d&f=%d&s=%s&y=0&g=%s&ignore=.csv'
@@ -57,7 +57,7 @@ def saveStock(ticker, d1, d2):
     try:
         csv = urllib2.urlopen(url).read()
     except:
-        print "[MM] %s: No data available for part of specified time period [(%i,%i,%i)-(%i,%i,%i)]." % (ticker, d1[0],d1[1],d1[2], d2[0],d2[1],d2[2])
+        if(verbose): print "[MM] %s: No data available for part of specified time period [(%i,%i,%i)-(%i,%i,%i)]." % (ticker, d1[0],d1[1],d1[2], d2[0],d2[1],d2[2])
         return
 
     lines = csv.split()[2:] # first 2 lines are just the column names 
@@ -114,9 +114,9 @@ def saveStock(ticker, d1, d2):
     fh.close()
 
     d1, d2 = dOld["d1"], dOld["d2"]
-    print "[MM] %s: Successfully saved data for time period [(%i,%i,%i)-(%i,%i,%i)]." % (ticker, d1[0],d1[1],d1[2], d2[0],d2[1],d2[2])
+    if(verbose): print "[MM] %s: Successfully saved data for time period [(%i,%i,%i)-(%i,%i,%i)]." % (ticker, d1[0],d1[1],d1[2], d2[0],d2[1],d2[2])
 
-def getStock(ticker, d1, d2):
+def getStock(ticker, d1, d2, verbose=False):
     if not iterable(d1): d1 = (d1, 1, 1)
     if not iterable(d2): d2 = (d2, 1, 1)
 
@@ -131,7 +131,7 @@ def getStock(ticker, d1, d2):
         dOld = pickle.load(fh)
         fh.close()
     except:
-        print "[MM] Error: file (%s/%s.pklz) does not exist" % (storageDir, ticker)
+        if(verbose): print "[MM] Error: file (%s/%s.pklz) does not exist" % (storageDir, ticker)
         return d
 
 

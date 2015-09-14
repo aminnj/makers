@@ -49,7 +49,7 @@ class Ledger:
     def getNumTrades(self): return len(self.trades)
     def getProfit(self): 
         self.profitReport(False)
-        return self.profit
+        return round(self.profit,2)
 
     def buyStock(self, ticker, price=None, amount=None):
         if(price is None):

@@ -27,6 +27,11 @@ def inum2tuple(dt):
     # return (y,m,d) tuple
     dt = inum2date(dt)
     return (dt.year, dt.month, dt.day)
+def tuple2string(dt):
+    # takes (y,m,d) tuple
+    # returns nice string like Jan 1, 2004
+    dt = datetime.datetime(*dt)
+    return dt.strftime("%b %d, %Y").replace(" 0"," ")
 
 def keepIfBetween(vals, tuple1, tuple2, idx=0):
     # return the elements in vals for which the date (val[idx]) is in specified range
