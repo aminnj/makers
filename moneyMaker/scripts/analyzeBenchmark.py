@@ -7,6 +7,7 @@ import indicators as ind
 import tradeReport as tr
 import backtestBenchmark as btbm
 
+# fh = open("btbenchmark_crossover.txt","r")
 fh = open("test.txt","r")
 res = json.loads(fh.read())
 fh.close()
@@ -17,6 +18,11 @@ rands = []
 bahs = []
 days = []
 for sym in res.keys():
+    if res[sym]["user"][2] < 0.001: continue # ntrades
+    if res[sym]["rand"][2] < 0.001: continue # ntrades
+    if res[sym]["bah"][2] < 0.001: continue # ntrades
+    if res[sym]["ndays"] < 10: continue
+
     users.append( res[sym]["user"] )
     rands.append( res[sym]["rand"] )
     bahs.append( res[sym]["bah"] )
@@ -27,12 +33,12 @@ rands = np.array(rands)
 bahs = np.array(bahs)
 days = np.array(days)
 
-print "Found %i stocks!\n" % len(res.keys())
+print "Found %i stocks!\n" % len(days)
 
 # rand
 print "RAND:"
-print "rand strat yields $(%.2f +- %.2f)/day" % (np.mean(rands[:,0]/days), np.mean(rands[:,1]/days))
-print "rand strat yields $(%.2f +- %.2f)/trade" % (np.mean(rands[:,0]/rands[:,2]), np.mean(rands[:,1]/rands[:,2]))
+print "rand strat yields $(%.2f +- %.2f)/day" % (np.mean(rands[:,0]/days), np.mean(rands[:,1]/days)/np.sqrt(100))
+print "rand strat yields $(%.2f +- %.2f)/trade" % (np.mean(rands[:,0]/rands[:,2]), np.mean(rands[:,1]/rands[:,2])/np.sqrt(100))
 print "rand strat has %.1f trades/yr" % (365.0*np.mean(rands[:,2]/days))
 print "-"*30,"\n"
 

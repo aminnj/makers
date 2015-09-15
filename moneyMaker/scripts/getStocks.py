@@ -53,6 +53,7 @@ def saveStock(ticker, d1, d2, verbose=False):
 
     urlFmt = 'http://ichart.yahoo.com/table.csv?a=%d&b=%d&c=%d&d=%d&e=%d&f=%d&s=%s&y=0&g=%s&ignore=.csv'
     url = urlFmt % (d1[1]-1, d1[2], d1[0], d2[1]-1, d2[2], d2[0], ticker, 'd')
+    # print url
 
     try:
         csv = urllib2.urlopen(url).read()

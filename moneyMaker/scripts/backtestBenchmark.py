@@ -1,4 +1,4 @@
-import os, sys, random, json
+import os, sys, random, json, itertools
 
 import numpy as np
 import getStocks as gs
@@ -49,15 +49,56 @@ class Backtest:
 
         return 0
 
+    def cleanVars(self):
+        self.isymbol = 0
+        self.report = { }
+
     def postBenchmark(self):
         # dump report to file for later analysis
         fh = open(self.filename,"w")
         fh.write( json.dumps(self.report) )
         fh.close()
 
+    def doScan(self, paramsAndRanges, filename="test_scan.txt"):
+        pass
+        # each key in paramsAndRanges is a parameter (ROOT syntax): "p0","p1", etc.
+        # each value is a list of values for that parameter
+        # e.g., paramsAndRanges["p0"] = [0.1,0.2,0.9,1.0]
+        
+        fhscan = open(filename, "w")
+
+        keys = sorted(paramsAndRanges.keys())
+        keyString = "(%s)" % ", ".join(keys)
+        vals = tuple([paramsAndRanges[key] for key in keys])
+        combinations = list(itertools.product(*vals))
+        combinationResults = { }
+        for combination in combinations:
+            valString = "(%s)" % ", ".join(map(str,combination))
+            params =  { keys[i]: combination[i] for i in range(len(keys)) }
+            self.doBenchmark(params, progressBar=False, userOnly=True)
+            profit = np.mean([self.report[sym]["user"][0] for sym in self.report.keys()])
+            ntrades = np.mean([self.report[sym]["user"][2] for sym in self.report.keys()])
+            # ntrades = self.report["user"][2]
+            fhscan.write("%s = %s: %.2f,%i\n" % (keyString, valString, profit, ntrades) )
+            print "%s = %s: %.2f,%i" % (keyString, valString, profit, ntrades)
+            combinationResults[combination] = [ profit, ntrades ]
+
+        maxprofit, winningCombination, winningResult = -1, -1, -1
+        for res in combinationResults.keys():
+            if(combinationResults[res][0] > maxprofit):
+                maxprofit = combinationResults[res][0]
+                winningCombination = res
+                winningResult = combinationResults[res]
+
+        winningString = "%s = (%s) with profit = %.2f and ntrades = %i" % (keyString, ", ".join(map(str,winningCombination)), winningResult[0], winningResult[1])
+        fhscan.write("# WINNER:\n%s\n" %  winningString)
+        fhscan.close()
+        print "WINNER:", winningString
 
 
-    def doBenchmark(self, progressBar=True):
+    def doBenchmark(self, params={}, progressBar=True, userOnly=False):
+        self.cleanVars()
+
         if self.performChecks():
             print "[BT] Can't benchmark"
             return
@@ -71,54 +112,59 @@ class Backtest:
             if(len(quotes) < 25): continue
 
             try:
-                dBuy, dSell = self.strategy(quotes)
-            except:
+                dBuy, dSell = self.strategy(quotes, params)
+            except Exception as e:
                 print "[BT] Problem running user strategy"
+                print e
                 continue
 
             if(len(dBuy.keys()) < 1): continue # pointless if we don't buy
             if(len(dSell.keys()) < 1): continue # pointless if we don't sell -- then it's just BAH
 
-            # USER STRATEGY
-            price = 0
-            ledger = tr.Ledger(self.money)
-            for quote in quotes:
-                day,price,h,l,c = quote
-                if(day in dBuy): ledger.buyStock(symbol, price)
-                elif(day in dSell): ledger.sellStock(symbol,price)
-            ledger.sellStock(symbol, price) # sell outstanding shares to finish up
+            try:
+                self.report[symbol] = { }
+                self.report[symbol]["ndays"] = len(quotes)
 
-            # RANDOM STRATEGY
-            profits = []
-            for i in range(100):
+                # USER STRATEGY
                 price = 0
-                ledgerRand = tr.Ledger(self.money)
-                days = quotes[:,0]
-                np.random.shuffle(days)
-                # want to do a random trade on avg every 3-10 days
-                # so we take the first #days/rand(3,10) random days, then sort them
-                days = sorted(days[:len(days)//random.randint(3,10)])
-                days = days[len(days)%2:] # even number of entries, so we always sell what we buy
-                buy = True # buy initially
-                for day in days:
-                    if(buy): ledgerRand.buyStock(symbol, price=stock["days"][day]['c'])
-                    else: ledgerRand.sellStock(symbol, price=stock["days"][day]['c'])
-                    buy = not buy # alternate between buy and sell
-                profits.append( ledgerRand.getProfit() )
-            profits = np.array(profits)
+                ledger = tr.Ledger(self.money)
+                for quote in quotes:
+                    day,price,h,l,c = quote
+                    if(day in dBuy): ledger.buyStock(symbol, price)
+                    elif(day in dSell): ledger.sellStock(symbol,price)
+                ledger.sellStock(symbol, price) # sell outstanding shares to finish up
+                self.report[symbol]["user"] = [ledger.getProfit(), 0.0, ledger.getNumTrades()]
 
-            # BUY AND HOLD
-            ledgerBAH = tr.Ledger(self.money) # buy and hold
-            ledgerBAH.buyStock(symbol,quotes[0][4])
-            ledgerBAH.sellStock(symbol,quotes[-1][4])
+                if(not userOnly): 
+                    # RANDOM STRATEGY
+                    profits = []
+                    for i in range(100):
+                        price = 0
+                        ledgerRand = tr.Ledger(self.money)
+                        days = quotes[:,0]
+                        np.random.shuffle(days)
+                        # want to do a random trade on avg every 3-10 days
+                        # so we take the first #days/rand(3,10) random days, then sort them
+                        days = sorted(days[:len(days)//random.randint(3,10)])
+                        days = days[len(days)%2:] # even number of entries, so we always sell what we buy
+                        buy = True # buy initially
+                        for day in days:
+                            if(buy): ledgerRand.buyStock(symbol, price=stock["days"][day]['c'])
+                            else: ledgerRand.sellStock(symbol, price=stock["days"][day]['c'])
+                            buy = not buy # alternate between buy and sell
+                        profits.append( ledgerRand.getProfit() )
+                    profits = np.array(profits)
 
-            # fill report. do we want anything else here?
-            # second element is the error...only applies to rand, but want to keep compatibility with others
-            self.report[symbol] = { }
-            self.report[symbol]["user"] = [ledger.getProfit(), 0.0, ledger.getNumTrades()]
-            self.report[symbol]["rand"] = [round(np.mean(profits),2), round(np.std(profits)), ledgerRand.getNumTrades()]
-            self.report[symbol]["bah"] = [ledgerBAH.getProfit(), 0.0,  ledgerBAH.getNumTrades()]
-            self.report[symbol]["ndays"] = len(quotes)
+                    # BUY AND HOLD
+                    ledgerBAH = tr.Ledger(self.money) # buy and hold
+                    ledgerBAH.buyStock(symbol,quotes[0][4])
+                    ledgerBAH.sellStock(symbol,quotes[-1][4])
+
+                    self.report[symbol]["rand"] = [round(np.mean(profits),2), round(np.std(profits)), ledgerRand.getNumTrades()]
+                    self.report[symbol]["bah"] = [ledgerBAH.getProfit(), 0.0,  ledgerBAH.getNumTrades()]
+            except:
+                print "[BT] Some other error"
+                continue
 
         self.postBenchmark()
 
