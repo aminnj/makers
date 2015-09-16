@@ -1,3 +1,5 @@
+import numpy as np
+
 def tradeReport(ledger):
     """
     ledger is a list where each entry is [symbol, shares, price]
@@ -50,13 +52,30 @@ class Ledger:
     def getProfit(self): 
         self.profitReport(False)
         return round(self.profit,2)
+
     def getWinPercent(self):
         buys = self.trades[::2]
         sells = self.trades[1::2]
         numWins = 0
         for buy,sell in zip(buys, sells): 
-            if buy <= sell: numWins += 1
+            if buy[1] <= sell[1]: numWins += 1
         return int(100*2*numWins/float(len(self.trades)))
+
+    def getWinLossPercent(self):
+        buys = self.trades[::2]
+        sells = self.trades[1::2]
+        percentChanges = []
+        for buy,sell in zip(buys, sells): 
+            b, s = buy[1], sell[1]
+            percentChanges.append( 100.0*(s-b)/b )
+
+        percentChanges = np.array(percentChanges)
+        percentGains = percentChanges[percentChanges>=0]
+        percentLosses = percentChanges[percentChanges<0]
+        if(len(percentGains) < 1): percentGains = np.zeros(1)
+        if(len(percentLosses) < 1): percentLosses = np.zeros(1)
+        return np.mean(percentGains), np.mean(percentLosses)
+
 
     def buyStock(self, ticker, price=None, amount=None):
         if(price is None):
@@ -76,7 +95,7 @@ class Ledger:
         self.assets[ticker] += amount
         self.money -= price*amount
 
-    def sellStock(self, ticker, price=None, amount=None):
+    def sellStock(self, ticker, price=None, amount=None, fraction=1.0):
         if(price is None):
             print "[Ledger] Please specify price for %s" % ticker
             return
@@ -89,6 +108,7 @@ class Ledger:
             amount = self.assets[ticker]
 
         amount = min(amount, self.assets[ticker]) # only sell what we have
+        amount = int(fraction*amount)
 
         self.trades.append( [ ticker, price, -amount ] )
         self.assets[ticker] -= amount

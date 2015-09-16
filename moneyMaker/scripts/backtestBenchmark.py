@@ -1,4 +1,4 @@
-import os, sys, random, json, itertools
+import os, sys, random, json, itertools, math
 
 import numpy as np
 import getStocks as gs
@@ -78,9 +78,11 @@ class Backtest:
             self.doBenchmark(params, progressBar=False, userOnly=True)
             profit = np.mean([self.report[sym]["user"][0] for sym in self.report.keys()])
             ntrades = np.mean([self.report[sym]["user"][2] for sym in self.report.keys()])
-            # ntrades = self.report["user"][2]
-            fhscan.write("%s = %s: %.2f,%i\n" % (keyString, valString, profit, ntrades) )
-            print "%s = %s: %.2f,%i" % (keyString, valString, profit, ntrades)
+
+            if(math.isnan(profit) or math.isnan(ntrades)): continue
+
+            fhscan.write("%s = %s: %.2f,%.1f\n" % (keyString, valString, profit, ntrades) )
+            print "%s = %s: %.2f,%.1f" % (keyString, valString, profit, ntrades)
             combinationResults[combination] = [ profit, ntrades ]
 
         maxprofit, winningCombination, winningResult = -1, -1, -1
@@ -90,7 +92,7 @@ class Backtest:
                 winningCombination = res
                 winningResult = combinationResults[res]
 
-        winningString = "%s = (%s) with profit = %.2f and ntrades = %i" % (keyString, ", ".join(map(str,winningCombination)), winningResult[0], winningResult[1])
+        winningString = "%s = (%s) with profit = %.2f and ntrades = %.1f" % (keyString, ", ".join(map(str,winningCombination)), winningResult[0], winningResult[1])
         fhscan.write("# WINNER:\n%s\n" %  winningString)
         fhscan.close()
         print "WINNER:", winningString
@@ -130,10 +132,12 @@ class Backtest:
                 ledger = tr.Ledger(self.money)
                 for quote in quotes:
                     day,price,h,l,c = quote
-                    if(day in dBuy): ledger.buyStock(symbol, price)
-                    elif(day in dSell): ledger.sellStock(symbol,price)
+                    if(day in dBuy):
+                        ledger.buyStock(symbol, price)
+                    elif(day in dSell): 
+                        ledger.sellStock(symbol,price,fraction=dSell[day])
                 ledger.sellStock(symbol, price) # sell outstanding shares to finish up
-                self.report[symbol]["user"] = [ledger.getProfit(), 0.0, ledger.getNumTrades(), ledger.getWinPercent()]
+                self.report[symbol]["user"] = [ledger.getProfit(), 0.0, ledger.getNumTrades(), ledger.getWinPercent(), ledger.getWinLossPercent()]
 
                 if(not userOnly): 
                     # RANDOM STRATEGY
@@ -160,10 +164,12 @@ class Backtest:
                     ledgerBAH.buyStock(symbol,quotes[0][4])
                     ledgerBAH.sellStock(symbol,quotes[-1][4])
 
-                    self.report[symbol]["rand"] = [round(np.mean(profits),2), round(np.std(profits)), ledgerRand.getNumTrades(), ledgerRand.getWinPercent()]
-                    self.report[symbol]["bah"] = [ledgerBAH.getProfit(), 0.0,  ledgerBAH.getNumTrades(), ledgerBAH.getWinPercent()]
-            except:
+                    self.report[symbol]["rand"] = [round(np.mean(profits),2), round(np.std(profits)), ledgerRand.getNumTrades(), ledgerRand.getWinPercent(), ledgerRand.getWinLossPercent()]
+                    self.report[symbol]["bah"] = [ledgerBAH.getProfit(), 0.0,  ledgerBAH.getNumTrades(), ledgerBAH.getWinPercent(), ledgerBAH.getWinLossPercent()]
+
+            except Exception as e:
                 print "[BT] Some other error"
+                print e
                 continue
 
         self.postBenchmark()
