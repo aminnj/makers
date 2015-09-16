@@ -98,13 +98,14 @@ def makePlot(vx, vy, filename, title=None):
     print "Saved plot %s" % filename
 
 
-def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, window=None, averages=None, rsis=None):
+def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, window=None, averages=None, rsis=None, vlines=None):
     if window:
         quotes = keepIfBetween(quotes, window[0], window[1])
         if shadings is not None: shadings = [keepIfBetween(shading, window[0], window[1]) for shading in shadings]
         if bbands is not None: bbands = keepIfBetween(bbands, window[0], window[1])
         if averages is not None: averages = [keepIfBetween(avg, window[0], window[1]) for avg in averages]
         if rsis is not None: rsis = keepIfBetween(rsis, window[0], window[1])
+        if vlines is not None: vlines = keepIfBetween(vlines, window[0], window[1])
 
     # each element of quotes is [day, open, high, low, close]
     if not title:
@@ -135,6 +136,10 @@ def makeCandlestick(quotes, filename, title=None, shadings=None, bbands=None, wi
 
 
                 plt.axvspan(dayleft-0.5,dayright-0.5, ycutoffs[i],ycutoffs[i+1], color=shading[j][1], alpha=0.35,lw=0)
+
+    if vlines is not None:
+        for day in vlines:
+            plt.axvline(day-0.5)
     
     if bbands is not None:
         ax.plot(bbands[:,0],bbands[:,1],'r',lw=1) # upper

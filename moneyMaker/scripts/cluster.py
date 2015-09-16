@@ -22,6 +22,7 @@ def clusterCandles(normquotes, nclusters=5, ncandles=2, shift=0):
     times = times[:,0]
 
     km = skc.KMeans(n_clusters=nclusters)
+
     # add more and more columns to data (c_ just puts columns side by side)
     # data = np.c_[ normquotes[:,[2,3,4]] ] # no need for low because we subtracted that out...always 0
     data = np.c_[ forfit ] # no need for low because we subtracted that out...always 0
@@ -30,4 +31,6 @@ def clusterCandles(normquotes, nclusters=5, ncandles=2, shift=0):
     # data = np.c_[ data, bbands[:,3]-quotes[:,1] ]
 
     clusters = km.fit_predict(data)
-    return times, clusters
+    clusterCenters = km.cluster_centers_
+
+    return times, clusters, clusterCenters

@@ -49,7 +49,15 @@ rsis = ind.rsitimes(quotes[:,[0,1]],14)
 normquotes = np.array(normquotes[-len(bbands):])
 quotes = quotes[-len(bbands):]
 
-times, clusters = cl.clusterCandles(normquotes, nclusters=5, ncandles=3)
+nclusters=7
+ncandles=5
+# normquotes = []
+# for quotes in normquotes:
+
+times, clusters, clusterCenters = cl.clusterCandles(normquotes, nclusters=nclusters, ncandles=ncandles)
+
+# print clusterCenters
+clusterCenters = clusterCenters.reshape(nclusters*ncandles,3)
 
 colors = list("rbgkcmyw") # only allows up to 8
 clustershading = []
@@ -60,11 +68,17 @@ crossovershading = []
 for day, rising in ind.crossovertimes(emas):
     crossovershading.append([day, 'g' if rising else 'r'])
 
-u.makeCandlestick(quotes, "../plots/candlestick.png", title="WMT (2009)", \
-        shadings=[clustershading,crossovershading], \
-        bbands=bbands, \
-        window=[d1,d2], \
-        averages=emas, \
-        rsis=rsis, \
-        )
-u.web("../plots/candlestick.png")
+clusterQuotes = np.c_[ np.array(range(1000,1000+len(clusterCenters))), np.zeros(len(clusterCenters)), clusterCenters ]
+print clusterQuotes[:,0]
+
+vlines = range(1000,1000+len(clusterQuotes[:,0]),ncandles)
+
+u.makeCandlestick(clusterQuotes, "../plots/candlestick.png",title="cluster centers",vlines=vlines)
+# u.makeCandlestick(quotes, "../plots/candlestick.png", title="WMT (2009)", \
+#         shadings=[clustershading,crossovershading], \
+#         bbands=bbands, \
+#         window=[d1,d2], \
+#         averages=emas, \
+#         rsis=rsis, \
+#         )
+# u.web("../plots/candlestick.png")
