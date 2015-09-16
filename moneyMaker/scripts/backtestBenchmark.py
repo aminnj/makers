@@ -133,7 +133,7 @@ class Backtest:
                     if(day in dBuy): ledger.buyStock(symbol, price)
                     elif(day in dSell): ledger.sellStock(symbol,price)
                 ledger.sellStock(symbol, price) # sell outstanding shares to finish up
-                self.report[symbol]["user"] = [ledger.getProfit(), 0.0, ledger.getNumTrades(), ledger.getWinPercent()]
+                self.report[symbol]["user"] = [ledger.getProfit(), 0.0, ledger.getNumTrades(), ledger.getWinPercent(), ledger.getAvgWinProfitPercent(), ledger.getAvgLossProfitPercent()]
 
                 if(not userOnly): 
                     # RANDOM STRATEGY
@@ -160,8 +160,8 @@ class Backtest:
                     ledgerBAH.buyStock(symbol,quotes[0][4])
                     ledgerBAH.sellStock(symbol,quotes[-1][4])
 
-                    self.report[symbol]["rand"] = [round(np.mean(profits),2), round(np.std(profits)), ledgerRand.getNumTrades(), ledgerRand.getWinPercent()]
-                    self.report[symbol]["bah"] = [ledgerBAH.getProfit(), 0.0,  ledgerBAH.getNumTrades(), ledgerBAH.getWinPercent()]
+                    self.report[symbol]["rand"] = [round(np.mean(profits),2), round(np.std(profits)), ledgerRand.getNumTrades(), ledgerRand.getWinPercent(), ledgerRand.getAvgWinProfitPercent(), ledgerRand.getAvgLossProfitPercent()]
+                    self.report[symbol]["bah"] = [ledgerBAH.getProfit(), 0.0,  ledgerBAH.getNumTrades(), ledgerBAH.getWinPercent(), ledgerBAH.getAvgWinProfitPercent(), ledgerBAH.getAvgLossProfitPercent()]
             except:
                 print "[BT] Some other error"
                 continue
