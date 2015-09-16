@@ -319,6 +319,17 @@ def ematimes(timeprices, period, ema_type=0):
     times = times[-len(emaprices):] # make sure times and ema output have same length from the end
     return np.c_[ times, emaprices ] # add the time back in as a column
 
+def macdhisttimes(timeprices, period_fast, period_slow, period_signal, ema_type=0):
+    times = timeprices[:,0]
+    prices = timeprices[:,1]
+    emaprices_fast = ema(prices, period_fast, ema_type) # feed the function only the prices
+    emaprices_slow = ema(prices, period_slow, ema_type) # feed the function only the prices
+    ema_diff = [x - y for x, y in zip(emaprices_fast, emaprices_slow)]# MACD line
+    ema_signal = ema(ema_diff, period_signal, ema_type) # Signal line
+    hist = [x - y for x, y in zip(ema_diff, ema_signal)]# Histogram of MACD - Signal
+    times = times[-len(hist):] # make sure times and hist have same length from the end
+    return np.c_[ times, hist ] # add the time back in as a column
+
 def rsitimes(timeprices, period=14):
     # give a ndarray of time,openprice,closeprice
     # get the rsi at each time slice
