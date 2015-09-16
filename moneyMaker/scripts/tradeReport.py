@@ -50,6 +50,13 @@ class Ledger:
     def getProfit(self): 
         self.profitReport(False)
         return round(self.profit,2)
+    def getWinPercent(self):
+        buys = self.trades[::2]
+        sells = self.trades[1::2]
+        numWins = 0
+        for buy,sell in zip(buys, sells): 
+            if buy <= sell: numWins += 1
+        return int(100*2*numWins/float(len(self.trades)))
 
     def buyStock(self, ticker, price=None, amount=None):
         if(price is None):
@@ -141,4 +148,5 @@ if __name__=='__main__':
 
     l1.profitReport()
     print l1.getProfit() # if you want to retrieve the profit as a number. also note the other get commands
+    print l1.getWinPercent()
 
