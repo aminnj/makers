@@ -1,0 +1,48 @@
+<html>
+    <head>
+        <meta name="referrer" content="no-referrer"> <!-- need this or stockcharts whines like a wittle baby about not embedding -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script>
+
+            var tickers = ["AAL"];
+            var iticker = 0;
+            $(function() {
+                $('#updatebtn').click(function() {
+                    var text = $('#tickertext').val();
+                    tickers = text.split(" ");
+                    tickers = $.grep(tickers,function(n) { return(n) });
+                    console.log(tickers);
+
+                    changeTicker(0);
+                });
+            });
+
+            function changeTicker(delta) {
+                if(tickers.length < 1) return;
+
+                iticker += delta;
+                iticker += tickers.length;
+                iticker = iticker % tickers.length;
+
+                document.getElementById("stocktext").innerHTML = "<h2>"+tickers[iticker]+"</h2>";
+                document.getElementById("stockimage").src = "http://stockcharts.com/c-sc/sc?s="+tickers[iticker]+"&p=D&b=5&g=0&i=t45547377967";
+            }
+
+        </script>
+    </head>
+
+    <body>
+        Paste space-separated stock tickers into the box
+        <textarea id='tickertext'></textarea>
+        <button id='updatebtn'>Update</button>
+
+        <button id="prevButton" onClick="changeTicker(-1);"><b>← Previous</b></button>
+        <button id="nextButton" onClick="changeTicker(1);"><b>Next →</b> </button>
+        <br>
+
+        <!-- also need this or else it doesn't work...I don't know why -->
+        <iframe frameborder="0" width=0 height=0 scrolling="no" src="http://stockcharts.com/c-sc/sc?s=FATE&p=D&b=5&g=0&i=t45547377967"> </iframe>
+        <div id="stocktext"> </div>
+        <img id="stockimage" />
+    </body>
+</html>
