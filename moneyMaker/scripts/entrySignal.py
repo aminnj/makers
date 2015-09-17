@@ -30,7 +30,7 @@ def crossover(quotes):
 
     return dBuy
 
-symbols = [line.strip() for line in open("../data/nasdaqlisted.txt").readlines()][1000]
+symbols = [line.strip() for line in open("../data/nasdaqlisted.txt").readlines()][:1000]
 
 for symbol in symbols:
     stock = gs.getStock(symbol, (2015, 8, 1), (2015, 9, 16))
