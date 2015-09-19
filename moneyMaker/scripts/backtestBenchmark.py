@@ -7,13 +7,14 @@ import indicators as ind
 import tradeReport as tr
 
 class Backtest:
-    def __init__(self, symbols, d1, d2, strategy, money=1000.0, filename="temp.txt"):
+    def __init__(self, symbols, d0, d1, d2, strategy, money=1000.0, filename="temp.txt"):
         self.symbols = symbols
         self.isymbol = 0
         self.nsymbols = len(symbols)
 
-        self.d1 = d1
-        self.d2 = d2
+        self.d0 = d0 # start of moving avg computations, etc.
+        self.d1 = d1 # start of trades
+        self.d2 = d2 # end of trades
 
         self.strategy = strategy
         self.money = money
@@ -78,11 +79,14 @@ class Backtest:
             self.doBenchmark(params, progressBar=False, userOnly=True)
             profit = np.mean([self.report[sym]["user"][0] for sym in self.report.keys()])
             ntrades = np.mean([self.report[sym]["user"][2] for sym in self.report.keys()])
+            winpct = np.mean([self.report[sym]["user"][3] for sym in self.report.keys()])
+            winprofitpct = np.mean([self.report[sym]["user"][4] for sym in self.report.keys()])
+            lossprofitpct = np.mean([self.report[sym]["user"][5] for sym in self.report.keys()])
 
             if(math.isnan(profit) or math.isnan(ntrades)): continue
 
-            fhscan.write("%s = %s: %.2f,%.1f\n" % (keyString, valString, profit, ntrades) )
-            print "%s = %s: %.2f,%.1f" % (keyString, valString, profit, ntrades)
+            fhscan.write("%s = %s: %.2f,%.1f,%.1f%%,%.1f%%,%.1f%%\n" % (keyString, valString, profit, ntrades, winpct, winprofitpct, lossprofitpct) )
+            print "%s = %s: %.2f,%.1f,%.1f%%,%.1f%%,%.1f%%" % (keyString, valString, profit, ntrades, winpct, winprofitpct, lossprofitpct)
             combinationResults[combination] = [ profit, ntrades ]
 
         maxprofit, winningCombination, winningResult = -1, -1, -1
@@ -98,7 +102,7 @@ class Backtest:
         print "WINNER:", winningString
 
 
-    def doBenchmark(self, params={}, progressBar=True, userOnly=False):
+    def doBenchmark(self, params={}, progressBar=True, userOnly=False, debug=False):
         self.cleanVars()
 
         if self.performChecks():
@@ -109,12 +113,12 @@ class Backtest:
             self.isymbol = isymbol
             if(progressBar): self.drawProgressBar()
 
-            stock = gs.getStock(symbol,self.d1,self.d2)
+            stock = gs.getStock(symbol,self.d0,self.d2)
             quotes = u.dictToList(stock) # [day,o,h,l,c]
-            if(len(quotes) < 25): continue
+            if(len(quotes) < 15): continue
 
             try:
-                dBuy, dSell = self.strategy(quotes, params)
+                dBuy, dSell = self.strategy(quotes, self.d1, self.d2, params)
             except Exception as e:
                 print "[BT] Problem running user strategy"
                 print e
@@ -132,11 +136,11 @@ class Backtest:
                 ledger = tr.Ledger(self.money)
                 for quote in quotes:
                     day,price,h,l,c = quote
-                    if(day in dBuy):
-                        ledger.buyStock(symbol, price)
-                    elif(day in dSell): 
-                        ledger.sellStock(symbol,price,fraction=dSell[day])
-                ledger.sellStock(symbol, price) # sell outstanding shares to finish up
+                    if(day in dSell):
+                        ledger.sellStock(symbol,day,price,fraction=dSell[day])
+                    elif(day in dBuy): 
+                        ledger.buyStock(symbol,day,price)
+                ledger.sellStock(symbol,day,price) # sell outstanding shares to finish up
                 self.report[symbol]["user"] = [ledger.getProfit(), 0.0, ledger.getNumTrades(), ledger.getWinPercent(), ledger.getAvgWinProfitPercent(), ledger.getAvgLossProfitPercent()]
 
                 if(not userOnly): 
@@ -153,19 +157,23 @@ class Backtest:
                         days = days[len(days)%2:] # even number of entries, so we always sell what we buy
                         buy = True # buy initially
                         for day in days:
-                            if(buy): ledgerRand.buyStock(symbol, price=stock["days"][day]['c'])
-                            else: ledgerRand.sellStock(symbol, price=stock["days"][day]['c'])
+                            if(buy): ledgerRand.buyStock(symbol,day,price=stock["days"][day]['c'])
+                            else: ledgerRand.sellStock(symbol,day,price=stock["days"][day]['c'])
                             buy = not buy # alternate between buy and sell
                         profits.append( ledgerRand.getProfit() )
                     profits = np.array(profits)
 
                     # BUY AND HOLD
                     ledgerBAH = tr.Ledger(self.money) # buy and hold
-                    ledgerBAH.buyStock(symbol,quotes[0][4])
-                    ledgerBAH.sellStock(symbol,quotes[-1][4])
+                    ledgerBAH.buyStock(symbol,quotes[0][0],quotes[0][4])
+                    ledgerBAH.sellStock(symbol,quotes[-1][0],quotes[-1][4])
 
                     self.report[symbol]["rand"] = [round(np.mean(profits),2), round(np.std(profits)), ledgerRand.getNumTrades(), ledgerRand.getWinPercent(), ledgerRand.getAvgWinProfitPercent(), ledgerRand.getAvgLossProfitPercent()]
                     self.report[symbol]["bah"] = [ledgerBAH.getProfit(), 0.0,  ledgerBAH.getNumTrades(), ledgerBAH.getWinPercent(), ledgerBAH.getAvgWinProfitPercent(), ledgerBAH.getAvgLossProfitPercent()]
+
+                    if debug:
+                        ledger.printLedger()
+
             except Exception as e:
                 print "[BT] Some other error"
                 print e

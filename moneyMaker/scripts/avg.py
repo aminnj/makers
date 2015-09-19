@@ -10,8 +10,8 @@ import cluster as cl
 
 plotdir = "../plots/"
 
-stock = gs.getStock("F", (2005, 1, 1), (2014, 10, 5))["days"] # for calculating
-d1,d2 = (2007,8,1),(2008,3,5) # for plotting
+stock = gs.getStock("F", (2010, 1, 1), (2011, 10, 5))["days"] # for calculating
+d1,d2 = (2010,8,1),(2011,3,5) # for plotting
 
 quotes = []
 timesclose = []
@@ -35,12 +35,26 @@ rsis = ind.rsitimes(quotes[:,[0,1]],14)
 quotes = quotes[-len(bbands):]
 
 
-nclusters=10
+nclusters=5
 ncandles=10 # remember to change to "saveTo" below when you change these values
 times, clusters, clusterCenters = cl.clusterCandles(quotes, nclusters=nclusters, ncandles=ncandles, loadFrom="test.txt")
 clusterQuotes, vlines = cl.clusterCentersForPlotting(clusterCenters)
 
-print cl.clustersAndTheirProfits(clusters,clusterCenters)
+clustersAndProfits = cl.clustersAndTheirNextProfits(clusters,clusterCenters)
+dBuy = {}
+dSell = {}
+for i,clusterIdx in enumerate(clusters[:-2]):
+    profit = clustersAndProfits[clusterIdx]
+
+    if(profit > 0.03):
+        dBuy[times[i+1]] = 1
+        dSell[times[i+2]] = 1
+
+    
+
+print clustersAndProfits
+print dBuy, dSell
+
 
 
 # colors = list("rbgkcmyw") # only allows up to 8

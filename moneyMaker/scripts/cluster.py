@@ -78,7 +78,7 @@ def profitFromCluster(cluster):
     # since it is O h l c o h l C
     return cluster[-1]-cluster[0]
 
-def clustersAndTheirProfits(clusters, clusterCenters):
+def clustersAndTheirNextProfits(clusters, clusterCenters):
     # give me an array of clusters codes (1D) and an array of clusterCenters
     # I will give you a dict of clusters and their normalized profits
     # due to a weighted average of all possible following clusters
@@ -100,12 +100,14 @@ def clustersAndTheirProfits(clusters, clusterCenters):
         else: tot = 1
         # for each cluster pattern, figure out the cluster patterns that follow
         s = 0.0
+        norm = 0.0
         for two in twos:
             # sum up the profit from the following cluster pattern weighted by it's probability
             # to follow the initial cluster pattern
             frac = 1.0*two[1]/tot
             s += frac*profitFromCluster(clusterCenters[two[0]])
-        clusterProfits[one] = s
+            norm += abs(profitFromCluster(clusterCenters[two[0]]))
+        clusterProfits[one] = s/norm
 
     return clusterProfits
 
