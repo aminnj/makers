@@ -79,7 +79,7 @@ def makeSigBkgHist(bkg, sig, filename, title="", nbins=20, norm=1):
     plt.close(fig)
 
 def findSignals(quotes):
-    x = 0.04
+    x = 0.03
     prices = quotes[:,4] # closing values
     times = quotes[:,0]
     sig, bkg = [], []
@@ -136,6 +136,8 @@ extraParams = {
         }
 
 dInds = {}
+bkgPercentinc = np.array([])
+sigPercentinc = np.array([])
 for i,ticker in enumerate(symbols):
 # for ticker in ["F"]:
     stock = gs.getStock(ticker, (2013, 1, 1), (2014, 12, 31))["days"] # for calculating
@@ -172,72 +174,83 @@ for i,ticker in enumerate(symbols):
 
     ### PLOTS BEGIN
 
-    #ema5 - ema10
-    ema5 = ta.abstract.Function('ema')(inputs, timeperiod=5)
-    ema10 = ta.abstract.Function('ema')(inputs, timeperiod=10)
-    ematimes = noNaN(np.c_[ times, (ema5-ema10)/inputs['close'] ], 1)
-    addToSigBkgDict(ematimes, "ema5minus10", bkgtimes, sigtimes, longname="(ema5-ema10)/close")
+    try:
 
-    #ema3 - ema7
-    ema3 = ta.abstract.Function('ema')(inputs, timeperiod=3)
-    ema7 = ta.abstract.Function('ema')(inputs, timeperiod=7)
-    ematimes = noNaN(np.c_[ times, (ema3-ema7)/inputs['close'] ], 1)
-    addToSigBkgDict(ematimes, "ema3minus7", bkgtimes, sigtimes, longname="(ema3-ema7)/close")
+        # % increase over 3 days
+        bkgPercentinc = np.append( bkgPercentinc, bkg[:,1] )
+        sigPercentinc = np.append( sigPercentinc, sig[:,1] )
 
-    # know sure thing http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:know_sure_thing_kst
-    ksttimes = noNaN(np.c_[ times, ind.kst(inputs['close']) ], 1)
-    addToSigBkgDict(ksttimes, "KST", bkgtimes, sigtimes, longname="Know Sure Thing (KST)")
+        #ema5 - ema10
+        ema5 = ta.abstract.Function('ema')(inputs, timeperiod=5)
+        ema10 = ta.abstract.Function('ema')(inputs, timeperiod=10)
+        ematimes510 = noNaN(np.c_[ times, (ema5-ema10)/inputs['close'] ], 1)
+        addToSigBkgDict(ematimes510, "ema5minus10", bkgtimes, sigtimes, longname="(ema5-ema10)/close")
 
-    # know sure thing with hull moving average
-    ksthmatimes = noNaN(np.c_[ times, ind.hma(ind.kst(inputs['close'])) ], 1)
-    addToSigBkgDict(ksthmatimes, "KSTHMA", bkgtimes, sigtimes, longname="Know Sure Thing (KST) with HMA")
+        #ema3 - ema7
+        ema3 = ta.abstract.Function('ema')(inputs, timeperiod=3)
+        ema7 = ta.abstract.Function('ema')(inputs, timeperiod=7)
+        ematimes37 = noNaN(np.c_[ times, (ema3-ema7)/inputs['close'] ], 1)
+        addToSigBkgDict(ematimes37, "ema3minus7", bkgtimes, sigtimes, longname="(ema3-ema7)/close")
 
-    # diff b/w KST with HMA and KST without HMA
-    ksthmatimes = noNaN(np.c_[ times, ind.kst(inputs['close'])-ind.hma(ind.kst(inputs['close'])) ], 1)
-    addToSigBkgDict(ksthmatimes, "KSTDIFF", bkgtimes, sigtimes, longname="KST HMA - KST")
+        # know sure thing http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:know_sure_thing_kst
+        ksttimes = noNaN(np.c_[ times, ind.kst(inputs['close']) ], 1)
+        addToSigBkgDict(ksttimes, "KST", bkgtimes, sigtimes, longname="Know Sure Thing (KST)")
 
-    # all indicators below
+        # know sure thing with hull moving average
+        ksthmatimes = noNaN(np.c_[ times, ind.hma(ind.kst(inputs['close'])) ], 1)
+        addToSigBkgDict(ksthmatimes, "KSTHMA", bkgtimes, sigtimes, longname="Know Sure Thing (KST) with HMA")
 
-    indicators = ["BBANDS","DEMA","EMA","HT_TRENDLINE","KAMA","MA","MAMA","MIDPOINT","MIDPRICE","SAR","SAREXT","SMA", \
-                  "T3","TEMA","TRIMA","WMA","ADX","ADXR","APO","AROON","AROONOSC","BOP","CCI","CMO","DX","MACD","MACDEXT", \
-                  "MACDFIX","MFI","MINUS_DI","MINUS_DM","MOM","PLUS_DI","PLUS_DM","PPO","ROC","ROCP","ROCR","ROCR100", \
-                  "RSI","STOCH","STOCHF","STOCHRSI","TRIX","ULTOSC","WILLR","AD","ADOSC","OBV","HT_DCPERIOD","HT_DCPHASE", \
-                  "HT_PHASOR","HT_SINE","HT_TRENDMODE","AVGPRICE","MEDPRICE","TYPPRICE","WCLPRICE","ATR","NATR","TRANGE", \
-                  "CDL2CROWS","CDL3BLACKCROWS","CDL3INSIDE","CDL3LINESTRIKE","CDL3OUTSIDE","CDL3STARSINSOUTH", \
-                  "CDL3WHITESOLDIERS","CDLABANDONEDBABY","CDLADVANCEBLOCK","CDLBELTHOLD","CDLBREAKAWAY","CDLCLOSINGMARUBOZU", \
-                  "CDLCONCEALBABYSWALL","CDLCOUNTERATTACK","CDLDARKCLOUDCOVER","CDLDOJI","CDLDOJISTAR","CDLDRAGONFLYDOJI", \
-                  "CDLENGULFING","CDLEVENINGDOJISTAR","CDLEVENINGSTAR","CDLGAPSIDESIDEWHITE","CDLGRAVESTONEDOJI","CDLHAMMER", \
-                  "CDLHANGINGMAN","CDLHARAMI","CDLHARAMICROSS","CDLHIGHWAVE","CDLHIKKAKE","CDLHIKKAKEMOD","CDLHOMINGPIGEON", \
-                  "CDLIDENTICAL3CROWS","CDLINNECK","CDLINVERTEDHAMMER","CDLKICKING","CDLKICKINGBYLENGTH","CDLLADDERBOTTOM", \
-                  "CDLLONGLEGGEDDOJI","CDLLONGLINE","CDLMARUBOZU","CDLMATCHINGLOW","CDLMATHOLD","CDLMORNINGDOJISTAR", \
-                  "CDLMORNINGSTAR","CDLONNECK","CDLPIERCING","CDLRICKSHAWMAN","CDLRISEFALL3METHODS","CDLSEPARATINGLINES", \
-                  "CDLSHOOTINGSTAR","CDLSHORTLINE","CDLSPINNINGTOP","CDLSTALLEDPATTERN","CDLSTICKSANDWICH","CDLTAKURI", \
-                  "CDLTASUKIGAP","CDLTHRUSTING","CDLTRISTAR","CDLUNIQUE3RIVER","CDLUPSIDEGAP2CROWS","CDLXSIDEGAP3METHODS"]
+        # diff b/w KST with HMA and KST without HMA
+        kstdiff = noNaN(np.c_[ times, ind.kst(inputs['close'])-ind.hma(ind.kst(inputs['close'])) ], 1)
+        addToSigBkgDict(kstdiff, "KSTDIFF", bkgtimes, sigtimes, longname="KST HMA - KST")
 
-    functiongroups = ta.get_function_groups()
-    for fname in indicators:
-        fn = ta.abstract.Function(fname)
+        # all indicators below
 
-        # skip candlesticks crap
-        if(fname in functiongroups['Pattern Recognition']): continue
+        indicators = ["BBANDS","DEMA","EMA","HT_TRENDLINE","KAMA","MA","MAMA","MIDPOINT","MIDPRICE","SAR","SAREXT","SMA", \
+                      "T3","TEMA","TRIMA","WMA","ADX","ADXR","APO","AROON","AROONOSC","BOP","CCI","CMO","DX","MACD","MACDEXT", \
+                      "MACDFIX","MFI","MINUS_DI","MINUS_DM","MOM","PLUS_DI","PLUS_DM","PPO","ROC","ROCP","ROCR","ROCR100", \
+                      "RSI","STOCH","STOCHF","STOCHRSI","TRIX","ULTOSC","WILLR","AD","ADOSC","OBV","HT_DCPERIOD","HT_DCPHASE", \
+                      "HT_PHASOR","HT_SINE","HT_TRENDMODE","AVGPRICE","MEDPRICE","TYPPRICE","WCLPRICE","ATR","NATR","TRANGE", \
+                      "CDL2CROWS","CDL3BLACKCROWS","CDL3INSIDE","CDL3LINESTRIKE","CDL3OUTSIDE","CDL3STARSINSOUTH", \
+                      "CDL3WHITESOLDIERS","CDLABANDONEDBABY","CDLADVANCEBLOCK","CDLBELTHOLD","CDLBREAKAWAY","CDLCLOSINGMARUBOZU", \
+                      "CDLCONCEALBABYSWALL","CDLCOUNTERATTACK","CDLDARKCLOUDCOVER","CDLDOJI","CDLDOJISTAR","CDLDRAGONFLYDOJI", \
+                      "CDLENGULFING","CDLEVENINGDOJISTAR","CDLEVENINGSTAR","CDLGAPSIDESIDEWHITE","CDLGRAVESTONEDOJI","CDLHAMMER", \
+                      "CDLHANGINGMAN","CDLHARAMI","CDLHARAMICROSS","CDLHIGHWAVE","CDLHIKKAKE","CDLHIKKAKEMOD","CDLHOMINGPIGEON", \
+                      "CDLIDENTICAL3CROWS","CDLINNECK","CDLINVERTEDHAMMER","CDLKICKING","CDLKICKINGBYLENGTH","CDLLADDERBOTTOM", \
+                      "CDLLONGLEGGEDDOJI","CDLLONGLINE","CDLMARUBOZU","CDLMATCHINGLOW","CDLMATHOLD","CDLMORNINGDOJISTAR", \
+                      "CDLMORNINGSTAR","CDLONNECK","CDLPIERCING","CDLRICKSHAWMAN","CDLRISEFALL3METHODS","CDLSEPARATINGLINES", \
+                      "CDLSHOOTINGSTAR","CDLSHORTLINE","CDLSPINNINGTOP","CDLSTALLEDPATTERN","CDLSTICKSANDWICH","CDLTAKURI", \
+                      "CDLTASUKIGAP","CDLTHRUSTING","CDLTRISTAR","CDLUNIQUE3RIVER","CDLUPSIDEGAP2CROWS","CDLXSIDEGAP3METHODS"]
 
-        params = {}
-        if(fname in extraParams): params = extraParams[fname]
+        functiongroups = ta.get_function_groups()
+        for fname in indicators:
+            fn = ta.abstract.Function(fname)
 
-        outputs = fn(inputs, **params)
-        numoutputs = len(fn.info['output_names'])
-        norm = 1.0
+            # skip candlesticks crap
+            if(fname in functiongroups['Pattern Recognition']): continue
 
-        if(fname in functiongroups['Overlap Studies']): norm = inputs['close'] # normalize these indicators via closing price
-        if(fname in functiongroups['Price Transform']): norm = inputs['close']
+            params = {}
+            if(fname in extraParams): params = extraParams[fname]
 
-        if(numoutputs == 1):
-            valtimes = addTimes(times,outputs/norm)
-            addToSigBkgDict(valtimes, fname, bkgtimes, sigtimes, longname=fn.info['display_name'])
-        elif(numoutputs > 1):
-            for i in range(numoutputs):
-                valtimes = addTimes(times,outputs[i]/norm)
-                addToSigBkgDict(valtimes, fname+"_"+fn.info['output_names'][i], bkgtimes, sigtimes, longname=fn.info['display_name']+" ("+fn.info['output_names'][i]+")")
+            outputs = fn(inputs, **params)
+            numoutputs = len(fn.info['output_names'])
+            norm = 1.0
+
+            if(fname in functiongroups['Overlap Studies']): norm = inputs['close'] # normalize these indicators via closing price
+            if(fname in functiongroups['Price Transform']): norm = inputs['close']
+
+            if(numoutputs == 1):
+                valtimes = addTimes(times,outputs/norm)
+                addToSigBkgDict(valtimes, fname, bkgtimes, sigtimes, longname=fn.info['display_name'])
+            elif(numoutputs > 1):
+                for i in range(numoutputs):
+                    valtimes = addTimes(times,outputs[i]/norm)
+                    addToSigBkgDict(valtimes, fname+"_"+fn.info['output_names'][i], bkgtimes, sigtimes, longname=fn.info['display_name']+" ("+fn.info['output_names'][i]+")")
+
+    except:
+        # so many failure modes. dont care to debug them if we have 3k stocks. just skip 'em
+        print ticker
+        continue
 
     ### PLOTS END
 
@@ -247,9 +260,12 @@ plotdir = "../sb3/"
 nkeys = len(dInds.keys())
 for i,key in enumerate(dInds.keys()):
     drawProgressBar(1.0*i/nkeys)
-    makeSigBkgHist(dInds[key]["bkg"], dInds[key]["sig"], plotdir+key+".png", dInds[key]["longname"], nbins=60)
+    try:
+        makeSigBkgHist(dInds[key]["bkg"], dInds[key]["sig"], plotdir+key+".png", dInds[key]["longname"], nbins=60)
+    except:
+        # try-except all the things!
+        continue
     # u.web(plotdir+key+".png")
 
-bkg, sig = findSignals(quotes)
-makeSigBkgHist(bkg[:,1], sig[:,1], plotdir+"sig_definition.png", "% increase over 3 days", norm=0)
+makeSigBkgHist(bkgPercentinc, sigPercentinc, plotdir+"sig_definition.png", "% increase over 3 days", norm=0, nbins=60)
 # u.web(plotdir+"sig_definition.png")
