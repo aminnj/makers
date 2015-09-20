@@ -6,7 +6,7 @@ import backtestBenchmark as btbm
 import utils as u
 import indicators as ind
 
-def macd(quotes, params = {}):
+def macd(quotes, d1, d2, params = {}):
     # define a function that takes a quotes object, so it is an array with elements [day,o,h,l,c]
     # and returns a dictionary with keys of buy and sell times
     # values are not used (1 here), so that gives us room to pack in more information with this function
@@ -44,9 +44,10 @@ def macd(quotes, params = {}):
 
 symbols = [line.strip() for line in open("../data/nasdaqlisted.txt").readlines()]
 symbols = symbols[:100]
-d1, d2 = (2014, 1, 15), (2015, 9, 14)
+d0, d1, d2 = (2013, 5, 15), (2014, 1, 15), (2015, 9, 15)
+            
 
-bt = btbm.Backtest(symbols, d1, d2, macd, money=1000.0, filename="test.txt")
+bt = btbm.Backtest(symbols, d0, d1, d2, macd, money=1000.0, filename="test.txt")
 #bt.doScan(params, filename="test_scan.txt")
 bt.doBenchmark( progressBar=False, params={} )
 pprint(bt.getReport())

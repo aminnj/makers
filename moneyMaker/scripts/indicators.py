@@ -19,6 +19,23 @@ def bb(prices, period, num_std_dev=2.0):
     bbands = np.c_[ upper, middle, lower, (upper-lower)/middle, upper-lower, (prices-lower)/(upper-lower) ]
     return bbands[np.isfinite(bbands[:,0])]
 
+def kst(prices, roc1=10, roc2=15, roc3=20, roc4=30, sma1=10, sma2=10, sma3=10, sma4=15, smasig=9):
+    rcma1 = ta.SMA(ta.ROC(prices,timeperiod=roc1), timeperiod=sma1)
+    rcma2 = ta.SMA(ta.ROC(prices,timeperiod=roc2), timeperiod=sma2)
+    rcma3 = ta.SMA(ta.ROC(prices,timeperiod=roc3), timeperiod=sma3)
+    rcma4 = ta.SMA(ta.ROC(prices,timeperiod=roc4), timeperiod=sma4)
+    kst = 1.0*rcma1 + 2.0*rcma2 + 3.0*rcma3 + 4.0*rcma4
+    return ta.SMA(kst, timeperiod=smasig)
+
+def hma(prices, period=20):
+    # https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/hull-moving-average
+    step1 = 2.0*ta.WMA(prices, timeperiod=period/2)
+    step2 = step1 - ta.WMA(prices, timeperiod=period)
+    step3 = ta.WMA(step2, timeperiod=np.sqrt(10))
+    return step3
+
+
+
 def bbtimes(timeprices, period, num_std_dev=2.0):
     times = timeprices[:,0]
     prices = timeprices[:,1]
@@ -40,6 +57,7 @@ def macdhisttimes(timeprices, period_fast, period_slow, period_signal, ema_type=
     emaprices_fast = ema(prices, period_fast, ema_type) # feed the function only the prices
     emaprices_slow = ema(prices, period_slow, ema_type) # feed the function only the prices
     ema_diff = [x - y for x, y in zip(emaprices_fast, emaprices_slow)]# MACD line
+    ema_diff = np.array(ema_diff)
     ema_signal = ema(ema_diff, period_signal, ema_type) # Signal line
     hist = [x - y for x, y in zip(ema_diff, ema_signal)]# Histogram of MACD - Signal
     times = times[-len(hist):] # make sure times and hist have same length from the end
