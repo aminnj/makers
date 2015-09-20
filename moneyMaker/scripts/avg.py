@@ -37,7 +37,7 @@ quotes = quotes[-len(bbands):]
 
 nclusters=5
 ncandles=10 # remember to change to "saveTo" below when you change these values
-times, clusters, clusterCenters = cl.clusterCandles(quotes, nclusters=nclusters, ncandles=ncandles, loadFrom="test.txt")
+times, clusters, clusterCenters = cl.clusterCandles(quotes, nclusters=nclusters, ncandles=ncandles, saveTo="test.txt")
 clusterQuotes, vlines = cl.clusterCentersForPlotting(clusterCenters)
 
 clustersAndProfits = cl.clustersAndTheirNextProfits(clusters,clusterCenters)
@@ -50,13 +50,6 @@ for i,clusterIdx in enumerate(clusters[:-2]):
         dBuy[times[i+1]] = 1
         dSell[times[i+2]] = 1
 
-    
-
-print clustersAndProfits
-print dBuy, dSell
-
-
-
 # colors = list("rbgkcmyw") # only allows up to 8
 # clustershading = []
 # for i, day in enumerate(times):
@@ -67,14 +60,15 @@ for day, rising in ind.crossovertimes(emas):
     crossovershading.append([day, 'g' if rising else 'r'])
 
 
-u.makeCandlestick(clusterQuotes, "../plots/candlestick.png",title="cluster centers",vlines=vlines)
+# u.makeCandlestick(clusterQuotes, "../plots/candlestick.png",title="cluster centers",vlines=vlines)
 
-# u.makeCandlestick(quotes, "../plots/candlestick.png", title="WMT (2009)", \
-#         shadings=[clustershading,crossovershading], \
-#         bbands=bbands, \
-#         window=[d1,d2], \
-#         averages=emas, \
-#         rsis=rsis, \
-#         )
+u.makeCandlestick(quotes, "../plots/candlestick.png", title="WMT (2009)", \
+        # shadings=[clustershading,crossovershading], \
+        shadings=[crossovershading], \
+        bbands=bbands, \
+        window=[d1,d2], \
+        averages=emas, \
+        rsis=rsis, \
+        )
 
-# u.web("../plots/candlestick.png")
+u.web("../plots/candlestick.png")
