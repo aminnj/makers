@@ -164,8 +164,12 @@ for i,ticker in enumerate(symbols):
     timevals = addTimes(quotes[:,0], outputs)
     ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 3][:,0] )
 
+    outputs = ta.abstract.Function("SAREXT")(inputs)
+    timevals = addTimes(quotes[:,0]/inputs['close'], outputs)
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 0][:,0] )
+
     outputs = ta.abstract.Function("SAR")(inputs)
-    timevals = addTimes(quotes[:,0], outputs)
+    timevals = addTimes(quotes[:,0]/inputs['close'], outputs)
     ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 1.1][:,0] )
 
     outputs = ta.abstract.Function("DX")(inputs)
