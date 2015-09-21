@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, random
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -15,6 +15,16 @@ import indicators as ind
 def noNaN(v, col=0):
     if(col > 0): return v[np.isfinite(v[:,col])]
     else: return v[np.isfinite(v)]
+
+def removeBelowSize(d,sizeThreshold=1):
+    newd = { }
+    for key in d:
+        if not d[key]: continue
+        if len(d[key].keys()) < sizeThreshold: continue
+
+        newd[key] = d[key]
+            
+    return newd
 
 def filterTimes(d, arr):
     # only take vectors in arr if the first element of the vec is a key in d
@@ -46,7 +56,7 @@ def makeSigBkgHist(bkg, sig, filename, title="", nbins=20, norm=1):
     plt.close(fig)
 
 def findSignals(quotes, ignoretimes=None):
-    x = 0.03
+    x = 0.04
     prices = quotes[:,4] # closing values
     times = quotes[:,0]
     sig, bkg = [], []
@@ -107,14 +117,22 @@ extraParams = {
         "BBANDS": { "timeperiod": 20 }
         }
 
+doCuts = False
+writeBDTtext = True 
+makePlots = False
+fh = None
 dInds = {}
 bkgPercentinc = np.array([])
 sigPercentinc = np.array([])
-for i,ticker in enumerate(symbols):
-# for ticker in ["F"]:
-    stock = gs.getStock(ticker, (2013, 1, 1), (2014, 12, 31))["days"] # for calculating
 
-    drawProgressBar(1.0*i/nsymbols)
+if(writeBDTtext):
+    fh = open("forBDT.txt","w")
+
+for iticker,ticker in enumerate(symbols):
+    # stock = gs.getStock(ticker, (2013, 1, 1), (2014, 12, 31))["days"] # for calculating
+    stock = gs.getStock(ticker, (2014, 1, 1), (2014, 12, 20))["days"] # for calculating
+
+    drawProgressBar(1.0*iticker/nsymbols)
 
     if(len(stock) < 50): continue
 
@@ -144,49 +162,50 @@ for i,ticker in enumerate(symbols):
 
     ignoretimes = np.array([])
 
-    outputs = ta.abstract.Function("WILLR")(inputs)
-    timevals = addTimes(quotes[:,0], outputs)
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > -85][:,0] )
+    if doCuts:
+        outputs = ta.abstract.Function("WILLR")(inputs)
+        timevals = addTimes(quotes[:,0], outputs)
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > -85][:,0] )
 
-    outputs = ta.abstract.Function("HT_DCPHASE")(inputs)
-    timevals = addTimes(quotes[:,0], outputs)
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 75][:,0] )
+        outputs = ta.abstract.Function("HT_DCPHASE")(inputs)
+        timevals = addTimes(quotes[:,0], outputs)
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 75][:,0] )
 
-    outputs = ta.abstract.Function("CCI")(inputs)
-    timevals = addTimes(quotes[:,0], outputs)
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > -90][:,0] )
+        outputs = ta.abstract.Function("CCI")(inputs)
+        timevals = addTimes(quotes[:,0], outputs)
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > -90][:,0] )
 
-    outputs = ta.abstract.Function("AROONOSC")(inputs)
-    timevals = addTimes(quotes[:,0], outputs)
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > -60][:,0] )
+        outputs = ta.abstract.Function("AROONOSC")(inputs)
+        timevals = addTimes(quotes[:,0], outputs)
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > -60][:,0] )
 
-    outputs = ta.abstract.Function("NATR")(inputs)
-    timevals = addTimes(quotes[:,0], outputs)
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 3][:,0] )
+        outputs = ta.abstract.Function("NATR")(inputs)
+        timevals = addTimes(quotes[:,0], outputs)
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 3][:,0] )
 
-    outputs = ta.abstract.Function("SAREXT")(inputs)
-    timevals = addTimes(quotes[:,0]/inputs['close'], outputs)
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 0][:,0] )
+        outputs = ta.abstract.Function("SAREXT")(inputs)
+        timevals = addTimes(quotes[:,0]/inputs['close'], outputs)
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 0][:,0] )
 
-    outputs = ta.abstract.Function("SAR")(inputs)
-    timevals = addTimes(quotes[:,0]/inputs['close'], outputs)
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 1.1][:,0] )
+        outputs = ta.abstract.Function("SAR")(inputs)
+        timevals = addTimes(quotes[:,0]/inputs['close'], outputs)
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 1.1][:,0] )
 
-    outputs = ta.abstract.Function("DX")(inputs)
-    timevals = addTimes(quotes[:,0], outputs)
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 40][:,0] )
+        outputs = ta.abstract.Function("DX")(inputs)
+        timevals = addTimes(quotes[:,0], outputs)
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 40][:,0] )
 
-    outputs = ta.abstract.Function("RSI")(inputs)
-    timevals = addTimes(quotes[:,0], outputs)
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 35][:,0] )
+        outputs = ta.abstract.Function("RSI")(inputs)
+        timevals = addTimes(quotes[:,0], outputs)
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 35][:,0] )
 
-    outputs = ta.abstract.Function("BOP")(inputs)
-    timevals = addTimes(quotes[:,0], outputs)
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 0][:,0] )
+        outputs = ta.abstract.Function("BOP")(inputs)
+        timevals = addTimes(quotes[:,0], outputs)
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 0][:,0] )
 
-    outputs = ta.abstract.Function("STOCHF")(inputs)
-    timevals = addTimes(quotes[:,0], outputs[1]) # fastd is the second one
-    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 18][:,0] )
+        outputs = ta.abstract.Function("STOCHF")(inputs)
+        timevals = addTimes(quotes[:,0], outputs[1]) # fastd is the second one
+        ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 18][:,0] )
     ### CUTS END
 
 
@@ -232,19 +251,14 @@ for i,ticker in enumerate(symbols):
                       "T3","TEMA","TRIMA","WMA","ADX","ADXR","APO","AROON","AROONOSC","BOP","CCI","CMO","DX","MACD","MACDEXT", \
                       "MACDFIX","MFI","MINUS_DI","MINUS_DM","MOM","PLUS_DI","PLUS_DM","PPO","ROC","ROCP","ROCR","ROCR100", \
                       "RSI","STOCH","STOCHF","STOCHRSI","TRIX","ULTOSC","WILLR","AD","ADOSC","OBV","HT_DCPERIOD","HT_DCPHASE", \
-                      "HT_PHASOR","HT_SINE","HT_TRENDMODE","AVGPRICE","MEDPRICE","TYPPRICE","WCLPRICE","ATR","NATR","TRANGE", \
-                      "CDL2CROWS","CDL3BLACKCROWS","CDL3INSIDE","CDL3LINESTRIKE","CDL3OUTSIDE","CDL3STARSINSOUTH", \
-                      "CDL3WHITESOLDIERS","CDLABANDONEDBABY","CDLADVANCEBLOCK","CDLBELTHOLD","CDLBREAKAWAY","CDLCLOSINGMARUBOZU", \
-                      "CDLCONCEALBABYSWALL","CDLCOUNTERATTACK","CDLDARKCLOUDCOVER","CDLDOJI","CDLDOJISTAR","CDLDRAGONFLYDOJI", \
-                      "CDLENGULFING","CDLEVENINGDOJISTAR","CDLEVENINGSTAR","CDLGAPSIDESIDEWHITE","CDLGRAVESTONEDOJI","CDLHAMMER", \
-                      "CDLHANGINGMAN","CDLHARAMI","CDLHARAMICROSS","CDLHIGHWAVE","CDLHIKKAKE","CDLHIKKAKEMOD","CDLHOMINGPIGEON", \
-                      "CDLIDENTICAL3CROWS","CDLINNECK","CDLINVERTEDHAMMER","CDLKICKING","CDLKICKINGBYLENGTH","CDLLADDERBOTTOM", \
-                      "CDLLONGLEGGEDDOJI","CDLLONGLINE","CDLMARUBOZU","CDLMATCHINGLOW","CDLMATHOLD","CDLMORNINGDOJISTAR", \
-                      "CDLMORNINGSTAR","CDLONNECK","CDLPIERCING","CDLRICKSHAWMAN","CDLRISEFALL3METHODS","CDLSEPARATINGLINES", \
-                      "CDLSHOOTINGSTAR","CDLSHORTLINE","CDLSPINNINGTOP","CDLSTALLEDPATTERN","CDLSTICKSANDWICH","CDLTAKURI", \
-                      "CDLTASUKIGAP","CDLTHRUSTING","CDLTRISTAR","CDLUNIQUE3RIVER","CDLUPSIDEGAP2CROWS","CDLXSIDEGAP3METHODS"]
-        # indicators = ["WILLR"]
+                      "HT_PHASOR","HT_SINE","HT_TRENDMODE","AVGPRICE","MEDPRICE","TYPPRICE","WCLPRICE","ATR","NATR","TRANGE" ]
+        # indicators = ["WILLR", "DX", "BBANDS", "MOM"]
+        fullIndicators = []
 
+        forBDTsig = {}
+        forBDTbkg = {}
+
+        nIndicators = 0
         functiongroups = ta.get_function_groups()
         for fname in indicators:
             fn = ta.abstract.Function(fname)
@@ -262,14 +276,67 @@ for i,ticker in enumerate(symbols):
             if(fname in functiongroups['Overlap Studies']): norm = inputs['close'] # normalize these indicators via closing price
             if(fname in functiongroups['Price Transform']): norm = inputs['close']
 
+            nIndicators += numoutputs
+
             if(numoutputs == 1):
                 valtimes = addTimes(times,outputs/norm)
-                # print valtimes
+                fullIndicators.append(fname)
+
+                for t,v in valtimes:
+                    t = int(t)
+                    if t not in forBDTsig: forBDTsig[t] = {}
+                    if t not in forBDTbkg: forBDTbkg[t] = {}
+                    if t in sigtimes: forBDTsig[t][fname] = v
+                    if t in bkgtimes: forBDTbkg[t][fname] = v
+
                 addToSigBkgDict(valtimes, fname, bkgtimes, sigtimes, longname=fn.info['display_name'])
             elif(numoutputs > 1):
                 for i in range(numoutputs):
                     valtimes = addTimes(times,outputs[i]/norm)
-                    addToSigBkgDict(valtimes, fname+"_"+fn.info['output_names'][i], bkgtimes, sigtimes, longname=fn.info['display_name']+" ("+fn.info['output_names'][i]+")")
+                    shortname = fname+"_"+fn.info['output_names'][i]
+                    fullIndicators.append(shortname)
+
+                    for t,v in valtimes:
+                        t = int(t)
+                        if t not in forBDTsig: forBDTsig[t] = {}
+                        if t not in forBDTbkg: forBDTbkg[t] = {}
+                        if t in sigtimes: forBDTsig[t][shortname] = v
+                        if t in bkgtimes: forBDTbkg[t][shortname] = v
+
+                    addToSigBkgDict(valtimes, shortname, bkgtimes, sigtimes, longname=fn.info['display_name']+" ("+fn.info['output_names'][i]+")")
+
+        assert(len(fullIndicators) == nIndicators), "ERROR: len(fullIndicators) != nIndicators (%i != %i)" % (len(fullIndicators), nIndicators)
+
+
+
+        forBDTsig = removeBelowSize(forBDTsig, nIndicators)
+        forBDTbkg = removeBelowSize(forBDTbkg, nIndicators)
+
+        if writeBDTtext:
+            # if( iticker == 0 ): print "# ["+ticker+"]: SB Day "+" ".join(fullIndicators)
+            prescale = 1
+            fh.write( "# ["+ticker+"]: SB Day "+" ".join(fullIndicators) +"\n" )
+            for t in random.sample(forBDTsig.keys(), len(forBDTsig.keys())//prescale): #  "prescale" the events by 10
+                # we should have all indicators in here if we've done removeBelowSize properly
+                # 1 for sig, 0 for bkg
+                fh.write("1 %i " % int(t))
+                for indic in fullIndicators: 
+                    fh.write("%.2f " % forBDTsig[t][indic])
+                fh.write("\n")
+
+                # print "1", t,
+                # for indic in fullIndicators: print forBDTsig[t][indic],
+                # print
+            for t in random.sample(forBDTbkg.keys(), len(forBDTbkg.keys())//prescale):
+                fh.write("0 %i " % int(t))
+                for indic in fullIndicators: 
+                    fh.write("%.2f " % forBDTbkg[t][indic])
+                fh.write("\n")
+
+                # print "0", t,
+                # for indic in fullIndicators: print forBDTbkg[t][indic],
+                # print
+
 
     except Exception,e:
         # so many failure modes. dont care to debug them if we have 3k stocks. just skip 'em
@@ -279,19 +346,23 @@ for i,ticker in enumerate(symbols):
 
     ### PLOTS END
 
+if(writeBDTtext): fh.close()
 
-print "PLOTTING!"
-plotdir = "../sb4/"
-nkeys = len(dInds.keys())
-for i,key in enumerate(dInds.keys()):
-    # continue
-    drawProgressBar(1.0*i/nkeys)
-    try:
-        makeSigBkgHist(dInds[key]["bkg"], dInds[key]["sig"], plotdir+key+".png", dInds[key]["longname"], nbins=60)
-    except:
-        # try-except all the things!
+
+if(makePlots):
+    print "PLOTTING!"
+    plotdir = "../sb4/"
+    nkeys = len(dInds.keys())
+    for i,key in enumerate(dInds.keys()):
         continue
-    # u.web(plotdir+key+".png")
+        drawProgressBar(1.0*i/nkeys)
+        try:
+            makeSigBkgHist(dInds[key]["bkg"], dInds[key]["sig"], plotdir+key+".png", dInds[key]["longname"], nbins=60)
+        except:
+            # try-except all the things!
+            continue
+        # u.web(plotdir+key+".png")
 
-makeSigBkgHist(bkgPercentinc, sigPercentinc, plotdir+"sig_definition.png", "% increase over 3 days", norm=0, nbins=60)
-# u.web(plotdir+"sig_definition.png")
+    makeSigBkgHist(bkgPercentinc, sigPercentinc, plotdir+"sig_definition.png", "% increase over 3 days", norm=0, nbins=60)
+    # u.web(plotdir+"sig_definition.png")
+
