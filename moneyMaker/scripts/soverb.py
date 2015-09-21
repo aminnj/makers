@@ -32,32 +32,6 @@ def makeSigBkgHist(bkg, sig, filename, title="", nbins=20, norm=1):
     # find cut value for which s/b is maximum
     valstotry = np.linspace(np.min(sig),np.max(sig),num=50,endpoint=False)
     
-    # # want to maximize eff*purity (eff=nsig/ntotnocut, purity=nsig/ntotwithcut)
-    # maxratioleft, maxratioright = -1., -1.
-    # leftval, rightval = -1000., -1000.
-    # for val in valstotry:
-    #     try:
-    #         nbkgleft = len(bkg[bkg < val])
-    #         nsigleft = len(sig[sig < val])
-    #         nbkgright = nbkg - nbkgleft
-    #         nsigright = nsig - nsigleft
-    #         effleft, purleft = 1.0*nsigleft/(nbkg+nsig),1.0*nsigleft/(nsigleft+nbkgleft), 
-    #         ratioleft = effleft*purleft
-    #         effright, purright = 1.0*nsigright/(nbkg+nsig),1.0*nsigright/(nsigright+nbkgright), 
-    #         ratioright = effright*purright
-
-    #         eff, pur = 1.0*nsigleft/(nbkg+nsig),1.0*nsigleft/(nsigleft+nbkgleft), 
-    #         # print val, nbkgleft, nsigleft, nbkgright, nsigright, "eff:", eff, "pur:",pur, "eff*pur:",eff*pur
-    #         if(ratioleft > maxratioleft):
-    #             maxratioleft = ratioleft
-    #             leftval = val
-    #         if(ratioright > maxratioright):
-    #             maxratioright = ratioright
-    #             rightval = val
-    #     except:
-    #         pass
-    #         # probably div by zero, ignore it. who cares?
-
     fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
     fig.suptitle(title, fontsize=16)
     bins=np.histogram(np.hstack((sig,bkg)), bins=nbins)[1] #get the bin edges
@@ -67,23 +41,21 @@ def makeSigBkgHist(bkg, sig, filename, title="", nbins=20, norm=1):
     ax.text(0.015,0.985,"#bkg: "+str(len(bkg)), horizontalalignment='left', verticalalignment='top',transform=ax.transAxes,color='red')
     ax.text(0.015,0.935,"#sig: "+str(len(sig)), horizontalalignment='left', verticalalignment='top',transform=ax.transAxes,color='blue')
     ax.text(0.015,0.885,"Normalized" if norm>0 else "Unnormalized", horizontalalignment='left', verticalalignment='top',transform=ax.transAxes,color='black')
-    # xr = 1.0*(ax.get_xlim()[1]-ax.get_xlim()[0])
-    # if(maxratioleft > maxratioright): # left side wins with cut value of leftval
-    #     ax.axvline(x=leftval,c="black",linewidth=0.5)
-    #     ax.arrow(leftval, ax.get_ylim()[1]*0.95, -xr*0.04, 0, fc='k',ec='k',head_width=ax.get_ylim()[1]*0.01,head_length=xr*0.01,width=0.0001)
-    # else: # right side wins with cut value of rightval
-    #     ax.axvline(x=rightval,c="black",linewidth=0.5)
-    #     ax.arrow(rightval, ax.get_ylim()[1]*0.95,  xr*0.04, 0, fc='k',ec='k',head_width=ax.get_ylim()[1]*0.01,head_length=xr*0.01,width=0.0001)
 
     fig.savefig(filename, bbox_inches='tight')
     plt.close(fig)
 
-def findSignals(quotes):
+def findSignals(quotes, ignoretimes=None):
     x = 0.03
     prices = quotes[:,4] # closing values
     times = quotes[:,0]
     sig, bkg = [], []
+    dCuts = {}
+    if ignoretimes is not None: dCuts = { int(t):1 for t in ignoretimes } # for lookup
+
     for i,p in enumerate(prices[:-3]):
+        if int(times[i]) in dCuts: continue
+
         p0, p1, p2, p3 = p, prices[i+1], prices[i+2], prices[i+3]
         # want stock to go up by x% over 3 days without decreasing at all
         # if((p3-p0)/p0 < x or p1 < p0 or p2 < p1 or p3 < p2): bkg.append( [times[i],(p3-p0)/p0] ) # FIXME
@@ -125,7 +97,7 @@ def drawProgressBar(fraction):
     sys.stdout.flush()
 
 
-symbols = [line.strip() for line in open("../data/nasdaqlisted.txt").readlines()][:]
+symbols = [line.strip() for line in open("../data/goodstocks.txt").readlines()]
 # symbols = ["F", "AAL"]
 nsymbols = len(symbols)
 
@@ -158,6 +130,8 @@ for i,ticker in enumerate(symbols):
     if(quotes[-1][4] > 300.0): continue # ignore expensive stocks
     if(quotes[-1][4] < 1.00): continue # ignore "penny" stocks
 
+
+    times = quotes[:,0]
     inputs = {
         'open': quotes[:,1],
         'high': quotes[:,2],
@@ -166,9 +140,54 @@ for i,ticker in enumerate(symbols):
         'volume': quotes[:,5],
     }
 
-    times = quotes[:,0]
-    bkg, sig = findSignals(quotes)
-    # dict for const. lookup
+    ### CUTS BEGIN
+
+    ignoretimes = np.array([])
+
+    outputs = ta.abstract.Function("WILLR")(inputs)
+    timevals = addTimes(quotes[:,0], outputs)
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > -85][:,0] )
+
+    outputs = ta.abstract.Function("HT_DCPHASE")(inputs)
+    timevals = addTimes(quotes[:,0], outputs)
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 75][:,0] )
+
+    outputs = ta.abstract.Function("CCI")(inputs)
+    timevals = addTimes(quotes[:,0], outputs)
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > -90][:,0] )
+
+    outputs = ta.abstract.Function("AROONOSC")(inputs)
+    timevals = addTimes(quotes[:,0], outputs)
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > -60][:,0] )
+
+    outputs = ta.abstract.Function("NATR")(inputs)
+    timevals = addTimes(quotes[:,0], outputs)
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 3][:,0] )
+
+    outputs = ta.abstract.Function("SAR")(inputs)
+    timevals = addTimes(quotes[:,0], outputs)
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 1.1][:,0] )
+
+    outputs = ta.abstract.Function("DX")(inputs)
+    timevals = addTimes(quotes[:,0], outputs)
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] < 40][:,0] )
+
+    outputs = ta.abstract.Function("RSI")(inputs)
+    timevals = addTimes(quotes[:,0], outputs)
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 35][:,0] )
+
+    outputs = ta.abstract.Function("BOP")(inputs)
+    timevals = addTimes(quotes[:,0], outputs)
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 0][:,0] )
+
+    outputs = ta.abstract.Function("STOCHF")(inputs)
+    timevals = addTimes(quotes[:,0], outputs[1]) # fastd is the second one
+    ignoretimes = np.append( ignoretimes, timevals[timevals[:,1] > 18][:,0] )
+    ### CUTS END
+
+
+    bkg, sig = findSignals(quotes, ignoretimes)
+    # dicts for const. lookup
     bkgtimes = { int(bkg[:,0][i]):1 for i in range(len(bkg[:,0])) } if len(bkg) > 0 else { }
     sigtimes = { int(sig[:,0][i]):1 for i in range(len(sig[:,0])) } if len(sig) > 0 else { }
 
@@ -177,8 +196,8 @@ for i,ticker in enumerate(symbols):
     try:
 
         # % increase over 3 days
-        bkgPercentinc = np.append( bkgPercentinc, bkg[:,1] )
-        sigPercentinc = np.append( sigPercentinc, sig[:,1] )
+        if(len(bkg) > 0): bkgPercentinc = np.append( bkgPercentinc, bkg[:,1] )
+        if(len(sig) > 0): sigPercentinc = np.append( sigPercentinc, sig[:,1] )
 
         #ema5 - ema10
         ema5 = ta.abstract.Function('ema')(inputs, timeperiod=5)
@@ -205,7 +224,6 @@ for i,ticker in enumerate(symbols):
         addToSigBkgDict(kstdiff, "KSTDIFF", bkgtimes, sigtimes, longname="KST HMA - KST")
 
         # all indicators below
-
         indicators = ["BBANDS","DEMA","EMA","HT_TRENDLINE","KAMA","MA","MAMA","MIDPOINT","MIDPRICE","SAR","SAREXT","SMA", \
                       "T3","TEMA","TRIMA","WMA","ADX","ADXR","APO","AROON","AROONOSC","BOP","CCI","CMO","DX","MACD","MACDEXT", \
                       "MACDFIX","MFI","MINUS_DI","MINUS_DM","MOM","PLUS_DI","PLUS_DM","PPO","ROC","ROCP","ROCR","ROCR100", \
@@ -221,6 +239,7 @@ for i,ticker in enumerate(symbols):
                       "CDLMORNINGSTAR","CDLONNECK","CDLPIERCING","CDLRICKSHAWMAN","CDLRISEFALL3METHODS","CDLSEPARATINGLINES", \
                       "CDLSHOOTINGSTAR","CDLSHORTLINE","CDLSPINNINGTOP","CDLSTALLEDPATTERN","CDLSTICKSANDWICH","CDLTAKURI", \
                       "CDLTASUKIGAP","CDLTHRUSTING","CDLTRISTAR","CDLUNIQUE3RIVER","CDLUPSIDEGAP2CROWS","CDLXSIDEGAP3METHODS"]
+        # indicators = ["WILLR"]
 
         functiongroups = ta.get_function_groups()
         for fname in indicators:
@@ -241,14 +260,16 @@ for i,ticker in enumerate(symbols):
 
             if(numoutputs == 1):
                 valtimes = addTimes(times,outputs/norm)
+                # print valtimes
                 addToSigBkgDict(valtimes, fname, bkgtimes, sigtimes, longname=fn.info['display_name'])
             elif(numoutputs > 1):
                 for i in range(numoutputs):
                     valtimes = addTimes(times,outputs[i]/norm)
                     addToSigBkgDict(valtimes, fname+"_"+fn.info['output_names'][i], bkgtimes, sigtimes, longname=fn.info['display_name']+" ("+fn.info['output_names'][i]+")")
 
-    except:
+    except Exception,e:
         # so many failure modes. dont care to debug them if we have 3k stocks. just skip 'em
+        print str(e)
         print ticker
         continue
 
@@ -256,9 +277,10 @@ for i,ticker in enumerate(symbols):
 
 
 print "PLOTTING!"
-plotdir = "../sb3/"
+plotdir = "../sb4/"
 nkeys = len(dInds.keys())
 for i,key in enumerate(dInds.keys()):
+    # continue
     drawProgressBar(1.0*i/nkeys)
     try:
         makeSigBkgHist(dInds[key]["bkg"], dInds[key]["sig"], plotdir+key+".png", dInds[key]["longname"], nbins=60)
