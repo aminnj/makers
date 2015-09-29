@@ -34,7 +34,7 @@ def crossover(quotes):
 symbols = [line.strip() for line in open("../data/nasdaqlisted.txt").readlines()][:1000]
 
 today = datetime.datetime.today()
-dtuple = (today.year,today.month,today.day)
+dtuple = (today.year,today.month,today.day-3)
 
 goodsymbols = []
 for symbol in symbols:

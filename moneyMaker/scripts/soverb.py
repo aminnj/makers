@@ -56,7 +56,7 @@ def makeSigBkgHist(bkg, sig, filename, title="", nbins=20, norm=1):
     plt.close(fig)
 
 def findSignals(quotes, ignoretimes=None):
-    x = 0.04
+    x = 0.02
     prices = quotes[:,4] # closing values
     times = quotes[:,0]
     sig, bkg = [], []
@@ -69,8 +69,21 @@ def findSignals(quotes, ignoretimes=None):
         p0, p1, p2, p3 = p, prices[i+1], prices[i+2], prices[i+3]
         # want stock to go up by x% over 3 days without decreasing at all
         # if((p3-p0)/p0 < x or p1 < p0 or p2 < p1 or p3 < p2): bkg.append( [times[i],(p3-p0)/p0] ) # FIXME
-        if((p3-p0)/p0 < x): bkg.append( [times[i],(p3-p0)/p0] )
-        else: sig.append( [times[i],(p3-p0)/p0] )
+        # if((p2-p0)/p0 >= x): # if >x%, sig # FIXME
+        #     sig.append( [times[i],(p2-p0)/p0] )
+        # elif((p2-p0)/p0 <= 0.0): # if negative return, bkg
+        #     bkg.append( [times[i],(p3-p0)/p0] )
+
+        pGainD1 = (p1-p0)/p0 
+        pGainD2 = (p2-p0)/p0
+
+        pGain3Days = (p3-p0)/p0
+
+        if(pGainD1 > 0.0125 and pGainD2 > 0.0075): # 1.25% day 1, 0.75% day 2
+            sig.append( [times[i], pGain3Days] )
+        elif(pGainD1 < -0.0125 and pGainD2 < -0.0075): # -1.25% day 1, -0.75% day 2
+            bkg.append( [times[i], pGain3Days] )
+        # everything else doesn't matter
     return np.array(bkg), np.array(sig)
 
 def normToM1P1(vals):
@@ -119,7 +132,7 @@ extraParams = {
 
 doCuts = False
 writeBDTtext = True 
-makePlots = False
+makePlots = True
 fh = None
 dInds = {}
 bkgPercentinc = np.array([])
@@ -228,11 +241,20 @@ for iticker,ticker in enumerate(symbols):
         ematimes510 = noNaN(np.c_[ times, (ema5-ema10)/inputs['close'] ], 1)
         addToSigBkgDict(ematimes510, "ema5minus10", bkgtimes, sigtimes, longname="(ema5-ema10)/close")
 
+        # d/dt (ema5-ema10)
+        ematimesd510 = noNaN(np.c_[ times[1:], (ema5[1:]-ema10[:-1])/inputs['close'][1:] ], 1)
+        addToSigBkgDict(ematimesd510, "ddtema5minus10", bkgtimes, sigtimes, longname="ddt(ema5-ema10)/close")
+
+
         #ema3 - ema7
         ema3 = ta.abstract.Function('ema')(inputs, timeperiod=3)
         ema7 = ta.abstract.Function('ema')(inputs, timeperiod=7)
         ematimes37 = noNaN(np.c_[ times, (ema3-ema7)/inputs['close'] ], 1)
         addToSigBkgDict(ematimes37, "ema3minus7", bkgtimes, sigtimes, longname="(ema3-ema7)/close")
+
+        # d/dt (ema3-ema7)
+        ematimesd37 = noNaN(np.c_[ times[1:], (ema3[1:]-ema7[:-1])/inputs['close'][1:] ], 1)
+        addToSigBkgDict(ematimesd37, "ddtema3minus7", bkgtimes, sigtimes, longname="ddt(ema3-ema7)/close")
 
         # know sure thing http://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:know_sure_thing_kst
         ksttimes = noNaN(np.c_[ times, ind.kst(inputs['close']) ], 1)
@@ -354,7 +376,6 @@ if(makePlots):
     plotdir = "../sb4/"
     nkeys = len(dInds.keys())
     for i,key in enumerate(dInds.keys()):
-        continue
         drawProgressBar(1.0*i/nkeys)
         try:
             makeSigBkgHist(dInds[key]["bkg"], dInds[key]["sig"], plotdir+key+".png", dInds[key]["longname"], nbins=60)
