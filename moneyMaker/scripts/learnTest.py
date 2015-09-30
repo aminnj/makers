@@ -46,15 +46,18 @@ def projectionX(xvals, yvals, nselect=250):
     return bincenters, mean, std, cutoff, nleft, nright
 
 def saveTrades(testingdata, classifiersTest, cutoffTest, printToScreen=False):
-    goodTrades = testingdata[classifiersTest > cutoffTest][:,[1,2,3,4,5]]
-    goodClassifiers = classifiersTest[classifiersTest > cutoffTest]
+    goodTrades = testingdata[classifiersTest > cutoffTest][:,[1,2,3,4,5]] # FIXME FIXME FIXME
+    # goodTrades = testingdata[testingdata[:,0] > 0.5][classifiersTest[testingdata[:,0] > 0.5] > cutoffTest][:,[1,2,3,4,5]]
+    goodClassifiers = classifiersTest[classifiersTest > cutoffTest] # FIXME FIXME FIXME
+    # goodClassifiers = classifiersTest[testingdata[:,0] > 0.5][classifiersTest[testingdata[:,0] > 0.5] > cutoffTest]
     for itrade, trade in enumerate(goodTrades):
         day, gain1, gain2, iticker, close0 = trade
         day, iticker, close0 = int(day), int(iticker), float(close0)
         if printToScreen:
             print dTickers[iticker], u.inum2tuple(day), close0, gain1, gain2, gain1+gain2
         else:
-            fhTrades.write("%s %i %.3f %.2f\n" % (dTickers[iticker], day, goodClassifiers[itrade], close0))
+            dt = "%04i-%02i-%02i" % u.inum2tuple(day)
+            fhTrades.write("%s %s %.3f %.2f\n" % (dTickers[iticker], dt, goodClassifiers[itrade], close0))
 
 
 def doubleHist(sig, bkg, filename="test.png", name="", nbins=80):
@@ -156,7 +159,7 @@ def plotTrainTest(Xtrain, Ytrain, Xtest, Ytest, trainingdata, testingdata, title
 
 
 def plot2DGainClassifier(gains, classifiers, title, filename, lims=[-1.5,1.5]):
-    nselect = 250
+    nselect = 500
     # at what classifier value do we have nselect points to the right?
     xvals, yvals, yerr, cutoff, nleft, nright = projectionX(classifiers, gains, nselect=nselect)
     # what is the average fractional gain to the right of this cutoff line
@@ -182,10 +185,18 @@ def plot2DGainClassifier(gains, classifiers, title, filename, lims=[-1.5,1.5]):
     print ">>> Saved %s" % filename
     return cutoff
 
-filename = "forBDT_093015_short.txt"
-tickerfile = "forBDT_093015_tickers.txt"
-tradefile = "trades_093015.txt"
-# filename = "forBDT_093015.txt"
+filename = "forBDT_092915.txt"
+if(len(sys.argv)>1): filename = sys.argv[-1]
+# filename = "forBDT_093015_short.txt"
+# tickerfile = "forBDT_092915_tickers.txt"
+tickerfile = filename.replace(".txt","_tickers.txt")
+tradefile = "trades_"+filename
+
+print ">>> Input file:", filename
+print ">>> Input tickers file:", tickerfile
+print ">>> Output trades file:", tradefile
+
+# tradefile = "trades_092915.txt"
 basedir = "../bdtplots5/"
 fhinput = open(filename,"r")
 firstline = fhinput.readline()
@@ -196,7 +207,7 @@ fhinput.close()
 datasetOriginal = np.loadtxt(filename)
 
 dataset = np.copy(datasetOriginal)
-np.random.shuffle(dataset)
+# np.random.shuffle(dataset)
 
 # re-compute class on the fly
 change1, change2 = 1.25/100, 0.75/100
@@ -227,7 +238,7 @@ alg = None
 inclusive = True
 plotFeatures = False
 plotFeatures2D = False
-fracTrain = 0.5
+fracTrain = 0.3
 print ">>> Training with first %.0f%% and testing with latter %.0f%%" % (100.0*fracTrain, 100.0*(1.0-fracTrain))
 if(inclusive):
 
@@ -241,6 +252,9 @@ else:
     trainingdata = dataset[:int(fracTrain*len(dataset))] # train with first half (s and b only)
     testingdata = dataset[-int((1.0-fracTrain)*len(dataset)):] # test with second half
 
+# mix things up to keep the learner on its toes
+np.random.shuffle(trainingdata) 
+np.random.shuffle(testingdata)
 
 # first = True
 # whichIndicators = ["AROONOSC", "WILLR", "HT_DCPHASE", "NATR", "STOCHF_fastd", "SAREXT", \

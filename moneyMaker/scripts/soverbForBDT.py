@@ -52,9 +52,10 @@ def addToDict(vals, ticker, shortname):
     if shortname not in valNamesDict: valNamesDict[shortname] = 1
 
     for t,v in vals:
-        if(t not in mainDict[ticker]): mainDict[ticker][t] = {}
+        if(t not in mainDict): mainDict[t] = {}
+        if(ticker not in mainDict[t]): mainDict[t][ticker] = {}
 
-        mainDict[ticker][t][shortname] = round(v,3)
+        mainDict[t][ticker][shortname] = round(v,3)
 
 
 symbols = [line.strip() for line in open("../data/goodstocks.txt").readlines()]
@@ -62,7 +63,8 @@ symbols = [line.strip() for line in open("../data/goodstocks.txt").readlines()]
 nsymbols = len(symbols)
 tickerIDs = {} # key is stock name, val is a unique number (I will use iticker for it)
 
-fname = "forBDT_093015.txt"
+fname = "forBDT_092915.txt"
+if len(sys.argv) > 1: fname = sys.argv[-1]
 fh = open(fname,"w")
 fhTickers = open(fname.replace(".txt","_tickers.txt"),"w")
 
@@ -103,8 +105,6 @@ for iticker,ticker in enumerate(symbols):
     try:
 
         if(ticker not in tickerIDs): tickerIDs[ticker] = iticker
-
-        mainDict[ticker] = {}
 
         classStuff = classifyStocks(quotes)
         classVals = classStuff[:,[0,1]]
@@ -194,20 +194,16 @@ for name in valNames:
     if(name not in ignore): fh.write( "%s " % name )
 fh.write("\n")
 
-for stock in mainDict.keys():
-    cnt = 0
-    for t in mainDict[stock]:
-        vals = mainDict[stock][t]
+print "Ended up with %i days of data" % len(mainDict.keys())
+for t in sorted(mainDict.keys()):
+    for stock in mainDict[t].keys():
+        vals = mainDict[t][stock]
         if(len(vals) < nvalNames): continue
-
-        cnt += 1
 
         fh.write( "%i %i %.3f %.3f %i %.2f " % (vals['class'], t, vals['gainD1'], vals['gainD2'], tickerIDs[stock], vals['closeD0']) )
         for name in valNames:
             if(name not in ignore): fh.write( "%.3f " % vals[name] )
         fh.write( "\n" )
-
-    print "Stock", stock, "ended up with", cnt, "days of data"
 
 fhTickers.write( "# : tickerName tickerID\n" )
 for ticker in tickerIDs:
