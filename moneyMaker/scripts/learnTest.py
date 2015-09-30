@@ -19,18 +19,18 @@ def printImportances(imps, inds):
 
     print "---- BEGIN ----"
     for w in sorted(importances, key=importances.get, reverse=True):
-        print "NJA:%-20s %.2f" % (w, importances[w])
+        print "%-20s %.2f" % (w, importances[w])
     print "---- END ----"
 
 def projectionX(xvals, yvals, nselect=250):
     nbins = 25
-    n,  edges = np.histogram(xvals, bins=nbins)
-    w,  edges = np.histogram(xvals, bins=nbins,  weights=yvals)
-    w2, edges = np.histogram(xvals, bins=nbins,  weights=yvals*yvals)
-    mean = w/n
     with np.errstate(all='ignore'):
+        n,  edges = np.histogram(xvals, bins=nbins)
+        w,  edges = np.histogram(xvals, bins=nbins,  weights=yvals)
+        w2, edges = np.histogram(xvals, bins=nbins,  weights=yvals*yvals)
+        mean = w/n
         std = np.sqrt(w2/n - mean*mean)/np.sqrt(n)
-    bincenters = map(np.mean,zip(edges[:-1], edges[1:]))
+        bincenters = map(np.mean,zip(edges[:-1], edges[1:]))
 
     # at what point do we have ~360 evts to the right of the line
     cutoff = 0.0
@@ -44,6 +44,17 @@ def projectionX(xvals, yvals, nselect=250):
     nleft = len(xvals)-nright
             
     return bincenters, mean, std, cutoff, nleft, nright
+
+def saveTrades(testingdata, classifiersTest, cutoffTest, printToScreen=False):
+    goodTrades = testingdata[classifiersTest > cutoffTest][:,[1,2,3,4,5]]
+    goodClassifiers = classifiersTest[classifiersTest > cutoffTest]
+    for itrade, trade in enumerate(goodTrades):
+        day, gain1, gain2, iticker, close0 = trade
+        day, iticker, close0 = int(day), int(iticker), float(close0)
+        if printToScreen:
+            print dTickers[iticker], u.inum2tuple(day), close0, gain1, gain2, gain1+gain2
+        else:
+            fhTrades.write("%s %i %.3f %.2f\n" % (dTickers[iticker], day, goodClassifiers[itrade], close0))
 
 
 def doubleHist(sig, bkg, filename="test.png", name="", nbins=80):
@@ -67,19 +78,25 @@ def doubleHist(sig, bkg, filename="test.png", name="", nbins=80):
 def plotFeatureDistributions(Xtrain, Ytrain, name, idx):
     sig = Xtrain[:,[idx]][Ytrain>0.5]
     bkg = Xtrain[:,[idx]][Ytrain<0.5]
-    doubleHist(sig, bkg, basedir+"feature_%i.png"%idx, name="Training distributions: "+name)
+    doubleHist(sig, bkg, basedir+"feature_%i.png"%idx, name="Training distributions: "+name, nbins=50)
 
-def makeHist2D(valsx, valsy, filename, title=None, nbins=50):
+def makeHist2D(valsx, valsy, filename, title="", nbins=50):
     # vals is a 1d array of values
-    if not title:
-        title = filename.split("/")[-1]
-        title = ".".join(title.split(".")[:-1])
-
     fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
-    fig.suptitle(title, fontsize=20)
-    ax.hist2d(valsx,valsy,bins=nbins,norm=mpl.colors.LogNorm())
-    fig.savefig("%s" % (filename), bbox_inches='tight')
-    print ">>> Saved hist %s" % filename
+    plt.title(title)
+    ax.hist2d(valsx,valsy,bins=nbins,norm=mpl.colors.LogNorm(), cmap='Blues')
+    fig.savefig("%s" % (filename))
+    print ">>> Saved %s" % filename
+    plt.clf()
+
+def makeScatter2D(valsx, valsy, sigbkg, filename, title=""):
+    # vals is a 1d array of values
+    fig, ax = plt.subplots( nrows=1, ncols=1 )  # create figure & 1 axis
+    plt.title(title)
+    cols = 100.0-100.0*sigbkg
+    ax.scatter(valsx,valsy,c=cols,alpha=0.6,lw=0)
+    fig.savefig("%s" % (filename))
+    print ">>> Saved %s" % filename
     plt.clf()
 
 def plotTrainTest(Xtrain, Ytrain, Xtest, Ytest, trainingdata, testingdata, title="test title", filename="test.png"):
@@ -132,8 +149,9 @@ def plotTrainTest(Xtrain, Ytrain, Xtest, Ytest, trainingdata, testingdata, title
         
 
 
-    plot2DGainClassifier(gainsTrain, classifiersTrain, title+" Training", filename.replace(".png", "_gainsTrain.png"), lims=[c_min, c_max])
-    plot2DGainClassifier(gainsTest, classifiersTest, title+" Testing", filename.replace(".png", "_gainsTest.png"), lims=[c_min, c_max])
+    cutoffTrain = plot2DGainClassifier(gainsTrain, classifiersTrain, title+" Training", filename.replace(".png", "_gainsTrain.png"), lims=[c_min, c_max])
+    cutoffTest = plot2DGainClassifier(gainsTest, classifiersTest, title+" Testing", filename.replace(".png", "_gainsTest.png"), lims=[c_min, c_max])
+    saveTrades(testingdata, classifiersTest, cutoffTest, printToScreen=False)
 
 
 
@@ -161,15 +179,18 @@ def plot2DGainClassifier(gains, classifiers, title, filename, lims=[-1.5,1.5]):
     plt.xlabel('Classifier')
     fig.savefig(filename)
     plt.clf()
-    print ">>> Saved hist %s" % filename
+    print ">>> Saved %s" % filename
+    return cutoff
 
-# filename = "forBDTfinal.txt"
-filename = "forBDTsmall.txt"
+filename = "forBDT_093015_short.txt"
+tickerfile = "forBDT_093015_tickers.txt"
+tradefile = "trades_093015.txt"
+# filename = "forBDT_093015.txt"
 basedir = "../bdtplots5/"
 fhinput = open(filename,"r")
 firstline = fhinput.readline()
 columnlabels = firstline.split(":")[1].strip().split()
-indicators = columnlabels[2:]
+# indicators = columnlabels
 fhinput.close()
 
 datasetOriginal = np.loadtxt(filename)
@@ -178,7 +199,7 @@ dataset = np.copy(datasetOriginal)
 np.random.shuffle(dataset)
 
 # re-compute class on the fly
-change1, change2 = 0.75/100, 0.50/100
+change1, change2 = 1.25/100, 0.75/100
 for i in range(len(dataset)):
     sb, gainD1, gainD2 = -1, dataset[i][2], dataset[i][3]
 
@@ -189,33 +210,49 @@ for i in range(len(dataset)):
 
 dataset = dataset[dataset[:,2]+dataset[:,3] < 1.0] # ignore 100% gains!
 
+fhTicker = open(tickerfile, "r")
+lines = fhTicker.readlines()
+fhTicker.close()
+dTickers = {}
+for line in lines:
+    line = line.strip()
+    if("#" in line): continue
+    if(len(line) < 3): continue
+    ticker = line.split()[0]
+    iticker = int(line.split()[1])
+    dTickers[iticker] = ticker
+fhTrades = open(tradefile, "w")
+
+alg = None
 inclusive = True
+plotFeatures = False
+plotFeatures2D = False
+fracTrain = 0.5
+print ">>> Training with first %.0f%% and testing with latter %.0f%%" % (100.0*fracTrain, 100.0*(1.0-fracTrain))
 if(inclusive):
 
-    trainingdata = dataset[:len(dataset)//2] # train with first half (s and b only)
-    testingdata = dataset[-len(trainingdata)-1:] # test with second half (inclusive)
+    trainingdata = dataset[:int(fracTrain*len(dataset))] # train with first half (s and b only)
+    testingdata = dataset[-int((1.0-fracTrain)*len(dataset)):] # test with second half (inclusive)
 
     trainingdata = trainingdata[trainingdata[:,0] > -0.5] # ignore non sig and non bkg
 
 else:
     dataset = dataset[dataset[:,0] > -0.5] # ignore non sig and non bkg
-    trainingdata = dataset[:len(dataset)//2] # train with first half (s and b only)
-    testingdata = dataset[-len(trainingdata)-1:] # test with second half (inclusive)
+    trainingdata = dataset[:int(fracTrain*len(dataset))] # train with first half (s and b only)
+    testingdata = dataset[-int((1.0-fracTrain)*len(dataset)):] # test with second half
 
 
-first = True
-alg = None
+# first = True
 # whichIndicators = ["AROONOSC", "WILLR", "HT_DCPHASE", "NATR", "STOCHF_fastd", "SAREXT", \
 #                    "SAR", "HT_SINE_leadsine","CMO","RSI","BOP", "CCI", "EMAD510","AD", \
 #                    "KST","ADXR","MACDEXT_macdhist","MOM","MINUS_DI","ROC"]
 # whichIndicators = [i for i in indicators if "gain" not in i]
 
-whichIndicators = ["BOP","KST","STOCHF_fastk","MACDEXT_macdhist","ADOSC","NATR","MFI","AD","SAREXT","MOM","AROON_aroondown","ADXR","STOCHRSI_fastd","WILLR", "EMAD510"]
+whichIndicators = ["BOP","KST","STOCHF_fastk","MACDEXT_macdhist","ADOSC","NATR","MFI","AD","SAREXT","MOM","AROON_aroondown","ADXR","STOCHRSI_fastd","WILLR"]
 # print whichIndicators
 print ">>> Training with the indicators: %s" % " ".join(whichIndicators)
 # whichIndicators = ["gainD1", "gainD2"]
 indices = [columnlabels.index(indi) for indi in whichIndicators]
-# for algorithm in ["SVC", "BDT", "BDTG", "SVC_gamma0p08", "NuSVC", "SVR", "LinearSVC", "LDA", "LDAshrinkage"]:
 
 Xtrain = trainingdata[:,indices]
 Ytrain = trainingdata[:,0]
@@ -223,10 +260,25 @@ Ytrain = trainingdata[:,0]
 Xtest = testingdata[:,indices]
 Ytest = testingdata[:,0]
 
+if(plotFeatures):
+    for idx, indicator in enumerate(whichIndicators):
+        plotFeatureDistributions(Xtrain, Ytrain, indicator, idx)
+
+if(plotFeatures2D):
+    for idx1, indicator1 in enumerate(whichIndicators):
+        for idx2, indicator2 in enumerate(whichIndicators):
+            if( idx1 == idx2 ): continue
+
+            v1 = Xtrain[:,[idx1]].ravel()
+            v2 = Xtrain[:,[idx2]].ravel()
+            makeScatter2D(v1, v2, Ytrain, basedir+"feature_2d_%s_%s.png" % (indicator1, indicator2), title="%s vs %s" % (indicator1, indicator2))
+
 Xtrain = skp.StandardScaler().fit_transform(Xtrain)
 Xtest = skp.StandardScaler().fit_transform(Xtest)
 
-for algorithm in ["SVC", "BDTG", "BDT2", "BDT", "LinearSVC", "LDA"]:
+# for algorithm in ["SVC", "BDTG", "BDT2", "BDT"]:
+# for algorithm in ["SVC", "BDT", "BDTG", "SVC_gamma0p08", "NuSVC", "SVR", "LinearSVC", "LDA", "LDAshrinkage"]:
+for algorithm in ["BDTG"]:
 # for algorithm in ["BDTG", "BDT2", "BDT"]:
 
     print ">>> ALG: %s" % (algorithm)
@@ -253,9 +305,16 @@ for algorithm in ["SVC", "BDTG", "BDT2", "BDT", "LinearSVC", "LDA"]:
     # try: printImportances(alg.coef_, whichIndicators)
     # except: pass
 
+    minday = int(np.min(testingdata[:,[1]]))
+    maxday = int(np.max(testingdata[:,[1]]))
+    mind, maxd = u.inum2tuple(minday), u.inum2tuple(maxday)
+    fhTrades.write("# %s %i to %i (%i-%i-%i to %i-%i-%i) \n" % (algorithm, minday, maxday, mind[0], mind[1], mind[2], maxd[0], maxd[1], maxd[2]) )
+
     plotTrainTest(Xtrain, Ytrain, Xtest, Ytest, trainingdata, testingdata, \
         # title = "%s LR: %.3f N-estimators: %i" % (algorithm, rate, nest), \
         title = "%s" % (algorithm), \
         # filename = basedir+"TrainTest_%s_%s_%s.png" % (algorithm, ("%.4f" % rate).replace(".",""), ("%i" % nest).replace(".","")) \
         filename = basedir+"TrainTest_%s.png" % (algorithm) \
     )
+
+fhTrades.close()

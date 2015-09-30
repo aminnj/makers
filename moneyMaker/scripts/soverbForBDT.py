@@ -62,7 +62,7 @@ symbols = [line.strip() for line in open("../data/goodstocks.txt").readlines()]
 nsymbols = len(symbols)
 tickerIDs = {} # key is stock name, val is a unique number (I will use iticker for it)
 
-fname = "forBDT_092915.txt"
+fname = "forBDT_093015.txt"
 fh = open(fname,"w")
 fhTickers = open(fname.replace(".txt","_tickers.txt"),"w")
 
@@ -115,6 +115,8 @@ for iticker,ticker in enumerate(symbols):
         addToDict(gainD1Vals, ticker, "gainD1")
         addToDict(gainD2Vals, ticker, "gainD2")
 
+        closeD0 = noNaN(np.c_[ times, inputs['close'] ], 1)
+        addToDict(closeD0, ticker, "closeD0")
 
         #ema5 - ema10
         ema5 = ta.abstract.Function('ema')(inputs, timeperiod=5)
@@ -186,8 +188,8 @@ valNames = valNamesDict.keys()
 nvalNames = len(valNames)
 
 
-ignore = ['class', 'gainD1', 'gainD2', 'tickerID']
-fh.write( "# : Class Day gainD1 gainD2 tickerID " )
+ignore = ['class', 'gainD1', 'gainD2', 'tickerID', 'closeD0']
+fh.write( "# : Class Day gainD1 gainD2 tickerID closeD0 " )
 for name in valNames:
     if(name not in ignore): fh.write( "%s " % name )
 fh.write("\n")
@@ -200,7 +202,7 @@ for stock in mainDict.keys():
 
         cnt += 1
 
-        fh.write( "%i %i %.3f %.3f %i " % (vals['class'], t, vals['gainD1'], vals['gainD2'], tickerIDs[stock]) )
+        fh.write( "%i %i %.3f %.3f %i %.2f " % (vals['class'], t, vals['gainD1'], vals['gainD2'], tickerIDs[stock], vals['closeD0']) )
         for name in valNames:
             if(name not in ignore): fh.write( "%.3f " % vals[name] )
         fh.write( "\n" )
