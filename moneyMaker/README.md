@@ -10,9 +10,17 @@ pip install numpy
 pip install scipy
 pip install scikit-learn
 ```
+
 Install TA-lib (https://github.com/mrjbq7/ta-lib):
 ```
 brew install ta-lib
 pip install TA-lib
 ```
+
+Deep learning stuff:
+```
+pip install Theano
+sudo pip install keras
+```
+
 may need to sudo them

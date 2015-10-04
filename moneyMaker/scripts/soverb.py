@@ -143,7 +143,8 @@ if(writeBDTtext):
 
 for iticker,ticker in enumerate(symbols):
     # stock = gs.getStock(ticker, (2013, 1, 1), (2014, 12, 31))["days"] # for calculating
-    stock = gs.getStock(ticker, (2014, 1, 1), (2014, 12, 20))["days"] # for calculating
+    # stock = gs.getStock(ticker, (2014, 1, 1), (2014, 12, 20))["days"] # for calculating
+    stock = gs.getStock(ticker, (2014, 12, 20), (2015, 10, 1))["days"] # for calculating
 
     drawProgressBar(1.0*iticker/nsymbols)
 

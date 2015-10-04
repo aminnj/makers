@@ -159,7 +159,7 @@ def plotTrainTest(Xtrain, Ytrain, Xtest, Ytest, trainingdata, testingdata, title
 
 
 def plot2DGainClassifier(gains, classifiers, title, filename, lims=[-1.5,1.5]):
-    nselect = 500
+    nselect = 1000
     # at what classifier value do we have nselect points to the right?
     xvals, yvals, yerr, cutoff, nleft, nright = projectionX(classifiers, gains, nselect=nselect)
     # what is the average fractional gain to the right of this cutoff line
@@ -186,7 +186,7 @@ def plot2DGainClassifier(gains, classifiers, title, filename, lims=[-1.5,1.5]):
     return cutoff
 
 filename = "forBDT_092915.txt"
-if(len(sys.argv)>1): filename = sys.argv[-1]
+if(len(sys.argv)>1): filename = sys.argv[1]
 # filename = "forBDT_093015_short.txt"
 # tickerfile = "forBDT_092915_tickers.txt"
 tickerfile = filename.replace(".txt","_tickers.txt")
@@ -198,6 +198,7 @@ print ">>> Output trades file:", tradefile
 
 # tradefile = "trades_092915.txt"
 basedir = "../bdtplots5/"
+if(len(sys.argv)>3): basedir = sys.argv[3]
 fhinput = open(filename,"r")
 firstline = fhinput.readline()
 columnlabels = firstline.split(":")[1].strip().split()
@@ -238,7 +239,7 @@ alg = None
 inclusive = True
 plotFeatures = False
 plotFeatures2D = False
-fracTrain = 0.3
+fracTrain = 0.6
 print ">>> Training with first %.0f%% and testing with latter %.0f%%" % (100.0*fracTrain, 100.0*(1.0-fracTrain))
 if(inclusive):
 
@@ -292,7 +293,10 @@ Xtest = skp.StandardScaler().fit_transform(Xtest)
 
 # for algorithm in ["SVC", "BDTG", "BDT2", "BDT"]:
 # for algorithm in ["SVC", "BDT", "BDTG", "SVC_gamma0p08", "NuSVC", "SVR", "LinearSVC", "LDA", "LDAshrinkage"]:
-for algorithm in ["BDTG"]:
+algorithms = ["BDT2"]
+if(len(sys.argv)>2): algorithms = [sys.argv[2]]
+
+for algorithm in algorithms:
 # for algorithm in ["BDTG", "BDT2", "BDT"]:
 
     print ">>> ALG: %s" % (algorithm)

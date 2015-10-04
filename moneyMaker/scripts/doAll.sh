@@ -1,10 +1,19 @@
-filename="forBDT_092915.txt"
+# filename="forBDT_100115.txt"
+filename="data_2015.txt"
+folder=bdtplots6
 
 # produce the file for the machine learner
 python soverbForBDT.py $filename
 
 # use the file to learn, test, and print out predicted "good" events
-python learnTest.py $filename
+# algos: BDT BDT2 BDTG SVC NuSVC SVR LinearSVC LDA
+alg=SVC
+mkdir -p ../$folder
+rm ../$folder/*
+python learnTest.py $filename $alg "../$folder/"
+cd ..
+. ~/syncfiles/miscfiles/niceplots.sh $folder
+cd -
 
 # take predicted events and format them into csv for Quantopian
 python tradesToQuantopian.py "trades_$filename" > test_trades.csv

@@ -58,7 +58,7 @@ def addToDict(vals, ticker, shortname):
         mainDict[t][ticker][shortname] = round(v,3)
 
 
-symbols = [line.strip() for line in open("../data/goodstocks.txt").readlines()]
+symbols = [line.strip() for line in open("../data/goodstocks_vol.txt").readlines()]
 # symbols = ["F", "AAPL"]
 nsymbols = len(symbols)
 tickerIDs = {} # key is stock name, val is a unique number (I will use iticker for it)
@@ -72,8 +72,8 @@ valNamesDict, mainDict = {}, {}
 
 for iticker,ticker in enumerate(symbols):
     # stock = gs.getStock(ticker, (2013, 1, 1), (2014, 12, 31))["days"] # for calculating
-    stock = gs.getStock(ticker, (2014, 1, 1), (2014, 12, 20))["days"] # for calculating
-    # stock = gs.getStock(ticker, (2014, 5, 1), (2014, 12, 20))["days"] # for calculating
+    # stock = gs.getStock(ticker, (2014, 1, 1), (2014, 12, 20))["days"] # for calculating
+    stock = gs.getStock(ticker, (2014, 12, 20), (2015, 10, 1))["days"] # for calculating
 
     drawProgressBar(1.0*iticker/nsymbols)
 
