@@ -56,11 +56,11 @@ font-size:8px;
 }
 .lumi_good {
     background-color: #1855AB;
-    background-image: url(/atlasdqm/grlview/blue.png);
+    background-image: url(images/blue.png);
 }
 .lumi_bad {
     background-color: #B50009;    
-background-image: url(/atlasdqm/grlview/red.png);
+    background-image: url(images/red.png);
 
 }
 .run {
