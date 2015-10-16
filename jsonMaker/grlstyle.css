@@ -1,0 +1,109 @@
+body {
+    background-color: #fff;
+	font: 12px "Lucida Grande", "Trebuchet MS", Verdana, sans-serif;
+	margin: 20px;
+}
+
+a, .switch {
+    color: #1855AB;
+	text-decoration: none;
+}
+a:hover, .switch:hover {
+    color: #B50009; 
+	text-decoration: underline;
+}
+#streams {
+/*    width: 80%;*/
+/*    border: 1px solid red;*/
+}
+.streaminfo {
+/*	padding: 10px;*/
+/*    width: 200px;*/
+/*    float: left;*/
+/*    border: 1px solid #999;*/
+/*    text-align: center;*/
+}
+.streaminfo .streamentries {
+/*     color: red;*/
+}
+
+#query {
+/*	font-size: 70%;*/
+}
+#runs {
+	padding: 20px 0px;
+/*	font-size: 80%;*/
+}
+.lumi_bar{
+/*	width: 90%;*/
+	
+}
+.lumiblock {
+/*  position: relative;*/
+/*	float: left;*/
+/*border: 1px solid #fff;*/
+/*width: 10px;*/
+
+cursor: pointer;
+
+/*padding-left: 1px;*/
+/*height: 4px;*/
+width:2px;
+font-size:8px;
+}
+.accpt {
+/*  color: #1855AB;*/
+}
+.lumi_good {
+    background-color: #1855AB;
+    background-image: url(/atlasdqm/grlview/blue.png);
+}
+.lumi_bad {
+    background-color: #B50009;    
+background-image: url(/atlasdqm/grlview/red.png);
+
+}
+.run {
+	font-weight: bold;
+	display: block;
+	margin: 3px;
+}
+#footer{
+    border: 1px solid #999;
+    padding: 4px;
+	margin: 20px 0px;
+}
+thead {
+    font-weight: bold;
+}
+td{
+    min-width: 150px;
+}
+tfoot{
+    color: #999;
+    border-top: 1px solid #999;
+    padding:2px;
+}
+.good_eff{
+    font-size: 70%;
+    margin-left: 4px;
+}
+
+.switch{
+
+	padding: 6px;
+	font-size:80%;
+	cursor: pointer;
+}
+.lbid {
+color: white;
+display: none;
+}
+
+#lumi_ranges {
+display:none;
+}
+
+.lb_range_line {
+margin-left: 5px;
+}
