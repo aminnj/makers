@@ -21,9 +21,11 @@ if jsonName:
     # download and save json if it doesn't exist
     if not os.path.isfile(filename):
         url = "http://namin.web.cern.ch/namin/getJSON.php?json=%s" % (jsonName)
-        fh = open(filename, "w")
-        fh.write(urllib2.urlopen(url).read())
-        fh.close()
+        output = urllib2.urlopen(url).read()
+        if(len(output) > 10):
+            fh = open(filename, "w")
+            fh.write(output)
+            fh.close()
 
 
 
