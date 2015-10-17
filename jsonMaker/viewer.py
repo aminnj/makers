@@ -18,17 +18,30 @@ if jsonName:
     shortName = jsonName.split("/")[-1]
     filename = jsonDir+shortName
 
+    delivered = -1.0
+    recorded = -1.0
+
     # download and save json if it doesn't exist
     if("/afs/" in jsonName):
         if not os.path.isfile(filename):
 
             # download from lxplus
-            url = "http://namin.web.cern.ch/namin/getJSON.php?json=%s" % (jsonName)
+            url = "http://namin.web.cern.ch/namin/lumis/getJSON.php?json=%s" % (jsonName)
             output = urllib2.urlopen(url).read()
             if(len(output) > 10):
                 fh = open(filename, "w")
                 fh.write(output)
                 fh.close()
+
+        urllumi = "http://namin.web.cern.ch/namin/lumis/lumis.txt"
+        output = urllib2.urlopen(urllumi).read()
+        lines = output.split("\n")
+        for line in lines:
+            if shortName in line:
+                _, delivered, recorded = line.split()
+                delivered = float(delivered)
+                recorded = float(recorded)
+                break
     else:
         # copy from uaf
         os.system("cp %s %s/%s" % (jsonName, jsonDir, shortName))
@@ -47,6 +60,8 @@ if jsonName:
     print "  <NamedLumiRange>"
     print "    <Name>%s</Name>" % shortName
     print "    <Link>%s</Link>" % filename
+    print "    <Delivered>%.2f</Delivered>" % delivered
+    print "    <Recorded>%.2f</Recorded>" % recorded
     for run in sorted(js.keys()):
         print "    <LumiBlockCollection>"
         print "      <Run>%s</Run>" % run

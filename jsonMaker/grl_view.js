@@ -23,6 +23,7 @@ GrlView.prototype.header = function(parent) {
 	
     var head = '<div id="header"><h2>'+this.grl.Name+' (<a href='+this.grl.Link+'>raw JSON</a>)</h2><hr/>'
     // + '<div id="version">' + this.grl.Version + '</div>'
+	+ '<h2>Recorded '+this.grl.Recorded+' pb<sup>-1</sup> ('+(100.0*this.grl.Recorded/this.grl.Delivered).toFixed(2)+'% of delivered)</h2></div>'
 	+ '<div id="runs"><h3>Runs</h3>' + runlist_anchored.join(", ") + '</div>'
     + '<div id="streams"></div>'
     +'</div>'
@@ -30,9 +31,6 @@ GrlView.prototype.header = function(parent) {
     // + '</div><div id="footer"></div>';
 	
     $(this.html).html(head);
-    
-    
-    
     
 	
 	$("#bar", this.html).html('<div><span class="lumiblock lumi_good" title="LB: i">&#160;&#160;&#160;&#160;</span> Good Block &#160; <span class="lumiblock lumi_bad" title="LB: j">&#160;&#160;&#160;&#160;</span> Bad Block</div><br/><div><span id="lb_range_toggle" class="switch">Show LB Ranges</span></div><div id="lumibars"><br/><span id="lb_toggle" class="switch">Show LB numbers</span><div>' +this.lumiline() + '</div></div><div id="lumi_ranges">' + this.lumi_ranges() + '</div>');

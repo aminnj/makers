@@ -28,13 +28,15 @@
             <head>
                 <link rel="stylesheet" href="grlstyle.css" type="text/css" charset="utf-8" />
                 <script src="jquery.min.js" type="text/javascript" charset="utf-8"></script>
-                <script src="atl_grl_view.js" type="text/javascript" charset="utf-8"></script>
+                <script src="grl_view.js" type="text/javascript" charset="utf-8"></script>
 				
                 <script language="javascript">
                     var grl={
                     <xsl:for-each select="LumiRangeCollection/NamedLumiRange">
                         "Name" : "<xsl:value-of select="Name"/>",
                         "Link" : "<xsl:value-of select="Link"/>",
+                        "Delivered" : "<xsl:value-of select="Delivered"/>",
+                        "Recorded" : "<xsl:value-of select="Recorded"/>",
                         "Version" : "<xsl:value-of select="Version"/>",
                         "Query" : "<xsl:value-of select="Metadata[@Name='Query']"/>",
                         "RunList" : "<xsl:value-of select="Metadata[@Name='RunList']"/>",
