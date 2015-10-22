@@ -9,3 +9,13 @@ crontab on lxplus should have something like
 
 Right now, the cronjob is running on lxplus0048.
 
+
+Actually, this cronjob does not work because lxplus sucks. I have now done this:
+```
+acrontab -e
+```
+paste in
+```
+0 0 * * * lxplus.cern.ch /usr/bin/python /afs/cern.ch/user/n/namin/www/lumis/lumis.py > /afs/cern.ch/user/n/namin/www/lumis/acron.log 2>&1
+0 12 * * * lxplus.cern.ch /usr/bin/python /afs/cern.ch/user/n/namin/www/lumis/lumis.py > /afs/cern.ch/user/n/namin/www/lumis/acron.log 2>&1
+```
