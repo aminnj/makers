@@ -172,7 +172,8 @@ function populateBets() {
     if(isComplete) contents += "[ <span class='alert'> DONE </span> ] ";
     contents += "</span>";
     contents += "<span onClick='$(\"#betOptions"+ibet+"\").slideToggle()' >";
-    contents += "<a href='#'>" +bets[ibet]["shortTitle"] + "</a></span>";
+    // http://stackoverflow.com/questions/3252730/how-to-prevent-a-click-on-a-link-from-jumping-to-top-of-page-in-jquery
+    contents += "<a href='#/'>" +bets[ibet]["shortTitle"] + "</a></span>";
 
     contents += "<ul id='betOptions"+ibet+"' ";
     contents += " style='display:none;' "; // XXX REENABLE TO HIDE BY DEFAULT
