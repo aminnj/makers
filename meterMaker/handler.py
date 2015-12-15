@@ -8,6 +8,8 @@ datafile = "data.txt"
 data = {}
 data["meters"] = []
 
+PI_URL = 'http://128.111.19.91:8080/say'
+
 def inputToDict(form):
     d = {}
     for k in form.keys():
@@ -19,6 +21,7 @@ def loadMeters():
     fh = open(datafile, "r")
     data = json.loads(fh.read().strip())
     fh.close()
+    return data
 
 def writeMeters():
     global data
@@ -30,8 +33,23 @@ def getMeters():
     global data
     return json.dumps(data,indent=2)
 
+def forSoundMaker(input):
+
+    meterIdx = int(input["meterIdx"])
+    pointerFraction = float(input["pointerFraction"])
+    oldPointerFraction = oldInput["meters"][meterIdx]["pointer"]
+    shortTitle = oldInput["meters"][meterIdx]["title"]
+    toSay = "The %s meter was changed from %i to %i percent" % (shortTitle, round(100.0*oldPointerFraction), round(100.0*pointerFraction))
+
+    import urllib
+    import urllib2
+    payload = urllib.urlencode({'words' : toSay, 'type' : "meterMaker" })
+    req = urllib2.Request(PI_URL, payload)
+    response = urllib2.urlopen(req)
+    the_page = response.read()
+
 def updateMeter(input):
-    print input
+    # print input
     meterIdx = int(input["meterIdx"])
     pointerFraction = float(input["pointerFraction"])
     if(meterIdx >= len(data["meters"])):
@@ -40,6 +58,8 @@ def updateMeter(input):
     if( not ( 0.0 < pointerFraction < 1.0) ):
         print "Woah there dude! Invalid pointer fraction!"
         return
+
+    forSoundMaker(input)
 
     data["meters"][meterIdx]["pointer"] = pointerFraction
     print "Updated meter %i to %i%%" % (meterIdx, round(100.0*pointerFraction))
@@ -124,7 +144,7 @@ input = inputToDict(form)
 # "label1":"test","label2":"test","label3":"test","label4":"","label5":"","label6":"","rgb1":"#f1f1f1","rgb2":"#fff1ff","rgb3":"#0f00ff","rgb4":"","rgb5":"","rgb6":"",
 # "fraction1":"","fraction2":"","fraction3":"","fraction4":"","fraction5":"","fraction6":""}
 
-loadMeters()
+oldInput = loadMeters()
 if(input['action'] == "updateMeter"):
     updateMeter(input)
     writeMeters()
