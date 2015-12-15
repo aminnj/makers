@@ -39,7 +39,10 @@ def forSoundMaker(input):
     pointerFraction = float(input["pointerFraction"])
     oldPointerFraction = oldInput["meters"][meterIdx]["pointer"]
     shortTitle = oldInput["meters"][meterIdx]["title"]
-    toSay = "The %s meter was changed from %i to %i percent" % (shortTitle, round(100.0*oldPointerFraction), round(100.0*pointerFraction))
+    sayMeter, sayThe = "meter", "the"
+    if shortTitle.strip().lower().endswith("meter"): sayMeter = "" # don't say meter twice
+    if shortTitle.strip().lower().startswith("the"): sayThe = ""
+    toSay = "%s %s %s was changed from %i to %i percent" % (sayThe, shortTitle, sayMeter, round(100.0*oldPointerFraction), round(100.0*pointerFraction))
 
     import urllib
     import urllib2
