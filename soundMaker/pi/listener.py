@@ -14,17 +14,25 @@ def getCommand(words,reqType=None):
     if reqType == "meterMaker":
         return 'espeak "%s" &' % words
 
-    if (   "his name is" in words
-        or "is name his" in words
-        or "what's his name" in words
-        or "what is his" in words
-        or "what is name" in words
-        or "his name his" in words
-        or "whats the name" in words  ):
-        return 'aplay johncena_nointro.wav'
+    elif reqType == "voice":
 
-    if("john cena" in words):
-        return 'aplay johncena.wav'
+      if("Search, or say" in words or "Ok Google" in words or "Okay Google" in words): return
+
+      if (   "his name is" in words
+          or "is name his" in words
+          or "what's his name" in words
+          or "what is his" in words
+          or "what is name" in words
+          or "his name his" in words
+          or "whats the name" in words  ):
+          return 'aplay johncena_nointro.wav'
+
+      if("john cena" in words):
+          return 'aplay johncena.wav'
+
+      if("say" in words): words = " ".join(words.split("say", 1)[1:])
+
+      return 'espeak "%s"' % words
 
     return 'espeak "%s"' % words
     # return 'say -v Vicki "%s" &' % words # MAC
