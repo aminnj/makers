@@ -1,7 +1,8 @@
 import json, urllib, os
 
 def sayText(text):
-    os.system('espeak "%s" -s 150 -a 100' % text)
+    #os.system('espeak "%s" -s 180 -a 100' % text)
+    os.system('espeak -v mb-en1 "%s" -s 180 -a 100' % text)
 
 storage = "meter.txt"
 url = "http://uaf-6.t2.ucsd.edu/~namin/makers/meterMaker/data.txt"
