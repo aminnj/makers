@@ -1,7 +1,6 @@
 from bottle import post, route, run, request
 import os, sys
 
-
 # Test with:
 #   import urllib
 #   import urllib2
@@ -10,9 +9,16 @@ import os, sys
 #   response = urllib2.urlopen(req)
 #   the_page = response.read()
 
+
+
+def say(text):
+    # return 'espeak "%s" & ' % text
+    return '(espeak -w temp.wav "%s" && aplay temp.wav) & ' % text # does not slow down after a few words
+    # return 'mplayer -ao alsa -noconsolecontrols "http://translate.google.com/translate_tts?tl=en&client=t&q=%s" & ' % text # occasionally gets rate-limited
+
 def getCommand(words,reqType=None):
     if reqType == "meterMaker":
-        return 'espeak "%s" &' % words
+        return say(words)
 
     elif reqType == "voice":
 
@@ -30,11 +36,14 @@ def getCommand(words,reqType=None):
       if("john cena" in words):
           return 'aplay johncena.wav'
 
+      if("bye" in words or "good night" in words):
+          words = "goodbye, Nick"
+
       if("say" in words): words = " ".join(words.split("say", 1)[1:])
 
-      return 'espeak "%s"' % words
+      return say(words)
 
-    return 'espeak "%s"' % words
+    return say(words)
     # return 'say -v Vicki "%s" &' % words # MAC
 
 @post('/say')

@@ -11,7 +11,7 @@ var meters = [];
 
 $.ajaxSetup({
     type: 'POST',
-    timeout: 4000,
+    timeout: 10000,
 });
 
 function toggleMeters() {
