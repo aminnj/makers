@@ -62,7 +62,10 @@ def updateMeter(input):
         print "Woah there dude! Invalid pointer fraction!"
         return
 
-    forSoundMaker(input)
+    try:
+        forSoundMaker(input)
+    except:
+        pass
 
     data["meters"][meterIdx]["pointer"] = pointerFraction
     print "Updated meter %i to %i%%" % (meterIdx, round(100.0*pointerFraction))
