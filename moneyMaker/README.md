@@ -23,4 +23,12 @@ pip install Theano
 sudo pip install keras
 ```
 
+For xgboost
+```
+pip install xgboost
+brew update
+brew tap homebrew/versions
+brew install gcc49
+```
+
 may need to sudo them

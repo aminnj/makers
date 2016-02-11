@@ -6,8 +6,9 @@ folder=bdtplots6
 python soverbForBDT.py $filename
 
 # use the file to learn, test, and print out predicted "good" events
-# algos: BDT BDT2 BDTG SVC NuSVC SVR LinearSVC LDA
-alg=SVC
+# algos: BDT BDT2 BDTG SVC NuSVC SVR LinearSVC LDA XGB
+# alg=SVC
+algs=XGB,BDTG,BDT2,BDT
 mkdir -p ../$folder
 rm ../$folder/*
 python learnTest.py $filename $alg "../$folder/"

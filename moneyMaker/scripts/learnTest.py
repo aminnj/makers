@@ -7,6 +7,8 @@ from sklearn.ensemble import *
 from sklearn.lda import *
 from sklearn.tree import *
 from sklearn.neural_network import *
+from sklearn.metrics import roc_curve, auc
+from xgboostInterface import *
 import sklearn.preprocessing as skp
 from matplotlib import pyplot as plt
 import utils as u
@@ -102,6 +104,21 @@ def makeScatter2D(valsx, valsy, sigbkg, filename, title=""):
     print ">>> Saved %s" % filename
     plt.clf()
 
+def plotROC(rocs, filename="test.png"):
+    plt.figure()
+    for algorithm in rocs:
+        fpr, tpr = rocs[algorithm]
+        roc_auc = auc(fpr,tpr)
+        plt.plot(fpr, tpr, label='ROC curve for %s (area = %.2f)' % (algorithm, roc_auc))
+    plt.plot([0, 1], [0, 1], 'k--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.0])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title("ROC")
+    plt.legend(loc="lower right")
+    plt.savefig(filename)
+
 def plotTrainTest(Xtrain, Ytrain, Xtest, Ytest, trainingdata, testingdata, title="test title", filename="test.png"):
     # shamelessly stolen from https://dbaumgartel.wordpress.com/2014/03/14/machine-learning-examples-scikit-learn-versus-tmva-cern-root/
     Classifier_training_S = alg.decision_function(Xtrain[Ytrain>0.5]).ravel()
@@ -114,12 +131,13 @@ def plotTrainTest(Xtrain, Ytrain, Xtest, Ytest, trainingdata, testingdata, title
 
     gainsTrain = trainingdata[:,2]+trainingdata[:,3]
     gainsTest = testingdata[:,2]+testingdata[:,3]
-        
+
     c_min, c_max = -1.5, 1.5
     if("NuSVC" in title): c_min, c_max = -150.0, 150.0
     elif("LDA" in title): c_min, c_max = -1.0, 1.0
     elif("BDT" in title and not "BDTG" in title): c_min, c_max = -0.1, 0.1
     elif("LinearSVC" in title): c_min, c_max = -0.5, 0.5
+    elif("XGB" in title): c_min, c_max = 0.3, 0.7
 
     Histo_training_S = np.histogram(Classifier_training_S,bins=40,range=(c_min,c_max))
     Histo_training_B = np.histogram(Classifier_training_B,bins=40,range=(c_min,c_max))
@@ -187,7 +205,6 @@ def plot2DGainClassifier(gains, classifiers, title, filename, lims=[-1.5,1.5]):
 
 filename = "forBDT_092915.txt"
 if(len(sys.argv)>1): filename = sys.argv[1]
-# filename = "forBDT_093015_short.txt"
 # tickerfile = "forBDT_092915_tickers.txt"
 tickerfile = filename.replace(".txt","_tickers.txt")
 tradefile = "trades_"+filename
@@ -197,8 +214,8 @@ print ">>> Input tickers file:", tickerfile
 print ">>> Output trades file:", tradefile
 
 # tradefile = "trades_092915.txt"
-basedir = "../bdtplots5/"
-if(len(sys.argv)>3): basedir = sys.argv[3]
+basedir = "../bdtplots6/"
+if(len(sys.argv)>2): basedir = sys.argv[2]
 fhinput = open(filename,"r")
 firstline = fhinput.readline()
 columnlabels = firstline.split(":")[1].strip().split()
@@ -264,7 +281,6 @@ np.random.shuffle(testingdata)
 # whichIndicators = [i for i in indicators if "gain" not in i]
 
 whichIndicators = ["BOP","KST","STOCHF_fastk","MACDEXT_macdhist","ADOSC","NATR","MFI","AD","SAREXT","MOM","AROON_aroondown","ADXR","STOCHRSI_fastd","WILLR"]
-# print whichIndicators
 print ">>> Training with the indicators: %s" % " ".join(whichIndicators)
 # whichIndicators = ["gainD1", "gainD2"]
 indices = [columnlabels.index(indi) for indi in whichIndicators]
@@ -291,11 +307,15 @@ if(plotFeatures2D):
 Xtrain = skp.StandardScaler().fit_transform(Xtrain)
 Xtest = skp.StandardScaler().fit_transform(Xtest)
 
-# for algorithm in ["SVC", "BDTG", "BDT2", "BDT"]:
 # for algorithm in ["SVC", "BDT", "BDTG", "SVC_gamma0p08", "NuSVC", "SVR", "LinearSVC", "LDA", "LDAshrinkage"]:
-algorithms = ["BDT2"]
-if(len(sys.argv)>2): algorithms = [sys.argv[2]]
+# algorithms = ["BDT2"]
+algorithms = ["XGB", "BDTG", "BDT2", "BDT"]
+# algorithms = ["XGB"]
+if(len(sys.argv)>3):
+    if("," in sys.argv[3]): algorithms = sys.argv[3].split(",")
+    else: algorithms = [sys.argv[3]]
 
+forROCs = {}
 for algorithm in algorithms:
 # for algorithm in ["BDTG", "BDT2", "BDT"]:
 
@@ -315,6 +335,8 @@ for algorithm in algorithms:
     elif algorithm == "ExtraTrees": alg = ExtraTreesClassifier()
     elif algorithm == "RandomForest": alg = RandomForestClassifier()
     elif algorithm == "Bagging": alg = BaggingClassifier()
+    elif algorithm == "XGB": alg = XGBoostClassifier(num_boost_round=3000,num_class=2,eta=0.01,max_depth=9,sub_sample=0.9)
+    # elif algorithm == "XGB": alg = XGBoostClassifier(num_boost_round=30,num_class=2,eta=0.01,max_depth=9,sub_sample=0.9)
 
     alg.fit(Xtrain, Ytrain)
 
@@ -322,6 +344,7 @@ for algorithm in algorithms:
     # except: pass
     # try: printImportances(alg.coef_, whichIndicators)
     # except: pass
+
 
     minday = int(np.min(testingdata[:,[1]]))
     maxday = int(np.max(testingdata[:,[1]]))
@@ -334,5 +357,14 @@ for algorithm in algorithms:
         # filename = basedir+"TrainTest_%s_%s_%s.png" % (algorithm, ("%.4f" % rate).replace(".",""), ("%i" % nest).replace(".","")) \
         filename = basedir+"TrainTest_%s.png" % (algorithm) \
     )
+
+    Yscore = alg.predict(Xtest)
+    # needed for when we test inclusively -1, 0, 1
+    # want to just make the -1 into background (0)
+    Ytest[Ytest < -0.5] = 0
+    fpr, tpr, _ = roc_curve(Ytest,Yscore) 
+    forROCs[algorithm] = [fpr,tpr]
+
+plotROC(forROCs,filename=basedir+"ROCs.png")
 
 fhTrades.close()

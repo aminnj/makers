@@ -14,7 +14,7 @@
       <span class="thin">cmsMonitor</span>Maker
       <span class="thin">
         &emsp;
-        <a href="#" onClick="$('#uafMonitor').slideToggle(250);">uaf meters</a>&ensp;|&ensp;
+        <a href="#" onClick="$('#uafMonitor').slideToggle(250);">uaf health</a>&ensp;|&ensp;
         <a href="#" onClick="$('#cmsMonitor').slideToggle(250);">cool meter</a>&ensp;|&ensp;
         <a href="#" onClick="$('#otherMonitors').slideToggle(250);">boring lhc meters</a>&ensp;
       </span>
@@ -27,7 +27,7 @@
 
       <div id="uafMonitor" class="section">
           UAF Health: &nbsp;
-          <span style='border: 2px solid #04d000;'> uaf-3 </span> &nbsp; <span style='border: 2px solid #04d000;'> uaf-4 </span> &nbsp; <span style='border: 2px solid #04d000;'> uaf-5 </span> &nbsp; <span style='border: 2px solid #04cf00;'> uaf-6 </span> &nbsp; <span style='border: 2px solid #04d000;'> uaf-7 </span> &nbsp; <span style='border: 2px solid #05cf00;'> uaf-8 </span> &nbsp; <span style='border: 2px solid #02d100;'> uaf-9 </span> &nbsp; <span style='border: 2px solid #05ce00;'> uaf-10 </span> &nbsp; 
+          UAFPLACEHOLDER
       </div>
 
       <div id="cmsMonitor" class="section">
