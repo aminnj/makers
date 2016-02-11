@@ -12,6 +12,9 @@ python get_cms_data.py
 echo ">>> Plotting"
 python plot_cms_status.py
 
+echo ">>> Adding uaf health"
+python add_uaf_health.py # this makes overview.html from overview.html.replace
+
 picture="cms_status.svg"
 json="monitor.json"
 overview="overview.html"
