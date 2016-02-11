@@ -160,8 +160,8 @@ systemson = [systemsall[i] for i,s in enumerate(stat_c2) if int(s)]
 
 data = { }
 data["energy"] = energy
-data["cms_inst_lumi"] = float(str_cms)
-data["atl_inst_lumi"] = float(str_atl)
+data["cms_inst_lumi"] = float(str_cms) if str_cms else 0.0
+data["atl_inst_lumi"] = float(str_atl) if str_atl else 0.0
 data["bfield"] = Bfield
 data["timestamp"] = str(curtime)
 data["status"] = beam_stat
