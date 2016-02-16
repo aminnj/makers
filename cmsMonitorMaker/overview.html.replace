@@ -26,8 +26,8 @@
 
 
       <div id="uafMonitor" class="section">
-          UAF Health 
-          UAFPLACEHOLDER
+          Health 
+          HEALTHPLACEHOLDER
       </div>
 
       <div id="cmsMonitor" class="section">

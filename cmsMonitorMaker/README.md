@@ -11,4 +11,4 @@ sudo pip install --upgrade matplotlib
 2) Change BASEDIRECTORY and put the following line in your crontab via `crontab -e`:
 ```*/5 * * * * cd BASEDIRECTORY/makers/cmsMonitorMaker ; source do.sh```
 
-3) Every 5 minutes, http://uaf-6.t2.ucsd.edu/~USER/monitoring/overview.html will be updated
+3) Every 15 minutes, http://uaf-6.t2.ucsd.edu/~USER/monitoring/overview.html will be updated
