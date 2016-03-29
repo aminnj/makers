@@ -10,14 +10,15 @@ function doSubmit(data) {
     $("#query_container").show();
     prettyJSON($('#query'), data);
     $("#result_container").hide();
-    $.post("handler.py", data).done(function(response) {
-    }).always(function(response){
-        $("#loading_animation").hide();
-        $("#result_container").show();
-        prettyJSON($("#result"), response["response"]["payload"]);
-        $("#result_container").show();
-        console.log(response);
-
+    $.post("handler.py", data)
+        .done(function(response) {})
+        .always(function(response){
+            $("#loading_animation").hide();
+            $("#result_container").show();
+            console.log(response);
+            prettyJSON($("#result"), response["response"]["payload"]);
+            $("#result_container").show();
+            console.log(response);
     });
 }
 

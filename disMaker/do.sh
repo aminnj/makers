@@ -13,5 +13,5 @@ eval `scramv1 runtime -sh`
 
 cd ..
 
-python api.py "$*"
+python api.py "$*" | tee -a log.txt
 

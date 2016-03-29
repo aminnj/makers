@@ -4,8 +4,33 @@ import StringIO
 import ast
 import urllib2
 import json
+import traceback
+import sys
+import commands
 
 
+def get(cmd, returnStatus=False):
+    status, out = commands.getstatusoutput(cmd)
+    if returnStatus: return status, out
+    else: return out
+
+def cmd(cmd, returnStatus=False):
+    status, out = commands.getstatusoutput(cmd)
+    if returnStatus: return status, out
+    else: return out
+
+def proxy_hours_left():
+    try:
+        info = get("voms-proxy-info")
+        hours = int(info.split("timeleft")[-1].strip().split(":")[1])
+    except: hours = 0
+    return hours
+
+def proxy_renew():
+    # http://www.t2.ucsd.edu/tastwiki/bin/view/CMS/LongLivedProxy
+    cert_file = "/home/users/{0}/.globus/proxy_for_{0}.file".format(os.getenv("USER"))
+    if os.path.exists(cert_file): cmd("voms-proxy-init -q -voms cms -hours 120 -valid=120:0 -cert=%s" % cert_file)
+    else: cmd("voms-proxy-init -hours 9876543:0 -out=%s" % cert_file)
 
 def get_proxy_file():
     cert_file = '/tmp/x509up_u%s' % str(os.getuid()) # TODO: check that this is the same as `voms-proxy-info -path`
@@ -36,7 +61,7 @@ def dataset_event_count(dataset):
     ret = get_dbs_url(url)
     if len(ret) > 0:
         if ret[0]:
-            return { "nevents": ret[0]['num_event'], "filesize": ret[0]['file_size'], "nfiles": ret[0]['num_file'], "nlumis": ret[0]['num_lumi'] }
+            return { "nevents": ret[0]['num_event'], "filesizeGB": round(ret[0]['file_size']/1.9e9,2), "nfiles": ret[0]['num_file'], "nlumis": ret[0]['num_lumi'] }
     return None
 
 def get_dataset_files(dataset):
@@ -107,8 +132,12 @@ def make_response(query, payload, failed, fail_reason):
 
 if __name__=='__main__':
 
-    arg_dict_str = sys.argv[1]
-    arg_dict = ast.literal_eval(arg_dict_str)
+    arg_dict = {}
+    # arg_dict = {"dataset": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step1-695fadc5ae5b65c0e37b75e981d30125/USER", "type":"files"}
+
+    if not arg_dict:
+        arg_dict_str = sys.argv[1]
+        arg_dict = ast.literal_eval(arg_dict_str)
 
     query_type = arg_dict.get("type","basic")
     dataset = arg_dict.get("dataset", None)
@@ -118,40 +147,46 @@ if __name__=='__main__':
     fail_reason = ""
     payload = {}
 
+    if proxy_hours_left() < 5: proxy_renew()
 
     if not dataset:
         failed = True
         fail_reason = "Dataset not specified"
 
-    if query_type == "basic":
-        info = dataset_event_count(dataset)
-        if not info:
-            failed = True
-            fail_reason = "Dataset not found"
-        payload = info
 
-    elif query_type == "files":
-        files = get_dataset_files(dataset)
-        payload["files"] = filelist_to_dict(files, short)
+    try:
+        if query_type == "basic":
+            info = dataset_event_count(dataset)
+            if not info:
+                failed = True
+                fail_reason = "Dataset not found"
+            payload = info
 
-    elif query_type == "mcm":
-        gen_sim = get_gen_sim(dataset)
-        if short:
-            info = get_slim_mcm_json(gen_sim)
+        elif query_type == "files":
+            files = get_dataset_files(dataset)
+            payload["files"] = filelist_to_dict(files, short)
+
+        elif query_type == "mcm":
+            gen_sim = get_gen_sim(dataset)
+            if short:
+                info = get_slim_mcm_json(gen_sim)
+            else:
+                info = get_mcm_json(gen_sim)["results"]
+            info["gensim"] = gen_sim
+            payload = info
+
+        elif query_type == "lhe":
+            gen_sim = get_gen_sim(dataset)
+            lhe = get_dataset_parent(gen_sim)
+            files = get_dataset_files(lhe)
+            payload["files"] = filelist_to_dict(files, short)
+
         else:
-            info = get_mcm_json(gen_sim)["results"]
-        info["gensim"] = gen_sim
-        payload = info
-
-    elif query_type == "lhe":
-        gen_sim = get_gen_sim(dataset)
-        lhe = get_dataset_parent(gen_sim)
-        files = get_dataset_files(lhe)
-        payload["files"] = filelist_to_dict(files, short)
-
-    else:
+            failed = True
+            fail_reason = "Query type not found"
+    except:
         failed = True
-        fail_reason = "Query type not found"
+        fail_reason = traceback.format_exc()
 
     print make_response(arg_dict, payload, failed, fail_reason)
 
