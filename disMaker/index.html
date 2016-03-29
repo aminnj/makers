@@ -1,0 +1,48 @@
+<html>
+<head>
+    <title>disMaker</title>
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Quicksand" />
+    <link rel="stylesheet" type="text/css" href="css/pretty-json.css" />
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script type="text/javascript" src="js/main.js" ></script>
+    <script type="text/javascript" src="js/underscore-min.js" ></script>
+    <script type="text/javascript" src="js/backbone-min.js" ></script>
+    <script type="text/javascript" src="js/pretty-json-min.js" ></script>
+
+</head>
+
+<body>
+<center><h1><span class="highlight">D</span>AS <span class="highlight">I</span>s <span class="highlight">S</span>low</h1></center>
+
+
+<form id="main_form" action="javascript:void(0)">
+<center>
+    <input type="text" class="inputbar" name="dataset" placeholder="dataset name" width=550/>
+    <select id="select_type" class="inputbar selectbar" name="type" width=100>
+        <option value="basic">basic</option>
+        <option value="files">files</option>
+        <option value="mcm">mcm</option>
+        <option value="lhe">lhe</option>
+    </select>
+    <input type="checkbox" name="short" value="short">short &ensp;
+    <button class="submit_button" value="submit">submit</button>
+    <br>
+    <img id="loading_animation" src="images/loading.gif" />
+</center>
+</form>
+
+
+<div id="query_container">
+    <center>this is your query</center>
+    <pre> <div class="json" id="query"></div> </pre>
+</div>
+<div id="result_container">
+    <center>this is my response</center>
+    <pre> <div class="json" id="result"></div> </pre>
+</div>
+
+</body>
+</html>
+

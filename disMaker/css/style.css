@@ -1,0 +1,65 @@
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:300,400,900);
+
+.highlight {
+    color: #f00;
+}
+.json {
+   white-space: pre-wrap;
+    width:90%;
+    border: 1px solid #333;
+    padding: 5px;
+    // border-style: none;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 80%;
+
+}
+
+
+#loading_animation {
+    position: relative;
+    top: 10px;
+    height:30px;
+}
+
+
+.inputbar {
+    font-family: inherit;
+    position:relative;
+    top: -1px;
+    margin: 5px auto;
+    height: 30px;
+    padding: 0 20px;
+    font-size: inherit;
+    border: 1px solid #000;
+    outline: none;
+}
+
+.inputbar:focus {
+  border: 1px solid #FF3333;
+  transition: 0.2s ease;
+  color: #000;
+}
+
+/* BUTTONS */
+button {
+    outline:none;
+    font-family: inherit;
+    -webkit-border-radius: 0;
+    -moz-border-radius: 0;
+    height: 31px;
+    border-radius: 0px;
+    color: #000000;
+    font-size: inherit;
+    background: #f0f0f0;
+    padding: 3px 15px 3px 15px;
+    margin: auto 15px 7px auto;
+    border: solid #000000 1px;
+    text-decoration: none;
+}
+button:hover {
+    color: #FF3333; 
+}
+button:active {
+    color: #FF8080; 
+}
