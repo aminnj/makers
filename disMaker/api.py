@@ -64,6 +64,22 @@ def dataset_event_count(dataset):
             return { "nevents": ret[0]['num_event'], "filesizeGB": round(ret[0]['file_size']/1.9e9,2), "nfiles": ret[0]['num_file'], "nlumis": ret[0]['num_lumi'] }
     return None
 
+def list_of_datasets(wildcardeddataset, short=False):
+    url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?dataset=%s&detail=0" % (get_dbs_instance(wildcardeddataset),wildcardeddataset)
+    ret = get_dbs_url(url)
+    if len(ret) > 0:
+            vals = []
+            for d in ret:
+                dataset = d["dataset"]
+                if short:
+                    vals.append(dataset)
+                else:
+                    info = dataset_event_count(dataset)
+                    info["dataset"] = dataset
+                    vals.append(info)
+            return vals
+    return []
+
 def get_dataset_files(dataset):
     # return list of 3-tuples (LFN, nevents, size_in_GB) of files in a given dataset
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/files?dataset=%s&validFileOnly=1&detail=1" % (get_dbs_instance(dataset),dataset)
@@ -134,6 +150,7 @@ if __name__=='__main__':
 
     arg_dict = {}
     # arg_dict = {"dataset": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step1-695fadc5ae5b65c0e37b75e981d30125/USER", "type":"files"}
+    # arg_dict = {"dataset": "/TChiNeu*/namin-TChiNeu*/USER", "type":"files"}
 
     if not arg_dict:
         arg_dict_str = sys.argv[1]
@@ -146,6 +163,9 @@ if __name__=='__main__':
     failed = False
     fail_reason = ""
     payload = {}
+
+    if "*" in dataset:
+        query_type = "listdatasets"
 
     if proxy_hours_left() < 5: proxy_renew()
 
@@ -161,6 +181,13 @@ if __name__=='__main__':
                 failed = True
                 fail_reason = "Dataset not found"
             payload = info
+
+        if query_type == "listdatasets":
+            datasets = list_of_datasets(dataset, short)
+            if not datasets:
+                failed = True
+                fail_reason = "No datasets found"
+            payload = datasets
 
         elif query_type == "files":
             files = get_dataset_files(dataset)

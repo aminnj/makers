@@ -19,8 +19,8 @@
 
 <form id="main_form" action="javascript:void(0)">
 <center>
-    <input type="text" class="inputbar" name="dataset" placeholder="dataset name" width=550/>
-    <select id="select_type" class="inputbar selectbar" name="type" width=100>
+    <input type="text" class="inputbar" name="dataset" placeholder="dataset name" style="width:550px;"/>
+    <select id="select_type" class="inputbar selectbar" name="type" style="width:100px;">
         <option value="basic">basic</option>
         <option value="files">files</option>
         <option value="mcm">mcm</option>
@@ -29,18 +29,19 @@
     <input type="checkbox" name="short" value="short">short &ensp;
     <button class="submit_button" value="submit">submit</button>
     <br>
-    <img id="loading_animation" src="images/loading.gif" />
 </center>
 </form>
 
 
 <div id="query_container">
-    <center>this is your query</center>
+    <!-- <center>this is your query</center> -->
     <pre> <div class="json" id="query"></div> </pre>
 </div>
+<center> <img id="loading_animation" src="images/loading.gif" /> </center>
 <div id="result_container">
-    <center>this is my response</center>
+    <!-- <center>this is my response</center> -->
     <pre> <div class="json" id="result"></div> </pre>
+    <center> <span class="timing"></span> </center>
 </div>
 
 </body>
