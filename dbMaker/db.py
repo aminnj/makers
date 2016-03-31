@@ -108,3 +108,9 @@ class DBInterface():
     def close(self):
         self.connection.close()
 
+
+if __name__=='__main__':
+    import tester
+    if tester.do_test():
+        print "Calculations correct"
+
