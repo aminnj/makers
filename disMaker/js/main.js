@@ -13,7 +13,7 @@ function doSubmit(data) {
     prettyJSON($('#query'), data);
     $("#result_container").hide();
     t0 = new Date().getTime();
-    $.post("handler.py", data)
+    $.get("handler.py", data)
         .done(function(response) {})
         .always(function(response){
             $("#loading_animation").hide();

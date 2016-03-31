@@ -164,7 +164,7 @@ if __name__=='__main__':
     fail_reason = ""
     payload = {}
 
-    if "*" in dataset:
+    if "*" in dataset and query_type in ["basic","files"]:
         query_type = "listdatasets"
 
     if proxy_hours_left() < 5: proxy_renew()
@@ -207,6 +207,13 @@ if __name__=='__main__':
             lhe = get_dataset_parent(gen_sim)
             files = get_dataset_files(lhe)
             payload["files"] = filelist_to_dict(files, short)
+
+        elif query_type == "snt":
+            from db import DBInterface
+            db = DBInterface(fname="allsamples.db")
+            if "*" in dataset: dataset = dataset.replace("*","%")
+            samples = db.fetch_samples_matching({"dataset_name":dataset})
+            payload = samples
 
         else:
             failed = True

@@ -1,4 +1,5 @@
 import sqlite3
+import pickle
 
 class DBInterface():
     
@@ -7,8 +8,8 @@ class DBInterface():
         self.cursor = self.connection.cursor()
         self.key_types = [
                 ("sample_id", "INTEGER PRIMARY KEY"),
-                ("sample_type", "VARCHAR(20)"),
-                ("twiki_name", "VARCHAR(50)"),
+                ("sample_type", "VARCHAR(30)"),
+                ("twiki_name", "VARCHAR(60)"),
                 ("dataset_name", "VARCHAR(250)"),
                 ("location", "VARCHAR(300)"),
                 ("filter_type", "VARCHAR(20)"),
@@ -18,9 +19,9 @@ class DBInterface():
                 ("xsec", "FLOAT"),
                 ("kfactor", "FLOAT"),
                 ("gtag", "VARCHAR(40)"),
-                ("cms3tag", "VARCHAR(20)"),
-                ("assigned_to", "VARCHAR(20)"),
-                ("comments", "VARCHAR(100)"),
+                ("cms3tag", "VARCHAR(40)"),
+                ("assigned_to", "VARCHAR(30)"),
+                ("comments", "VARCHAR(600)"),
                 ]
 
     def drop_table(self):
@@ -92,7 +93,7 @@ class DBInterface():
 
         keys, vals = zip(*d.items())
         val_strs = self.make_val_str(vals)
-        set_str = " and ".join(map(lambda (x,y): "%s=%s" % (x,y), zip(keys, val_strs)))
+        set_str = " and ".join(map(lambda (x,y): "%s %s %s" % (x,'like' if '%' in y else '=', y), zip(keys, val_strs)))
         sql_cmd = "select * from sample where %s" % (set_str)
         return self.read_to_dict_list(sql_cmd)
 
@@ -110,7 +111,28 @@ class DBInterface():
 
 
 if __name__=='__main__':
-    import tester
-    if tester.do_test():
+    pass
+
+    import db_tester
+    if db_tester.do_test():
         print "Calculations correct"
 
+
+    
+    # db = DBInterface(fname="allsamples.db")
+    # db.drop_table()
+    # db.make_table()
+    # with open("allsamples.pkl","r") as fhin:
+    #     allsamples = pickle.load(fhin)
+    # for sample in allsamples:
+    #     db.update_sample(sample)
+    # db.close()
+
+    
+    # db = DBInterface(fname="allsamples.db")
+    # # tchi = db.fetch_samples_matching({"dataset_name":"/TChiNeu_mChi-300_mLSP-290_step1/namin-TChiNeu_mChi-300_mLSP-290_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"})
+    # tchi = db.fetch_samples_matching({"dataset_name":"/TChi%/namin-TChi%/USER"})
+    # print tchi
+    # db.close()
+
+    
