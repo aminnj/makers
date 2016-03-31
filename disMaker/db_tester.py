@@ -20,6 +20,7 @@ def do_test():
                 }
 
     # :memory: uses RAM instead of saving a file
+    # db = DBInterface(fname=":memory:")
     db = DBInterface(fname=":memory:")
 
     # empty DB and re-initialize table

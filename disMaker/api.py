@@ -151,6 +151,7 @@ if __name__=='__main__':
     arg_dict = {}
     # arg_dict = {"dataset": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step1-695fadc5ae5b65c0e37b75e981d30125/USER", "type":"files"}
     # arg_dict = {"dataset": "/TChiNeu*/namin-TChiNeu*/USER", "type":"files"}
+    # arg_dict = {"type": "snt", "dataset": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"}
 
     if not arg_dict:
         arg_dict_str = sys.argv[1]

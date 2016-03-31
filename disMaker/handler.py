@@ -1,7 +1,6 @@
 #!/usr/bin/python
-import cgi, cgitb 
-import os, sys, commands
-import json
+import cgi
+import commands
 
 def inputToDict(form):
     d = {}
