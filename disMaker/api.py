@@ -182,7 +182,7 @@ if __name__=='__main__':
                 fail_reason = "Dataset not found"
             payload = info
 
-        if query_type == "listdatasets":
+        elif query_type == "listdatasets":
             datasets = list_of_datasets(dataset, short)
             if not datasets:
                 failed = True
