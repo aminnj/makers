@@ -80,6 +80,9 @@ def do_test():
     assert( db.update_sample({}) == False ) # don't do anything if empty
     assert( db.update_sample({"duck":1}) == False ) # don't do anything if unrecognized key
 
+    assert( len(db.fetch_samples_matching({"cms3tag":"*_tag_*"})) == 3 ) # check wildcard support
+
+
     db.close()
 
     # print "Calculations correct"

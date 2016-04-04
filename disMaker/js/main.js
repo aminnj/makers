@@ -16,14 +16,12 @@ function doSubmit(data) {
     $.get("handler.py", data)
         .done(function(response) {})
         .always(function(response){
-            $("#loading_animation").hide();
-            $("#result_container").show();
-            console.log(response);
             if(response["response"]["status"] == "success") {
                 prettyJSON($("#result"), response["response"]["payload"]);
             } else {
                 prettyJSON($("#result"), response["response"]);
             }
+            $("#loading_animation").hide();
             $("#result_container").show();
             console.log(response);
             $(".timing").html("loaded in " + (new Date().getTime()-t0)/1000 + " seconds");

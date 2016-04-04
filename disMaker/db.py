@@ -91,10 +91,20 @@ class DBInterface():
         if not d: return []
         if self.unknown_keys(d): return []
 
+        # sanitize wildcards
+        for k in d:
+            if type(d[k]) in [str,unicode] and "*" in d[k]:
+                d[k] = d[k].replace("*","%")
+
         keys, vals = zip(*d.items())
         val_strs = self.make_val_str(vals)
-        set_str = " and ".join(map(lambda (x,y): "%s %s %s" % (x,'like' if '%' in y else '=', y), zip(keys, val_strs)))
+
+        def need_wildcard(y):
+            return ("%" in y) or ("[" in y) or ("]" in y)
+
+        set_str = " and ".join(map(lambda (x,y): "%s %s %s" % (x,'like' if need_wildcard(y) else '=', y), zip(keys, val_strs)))
         sql_cmd = "select * from sample where %s" % (set_str)
+        print sql_cmd
         return self.read_to_dict_list(sql_cmd)
 
     def unknown_keys(self, d):
@@ -130,8 +140,9 @@ if __name__=='__main__':
 
     
     # db = DBInterface(fname="allsamples.db")
-    # # tchi = db.fetch_samples_matching({"dataset_name":"/TChiNeu_mChi-300_mLSP-290_step1/namin-TChiNeu_mChi-300_mLSP-290_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"})
+    # tchi = db.fetch_samples_matching({"dataset_name":"/TChiNeu_mChi-300_mLSP-290_step1/namin-TChiNeu_mChi-300_mLSP-290_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"})
     # tchi = db.fetch_samples_matching({"dataset_name":"/TChi%/namin-TChi%/USER"})
+    # tchi = db.fetch_samples_matching({"dataset_name":"/GJets_HT-4*/*/*"})
     # print tchi
     # db.close()
 

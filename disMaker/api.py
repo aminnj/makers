@@ -149,17 +149,27 @@ def make_response(query, payload, failed, fail_reason):
 if __name__=='__main__':
 
     arg_dict = {}
-    # arg_dict = {"dataset": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step1-695fadc5ae5b65c0e37b75e981d30125/USER", "type":"files"}
-    # arg_dict = {"dataset": "/TChiNeu*/namin-TChiNeu*/USER", "type":"files"}
-    # arg_dict = {"type": "snt", "dataset": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"}
+    # arg_dict = {"query": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step1-695fadc5ae5b65c0e37b75e981d30125/USER", "type":"files"}
+    # arg_dict = {"query": "/TChiNeu*/namin-TChiNeu*/USER", "type":"files"}
+    # arg_dict = {"type": "snt", "query": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"}
+    # arg_dict = {"type": "snt", "query": "/TChiChi*/*/USER", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/TChiChi*/*/USER, gtag=*74X*", "short":"short"}
 
     if not arg_dict:
         arg_dict_str = sys.argv[1]
         arg_dict = ast.literal_eval(arg_dict_str)
 
     query_type = arg_dict.get("type","basic")
-    dataset = arg_dict.get("dataset", None)
+    query = arg_dict.get("query", None).strip()
     short = arg_dict.get("short", False)
+
+
+    # parse extra information in query if it's not just the dataset
+    extra = None
+    dataset = query
+    if "," in query:
+        dataset = query.split(",")[0].strip()
+        extra = query.split(",")[1:]
 
     failed = False
     fail_reason = ""
@@ -212,8 +222,26 @@ if __name__=='__main__':
         elif query_type == "snt":
             from db import DBInterface
             db = DBInterface(fname="allsamples.db")
-            if "*" in dataset: dataset = dataset.replace("*","%")
-            samples = db.fetch_samples_matching({"dataset_name":dataset})
+
+            match_dict = {"dataset_name": dataset}
+
+            if extra:
+                for more in extra:
+                    key = more.split("=")[0].strip()
+                    val = more.split("=")[1].strip()
+                    match_dict[key] = val
+
+            samples = db.fetch_samples_matching(match_dict)
+
+            if short:
+                new_samples = []
+                for sample in samples:
+                    for key in ["kfactor","nevents_in","sample_id","filter_eff","filter_type","assigned_to", \
+                                "comments","gtag","twiki_name","xsec","sample_type"]:
+                        del sample[key]
+                    new_samples.append(sample)
+                samples = new_samples
+
             payload = samples
 
         else:
