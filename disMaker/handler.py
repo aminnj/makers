@@ -13,6 +13,7 @@ inp = inputToDict(form)
 
 arg_str = str(inp)
 arg_str = arg_str.replace("'","\\'")
+arg_str = arg_str.replace("|", "\|")
 
 stat, out = commands.getstatusoutput("./do.sh %s" % arg_str)
 print out

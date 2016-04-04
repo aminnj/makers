@@ -154,6 +154,11 @@ if __name__=='__main__':
     # arg_dict = {"type": "snt", "query": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"}
     # arg_dict = {"type": "snt", "query": "/TChiChi*/*/USER", "short":"short"}
     # arg_dict = {"type": "snt", "query": "/TChiChi*/*/USER, gtag=*74X*", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07*", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07* | grep nevents_out,dataset_name", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07* | grep nevents_out,dataset_name | flatten", "short":"short"}
+
 
     if not arg_dict:
         arg_dict_str = sys.argv[1]
@@ -165,11 +170,19 @@ if __name__=='__main__':
 
 
     # parse extra information in query if it's not just the dataset
-    extra = None
+    # /Gjet*/*/*, cms3tag=*07*06* | grep location,dataset_name
+    # ^^dataset^^ ^^^selectors^^^   ^^^^^^^^^^^pipes^^^^^^^^^^
+    selectors = None
+    pipes = None
     dataset = query
     if "," in query:
-        dataset = query.split(",")[0].strip()
-        extra = query.split(",")[1:]
+        dataset = query.split(",",1)[0].strip()
+
+        if "|" in query:
+            selectors = query.split("|")[0].split(",")[1:]
+            pipes = query.split("|")[1:]
+        else:
+            selectors = query.split(",")[1:]
 
     failed = False
     fail_reason = ""
@@ -225,8 +238,8 @@ if __name__=='__main__':
 
             match_dict = {"dataset_name": dataset}
 
-            if extra:
-                for more in extra:
+            if selectors:
+                for more in selectors:
                     key = more.split("=")[0].strip()
                     val = more.split("=")[1].strip()
                     match_dict[key] = val
@@ -251,8 +264,26 @@ if __name__=='__main__':
         failed = True
         fail_reason = traceback.format_exc()
 
+    if pipes:
+        for pipe in pipes:
+            pipe = pipe.strip()
+            parts = pipe.split(" ",1)
+            if len(parts) == 2:
+                verb, keys = parts
+                keys = keys.split(",")
+            else:
+                verb = parts[0]
+
+            if verb == "grep":
+                for ipay in range(len(payload)):
+                    if type(payload[ipay]) is not dict: continue
+
+                    if len(keys) > 1:
+                        d = {}
+                        for key in keys: d[key] = payload[ipay].get(key,None)
+                        payload[ipay] = d
+                    else:
+                        payload[ipay] = payload[ipay].get(keys[0],None)
+
     print make_response(arg_dict, payload, failed, fail_reason)
-
-
-
 

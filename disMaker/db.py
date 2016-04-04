@@ -104,7 +104,6 @@ class DBInterface():
 
         set_str = " and ".join(map(lambda (x,y): "%s %s %s" % (x,'like' if need_wildcard(y) else '=', y), zip(keys, val_strs)))
         sql_cmd = "select * from sample where %s" % (set_str)
-        print sql_cmd
         return self.read_to_dict_list(sql_cmd)
 
     def unknown_keys(self, d):

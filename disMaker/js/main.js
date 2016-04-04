@@ -16,6 +16,7 @@ function doSubmit(data) {
     $.get("handler.py", data)
         .done(function(response) {})
         .always(function(response){
+            console.log(response);
             if(response["response"]["status"] == "success") {
                 prettyJSON($("#result"), response["response"]["payload"]);
             } else {

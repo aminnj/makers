@@ -5,6 +5,9 @@ import twiki
 import pickle
 from db import DBInterface
 
+def remove_unicode(x):
+    return x.decode('unicode_escape').encode('ascii','ignore')
+
 db = DBInterface(fname="allsamples.db")
 db.drop_table()
 db.make_table()
@@ -40,7 +43,7 @@ for site in sites:
         s["gtag"] = sample["gtag"]
         s["cms3tag"] = sample["cms3tag"]
         s["assigned_to"] = sample["assigned"]
-        s["comments"] = sample["comments"]
+        s["comments"] = remove_unicode(sample["comments"])
 
         db.update_sample(s)
         isample += 1
