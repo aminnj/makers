@@ -157,7 +157,7 @@ if __name__=='__main__':
     # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*", "short":"short"}
     # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07*", "short":"short"}
     # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07* | grep nevents_out,dataset_name", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07* | grep nevents_out,dataset_name | flatten", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/G* | grep cms3tag"}
 
 
     if not arg_dict:
@@ -174,15 +174,20 @@ if __name__=='__main__':
     # ^^dataset^^ ^^^selectors^^^   ^^^^^^^^^^^pipes^^^^^^^^^^
     selectors = None
     pipes = None
-    dataset = query
-    if "," in query:
-        dataset = query.split(",",1)[0].strip()
+    if "|" in query:
+        first = query.split("|")[0].strip()
+        pipes = query.split("|")[1:]
 
-        if "|" in query:
-            selectors = query.split("|")[0].split(",")[1:]
-            pipes = query.split("|")[1:]
+        if "," in first:
+            dataset = first.split(",")[0].strip()
+            selectors = first.split(",")[1:]
         else:
-            selectors = query.split(",")[1:]
+            dataset = first
+    elif "," in query:
+        dataset = query.split(",")[0].strip()
+        selectors = query.split(",")[1:]
+    else:
+        dataset = query.strip()
 
     failed = False
     fail_reason = ""

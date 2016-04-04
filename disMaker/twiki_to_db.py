@@ -30,6 +30,7 @@ for site in sites:
 
     for sample in samples:
         s = {}
+
         s["sample_type"] = "CMS3"
         s["twiki_name"] = site
         s["dataset_name"] = sample["dataset"]
