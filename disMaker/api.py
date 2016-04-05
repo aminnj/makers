@@ -53,6 +53,7 @@ def get_dbs_url(url):
 
 def get_dbs_instance(dataset):
     if dataset.endswith("/USER"): return "phys03"
+    elif "Nick" in dataset: return "phys03"
     else: return "global"
 
 def dataset_event_count(dataset):
@@ -275,7 +276,7 @@ if __name__=='__main__':
             parts = pipe.split(" ",1)
             if len(parts) == 2:
                 verb, keys = parts
-                keys = keys.split(",")
+                keys = map(lambda x: x.strip(), keys.split(","))
             else:
                 verb = parts[0]
 
