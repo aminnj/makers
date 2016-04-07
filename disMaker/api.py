@@ -28,7 +28,7 @@ def proxy_hours_left():
 
 def proxy_renew():
     # http://www.t2.ucsd.edu/tastwiki/bin/view/CMS/LongLivedProxy
-    cert_file = "/home/users/{0}/.globus/proxy_for_{0}.file".format(os.getenv("USER"))
+    cert_file = "/home/users/{0}/.globus/proxy_for_{0}.file".format(get("whoami").strip())
     if os.path.exists(cert_file): cmd("voms-proxy-init -q -voms cms -hours 120 -valid=120:0 -cert=%s" % cert_file)
     else: cmd("voms-proxy-init -hours 9876543:0 -out=%s" % cert_file)
 
