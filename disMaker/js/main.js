@@ -14,6 +14,7 @@ function doSubmit(data) {
     $("#result_container").hide();
     t0 = new Date().getTime();
     $.get("handler.py", data)
+    // $.get("http://uaf-8.t2.ucsd.edu:8080/dis", data)
         .done(function(response) {})
         .always(function(response){
             console.log(response);

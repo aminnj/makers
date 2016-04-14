@@ -1,11 +1,11 @@
-import os, sys
+import os
+import sys
 import pycurl 
 import StringIO 
 import ast
 import urllib2
 import json
 import traceback
-import sys
 import commands
 
 
@@ -109,6 +109,13 @@ def get_mcm_json(dataset):
     mcm_json = json.load(urllib2.urlopen(url))
     return mcm_json
 
+def get_mcm_setup(campaign):
+    # get McM json for given dataset
+    url = "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_setup/"+campaign
+    ret_data = urllib2.urlopen(url).read()
+    if "#!/bin/bash" in ret_data: ret_data = "\n" + ret_data
+    return ret_data
+
 def get_slim_mcm_json(dataset):
     out = {}
     mcm_json = get_mcm_json(dataset)
@@ -147,23 +154,8 @@ def make_response(query, payload, failed, fail_reason):
     return json.dumps( { "query": query, "response": { "status": status, "fail_reason": fail_reason, "payload": payload } } )
     # return { "query": query, "response": { "status": status, "fail_reason": fail_reason, "payload": payload } }
 
-if __name__=='__main__':
 
-    arg_dict = {}
-    # arg_dict = {"query": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step1-695fadc5ae5b65c0e37b75e981d30125/USER", "type":"files"}
-    # arg_dict = {"query": "/TChiNeu*/namin-TChiNeu*/USER", "type":"files"}
-    # arg_dict = {"type": "snt", "query": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"}
-    # arg_dict = {"type": "snt", "query": "/TChiChi*/*/USER", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/TChiChi*/*/USER, gtag=*74X*", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07*", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07* | grep nevents_out,dataset_name", "short":"short"}
-    # arg_dict = {"type": "snt", "query": "/G* | grep cms3tag"}
-
-
-    if not arg_dict:
-        arg_dict_str = sys.argv[1]
-        arg_dict = ast.literal_eval(arg_dict_str)
+def handle_query(arg_dict):
 
     query_type = arg_dict.get("type","basic")
     query = arg_dict.get("query", None).strip()
@@ -180,51 +172,52 @@ if __name__=='__main__':
         pipes = query.split("|")[1:]
 
         if "," in first:
-            dataset = first.split(",")[0].strip()
+            entity = first.split(",")[0].strip()
             selectors = first.split(",")[1:]
         else:
-            dataset = first
+            entity = first
     elif "," in query:
-        dataset = query.split(",")[0].strip()
+        entity = query.split(",")[0].strip()
         selectors = query.split(",")[1:]
     else:
-        dataset = query.strip()
+        entity = query.strip()
 
     failed = False
     fail_reason = ""
     payload = {}
 
-    if "*" in dataset and query_type in ["basic","files"]:
+    if "*" in entity and query_type in ["basic","files"]:
         query_type = "listdatasets"
 
-    if proxy_hours_left() < 5: proxy_renew()
+    if query_type in ["basic", "files", "listdatasets", "mcm", "driver", "lhe"]:
+        if proxy_hours_left() < 5: proxy_renew()
 
-    if not dataset:
+    if not entity:
         failed = True
         fail_reason = "Dataset not specified"
 
 
     try:
         if query_type == "basic":
-            info = dataset_event_count(dataset)
+            info = dataset_event_count(entity)
             if not info:
                 failed = True
                 fail_reason = "Dataset not found"
             payload = info
 
         elif query_type == "listdatasets":
-            datasets = list_of_datasets(dataset, short)
+            datasets = list_of_datasets(entity, short)
             if not datasets:
                 failed = True
                 fail_reason = "No datasets found"
             payload = datasets
 
         elif query_type == "files":
-            files = get_dataset_files(dataset)
+            files = get_dataset_files(entity)
             payload["files"] = filelist_to_dict(files, short)
 
         elif query_type == "mcm":
-            gen_sim = get_gen_sim(dataset)
+            gen_sim = get_gen_sim(entity)
             if short:
                 info = get_slim_mcm_json(gen_sim)
             else:
@@ -232,8 +225,16 @@ if __name__=='__main__':
             info["gensim"] = gen_sim
             payload = info
 
+        elif query_type == "driver":
+            gen_sim = get_gen_sim(entity)
+            info = get_mcm_json(gen_sim)["results"]
+            dataset_base = info["dataset_name"]
+            campaign = info["prepid"]
+            driver = get_mcm_setup(campaign)
+            payload = { "dataset": dataset_base, "cmsDriver": driver }
+
         elif query_type == "lhe":
-            gen_sim = get_gen_sim(dataset)
+            gen_sim = get_gen_sim(entity)
             lhe = get_dataset_parent(gen_sim)
             files = get_dataset_files(lhe)
             payload["files"] = filelist_to_dict(files, short)
@@ -242,7 +243,7 @@ if __name__=='__main__':
             from db import DBInterface
             db = DBInterface(fname="allsamples.db")
 
-            match_dict = {"dataset_name": dataset}
+            match_dict = {"dataset_name": entity}
 
             if selectors:
                 for more in selectors:
@@ -291,5 +292,27 @@ if __name__=='__main__':
                     else:
                         payload[ipay] = payload[ipay].get(keys[0],None)
 
-    print make_response(arg_dict, payload, failed, fail_reason)
+    return make_response(arg_dict, payload, failed, fail_reason)
+
+
+if __name__=='__main__':
+
+    arg_dict = {}
+    # arg_dict = {"query": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step1-695fadc5ae5b65c0e37b75e981d30125/USER", "type":"files"}
+    # arg_dict = {"query": "/TChiNeu*/namin-TChiNeu*/USER", "type":"files"}
+    # arg_dict = {"type": "snt", "query": "/TChiChi_mChi-150_mLSP-1_step1/namin-TChiChi_mChi-150_mLSP-1_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"}
+    # arg_dict = {"type": "snt", "query": "/TChiChi*/*/USER", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/TChiChi*/*/USER, gtag=*74X*", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07*", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07* | grep nevents_out,dataset_name", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/G* | grep cms3tag"}
+    # arg_dict = {"type": "driver", "query": "/QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM"}
+
+
+    if not arg_dict:
+        arg_dict_str = sys.argv[1]
+        arg_dict = ast.literal_eval(arg_dict_str)
+
+    print handle_query(arg_dict)
 

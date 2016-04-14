@@ -126,23 +126,10 @@ if __name__=='__main__':
     if db_tester.do_test():
         print "Calculations correct"
 
-
-    
-    # db = DBInterface(fname="allsamples.db")
-    # db.drop_table()
-    # db.make_table()
-    # with open("allsamples.pkl","r") as fhin:
-    #     allsamples = pickle.load(fhin)
-    # for sample in allsamples:
-    #     db.update_sample(sample)
-    # db.close()
-
-    
     # db = DBInterface(fname="allsamples.db")
     # tchi = db.fetch_samples_matching({"dataset_name":"/TChiNeu_mChi-300_mLSP-290_step1/namin-TChiNeu_mChi-300_mLSP-290_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"})
     # tchi = db.fetch_samples_matching({"dataset_name":"/TChi%/namin-TChi%/USER"})
     # tchi = db.fetch_samples_matching({"dataset_name":"/GJets_HT-4*/*/*"})
     # print tchi
     # db.close()
-
     
