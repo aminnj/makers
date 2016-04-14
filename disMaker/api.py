@@ -101,7 +101,10 @@ def get_gen_sim(dataset):
     while "GEN-SIM" not in dataset:
         dataset = get_dataset_parent(dataset)
         if not dataset: break
-    return dataset if "GEN-SIM" in dataset else None
+    if dataset and "GEN-SIM" in dataset:
+        return dataset
+    else:
+        raise LookupError("Could not find parent dataset")
 
 def get_mcm_json(dataset):
     # get McM json for given dataset
