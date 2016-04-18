@@ -96,12 +96,17 @@ def get_dataset_parent(dataset):
     if len(ret) < 1: return None
     return ret[0].get('parent_dataset', None)
 
-def get_gen_sim(dataset):
+def get_specified_parent(dataset, typ="LHE", fallback=None):
     # recurses up the tree of parent datasets until it finds the gen_sim dataset
-    while "GEN-SIM" not in dataset:
+    found = False
+    for i in range(4):
         dataset = get_dataset_parent(dataset)
         if not dataset: break
-    if dataset and "GEN-SIM" in dataset:
+        if typ in dataset or fallback and fallback in dataset: 
+            found = True
+            break
+
+    if found:
         return dataset
     else:
         raise LookupError("Could not find parent dataset")
@@ -220,7 +225,7 @@ def handle_query(arg_dict):
             payload["files"] = filelist_to_dict(files, short)
 
         elif query_type == "mcm":
-            gen_sim = get_gen_sim(entity)
+            gen_sim = get_specified_parent(entity, typ="GEN-SIM")
             if short:
                 info = get_slim_mcm_json(gen_sim)
             else:
@@ -229,7 +234,7 @@ def handle_query(arg_dict):
             payload = info
 
         elif query_type == "driver":
-            gen_sim = get_gen_sim(entity)
+            gen_sim = get_specified_parent(entity, typ="GEN-SIM", fallback="AOD")
             info = get_mcm_json(gen_sim)["results"]
             dataset_base = info["dataset_name"]
             campaign = info["prepid"]
@@ -237,8 +242,8 @@ def handle_query(arg_dict):
             payload = { "dataset": dataset_base, "cmsDriver": driver }
 
         elif query_type == "lhe":
-            gen_sim = get_gen_sim(entity)
-            lhe = get_dataset_parent(gen_sim)
+            lhe = get_specified_parent(entity, typ="LHE")
+            # lhe = get_dataset_parent(gen_sim)
             files = get_dataset_files(lhe)
             payload["files"] = filelist_to_dict(files, short)
 
@@ -311,6 +316,8 @@ if __name__=='__main__':
     # arg_dict = {"type": "snt", "query": "/GJet*HT-400*/*/*, gtag=*74X*, cms3tag=*07* | grep nevents_out,dataset_name", "short":"short"}
     # arg_dict = {"type": "snt", "query": "/G* | grep cms3tag"}
     # arg_dict = {"type": "driver", "query": "/QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM"}
+    # arg_dict = {"type": "lhe", "query": "/SMS-T5qqqqWW_mGl-600to800_mLSP-0to725_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-FastAsympt25ns_74X_mcRun2_asymptotic_v2-v1/MINIAODSIM"}
+    # arg_dict = {"type": "driver", "query": "/SMS-T5qqqqWW_mGl-600to800_mLSP-0to725_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-FastAsympt25ns_74X_mcRun2_asymptotic_v2-v1/MINIAODSIM"}
 
 
     if not arg_dict:

@@ -13,6 +13,7 @@ db.drop_table()
 db.make_table()
 
 sites = [
+"Run2Samples25ns80X",
 "Run2SamplesPrivateSMSFastSim25ns",
 "Run2Samples25ns76XminiAODv2",
 "Run2SamplesSMSFastSim_25ns",
