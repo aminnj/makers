@@ -101,15 +101,25 @@ def get_dataset_parent(dataset):
 def get_specified_parent(dataset, typ="LHE", fallback=None):
     # recurses up the tree of parent datasets until it finds the gen_sim dataset
     found = False
+    fallback_found = False
+
+    the_dataset = None
+    fallback_dataset = None
     for i in range(4):
         dataset = get_dataset_parent(dataset)
         if not dataset: break
-        if typ in dataset or fallback and fallback in dataset: 
+        if typ in dataset:
             found = True
+            the_dataset = dataset
             break
+        elif fallback and fallback in dataset: 
+            fallback_found = True
+            fallback_dataset = dataset
 
     if found:
-        return dataset
+        return the_dataset
+    elif fallback_found:
+        return fallback_dataset
     else:
         raise LookupError("Could not find parent dataset")
 
