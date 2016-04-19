@@ -36,7 +36,7 @@ def get_proxy_file():
     cert_file = '/tmp/x509up_u%s' % str(os.getuid()) # TODO: check that this is the same as `voms-proxy-info -path`
     return cert_file
 
-def get_dbs_url(url):
+def get_url_with_cert(url, return_raw=False):
     # get json from a dbs url (API ref is at https://cmsweb.cern.ch/dbs/prod/global/DBSReader/)
     b = StringIO.StringIO() 
     c = pycurl.Curl() 
@@ -47,7 +47,9 @@ def get_dbs_url(url):
     c.setopt(pycurl.SSLCERT, cert)
     c.setopt(pycurl.URL, url) 
     c.perform() 
-    s = b.getvalue().replace("null","None")
+    s = b.getvalue()
+    if return_raw: return s
+    s = s.replace("null","None")
     ret = ast.literal_eval(s)
     return ret
 
@@ -59,7 +61,7 @@ def get_dbs_instance(dataset):
 def dataset_event_count(dataset):
     # get event count and other information from dataset
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/filesummaries?dataset=%s&validFileOnly=1" % (get_dbs_instance(dataset),dataset)
-    ret = get_dbs_url(url)
+    ret = get_url_with_cert(url)
     if len(ret) > 0:
         if ret[0]:
             return { "nevents": ret[0]['num_event'], "filesizeGB": round(ret[0]['file_size']/1.9e9,2), "nfiles": ret[0]['num_file'], "nlumis": ret[0]['num_lumi'] }
@@ -67,7 +69,7 @@ def dataset_event_count(dataset):
 
 def list_of_datasets(wildcardeddataset, short=False):
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?dataset=%s&detail=0" % (get_dbs_instance(wildcardeddataset),wildcardeddataset)
-    ret = get_dbs_url(url)
+    ret = get_url_with_cert(url)
     if len(ret) > 0:
             vals = []
             for d in ret:
@@ -84,7 +86,7 @@ def list_of_datasets(wildcardeddataset, short=False):
 def get_dataset_files(dataset):
     # return list of 3-tuples (LFN, nevents, size_in_GB) of files in a given dataset
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/files?dataset=%s&validFileOnly=1&detail=1" % (get_dbs_instance(dataset),dataset)
-    ret = get_dbs_url(url)
+    ret = get_url_with_cert(url)
     files = []
     for f in ret:
         files.append( [f['logical_file_name'], f['event_count'], f['file_size']/1.0e9] )
@@ -92,7 +94,7 @@ def get_dataset_files(dataset):
 
 def get_dataset_parent(dataset):
     # get parent of a given dataset
-    ret = get_dbs_url("https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasetparents?dataset=%s" % (get_dbs_instance(dataset),dataset))
+    ret = get_url_with_cert("https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasetparents?dataset=%s" % (get_dbs_instance(dataset),dataset))
     if len(ret) < 1: return None
     return ret[0].get('parent_dataset', None)
 
@@ -225,7 +227,7 @@ def handle_query(arg_dict):
             payload["files"] = filelist_to_dict(files, short)
 
         elif query_type == "mcm":
-            gen_sim = get_specified_parent(entity, typ="GEN-SIM")
+            gen_sim = get_specified_parent(entity, typ="GEN-SIM", fallback="AODSIM")
             if short:
                 info = get_slim_mcm_json(gen_sim)
             else:
@@ -234,7 +236,7 @@ def handle_query(arg_dict):
             payload = info
 
         elif query_type == "driver":
-            gen_sim = get_specified_parent(entity, typ="GEN-SIM", fallback="AOD")
+            gen_sim = get_specified_parent(entity, typ="GEN-SIM", fallback="AODSIM")
             info = get_mcm_json(gen_sim)["results"]
             dataset_base = info["dataset_name"]
             campaign = info["prepid"]
