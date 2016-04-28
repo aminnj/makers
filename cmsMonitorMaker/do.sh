@@ -32,7 +32,7 @@ if [[ ${HOST} == *uaf-* ]]; then
     cp $style $outdir/
 else
     # scp to public_html
-    scp $picture $json $overview $image $style $user@uaf-6.t2.ucsd.edu:~/public_html/$outdir/
+    scp -o COnnectTimeout=10 -o StrictHostKeyChecking=no $picture $json $overview $image $style $user@uaf-6.t2.ucsd.edu:~/public_html/$outdir/ || scp -o COnnectTimeout=10 -o StrictHostKeyChecking=no $picture $json $overview $image $style $user@uaf-7.t2.ucsd.edu:~/public_html/$outdir/ || scp -o COnnectTimeout=10 -o StrictHostKeyChecking=no $picture $json $overview $image $style $user@uaf-8.t2.ucsd.edu:~/public_html/$outdir/
 fi
 
 echo ">>> Output in uaf-6.t2.ucsd.edu/~$user/$outdir/$overview"

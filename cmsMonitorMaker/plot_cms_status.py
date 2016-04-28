@@ -206,9 +206,9 @@ if PLOT_LUMI:
     ax2.set_ylim(0,4*baseunit)
     ax2.set_yticks([baseunit, 2*baseunit, 3*baseunit])
     ax2.set_yticks([0.5*baseunit, 1.5*baseunit, 2.5*baseunit, 3.5*baseunit], minor=True)
-    leg = plt.legend(handles=[red_patch, blue_patch, green_patch, cms_lumi_plot, atl_lumi_plot], fontsize='small')
+    leg = plt.legend([red_patch, blue_patch, green_patch, cms_lumi_plot, atl_lumi_plot], fontsize='small')
 else:
-    leg = plt.legend(handles=[red_patch, blue_patch, green_patch], fontsize='small')
+    leg = plt.legend([red_patch, blue_patch, green_patch], fontsize='small')
     
 ax1.set_xlim(time_vals[0], time_vals[-1])
 fig.autofmt_xdate()
