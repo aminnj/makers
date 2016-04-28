@@ -69,6 +69,7 @@ for i in range(len(lines)-1,-1,-1):
     # bad values
     if B==-1 or c1.count(-1)!=0 or c2.count(-1)!=0:
         continue
+
     time_vals.append(datetime.fromtimestamp(t))
     B_vals.append(B)
     E_vals.append(E)
@@ -206,7 +207,9 @@ if PLOT_LUMI:
     ax2.set_ylim(0,4*baseunit)
     ax2.set_yticks([baseunit, 2*baseunit, 3*baseunit])
     ax2.set_yticks([0.5*baseunit, 1.5*baseunit, 2.5*baseunit, 3.5*baseunit], minor=True)
-    leg = plt.legend([red_patch, blue_patch, green_patch, cms_lumi_plot, atl_lumi_plot], fontsize='small')
+    patches = [red_patch, blue_patch, green_patch, cms_lumi_plot, atl_lumi_plot]
+    labels = map(lambda x: x.get_label(), patches)
+    leg = plt.legend(patches, labels, fontsize='small')
 else:
     leg = plt.legend([red_patch, blue_patch, green_patch], fontsize='small')
     
@@ -215,6 +218,7 @@ fig.autofmt_xdate()
 
 badColor = '#96281B'
 goodColor = 'g'
+
 if curBscore >= 5:
     leg.get_texts()[0].set_color(goodColor)
 else:

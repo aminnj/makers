@@ -83,7 +83,7 @@ for i in range(len(stat_c1)):
     elif stat_c1[i]=='OUT':
         stat_c1[i] = '0'
     else:
-        stat_c1[i] = '-1'
+        stat_c1[i] = '0'
 
 for i in range(len(stat_c2)):
     if stat_c2[i]=='ON':
@@ -93,7 +93,7 @@ for i in range(len(stat_c2)):
     elif stat_c2[i]=='PAR ON':
         stat_c2[i] = '0'
     else:
-        stat_c2[i] = '-1'
+        stat_c2[i] = '0'
 
 im_energy = transform_image(im, 373, 58, 491, 81, 4, inverted=False)
 try:
