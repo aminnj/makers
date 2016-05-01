@@ -209,7 +209,7 @@ def handle_query(arg_dict):
     if "*" in entity and query_type in ["basic","files"]:
         query_type = "listdatasets"
 
-    if query_type in ["basic", "files", "listdatasets", "mcm", "driver", "lhe"]:
+    if query_type in ["basic", "files", "listdatasets", "mcm", "driver", "lhe", "parents"]:
         if proxy_hours_left() < 5: proxy_renew()
 
     if not entity:
@@ -245,8 +245,28 @@ def handle_query(arg_dict):
             info["gensim"] = gen_sim
             payload = info
 
+        elif query_type == "parents":
+
+            lineage = []
+            dataset = entity
+            while dataset:
+                try:
+                    dataset = get_dataset_parent(dataset)
+                except: 
+                    break
+                if dataset: lineage.append(dataset)
+
+            info = {}
+            info["parents"] = lineage
+            payload = info
+
         elif query_type == "driver":
-            gen_sim = get_specified_parent(entity, typ="GEN-SIM", fallback="AODSIM")
+            if selectors:
+                if "this" == selectors[0].lower():
+                    gen_sim = entity
+            else:
+                gen_sim = get_specified_parent(entity, typ="GEN-SIM", fallback="AODSIM")
+
             info = get_mcm_json(gen_sim)["results"]
             dataset_base = info["dataset_name"]
             campaign = info["prepid"]
@@ -276,8 +296,8 @@ def handle_query(arg_dict):
             if short:
                 new_samples = []
                 for sample in samples:
-                    for key in ["kfactor","nevents_in","sample_id","filter_eff","filter_type","assigned_to", \
-                                "comments","gtag","twiki_name","xsec","sample_type"]:
+                    for key in ["sample_id","filter_eff","filter_type","assigned_to", \
+                                "comments","twiki_name","sample_type"]:
                         del sample[key]
                     new_samples.append(sample)
                 samples = new_samples
@@ -330,6 +350,7 @@ if __name__=='__main__':
     # arg_dict = {"type": "driver", "query": "/QCD_HT2000toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM"}
     # arg_dict = {"type": "lhe", "query": "/SMS-T5qqqqWW_mGl-600to800_mLSP-0to725_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-FastAsympt25ns_74X_mcRun2_asymptotic_v2-v1/MINIAODSIM"}
     # arg_dict = {"type": "driver", "query": "/SMS-T5qqqqWW_mGl-600to800_mLSP-0to725_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-FastAsympt25ns_74X_mcRun2_asymptotic_v2-v1/MINIAODSIM"}
+    # arg_dict = {"type": "parents", "query": "/SMS-T1tttt_mGluino-1500_mLSP-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv1-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/MINIAODSIM"}
 
 
     if not arg_dict:
