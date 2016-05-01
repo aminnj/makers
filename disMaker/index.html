@@ -3,6 +3,7 @@
     <title>disMaker</title>
     <link rel="stylesheet" type="text/css" href="css/pretty-json.css" />
     <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="icon" type="image/png" sizes="96x96" href="images/dislogo.png">
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script type="text/javascript" src="js/main.js" ></script>
@@ -13,7 +14,10 @@
 </head>
 
 <body>
-<center><h1><span class="highlight">D</span>AS <span class="highlight">I</span>s <span class="highlight">S</span>low</h1></center>
+<center>
+    <h1><span class="highlight">D</span>AS <span class="highlight">I</span>s <span class="highlight">S</span>low</h1>
+            <!-- <img height="50px" src="images/dislogo.png" /> -->
+</center>
 
 
 <form id="main_form" action="javascript:void(0)">
@@ -24,15 +28,55 @@
         <option value="files">files</option>
         <option value="mcm">mcm</option>
         <option value="driver">driver</option>
+        <option value="parents">parents</option>
         <option value="lhe">lhe</option>
         <option value="snt">snt</option>
     </select>
     <input type="checkbox" name="short" value="short" checked>short &ensp;
     <button class="submit_button" value="submit">submit</button>
+    <a id="toggle_examples" href="#" onClick="toggleExamples()">show examples</a>
     <br>
 </center>
 </form>
 
+<!-- <div id="examples_container"> -->
+<div id="examples_container" style='display:none;'>
+    <span class="highlight">basic</span>
+    <ul>
+        <li>/WWTo2L2Nu_13TeV-powheg/RunIIFall*/MINIAODSIM: show dataset names matching wildcard</li>
+        <li>/WWTo2L2Nu_13TeV-powheg/RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/MINIAODSIM: show basic details about dataset</li>
+    </ul>
+    <span class="highlight">files</span>
+    <ul>
+        <li>/WWTo2L2Nu_13TeV-powheg/RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/MINIAODSIM: show basic details about a few files in dataset</li>
+    </ul>
+    <span class="highlight">mcm</span>
+    <ul>
+        <li>/WWTo2L2Nu_13TeV-powheg/RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/MINIAODSIM: traverses up parent tree to GEN-SIM sample and shows basic MCM information</li>
+    </ul>
+    <span class="highlight">driver</span>
+    <ul>
+        <li>/WWTo2L2Nu_13TeV-powheg/RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/MINIAODSIM: show CMS driver commands</li>
+    </ul>
+    <span class="highlight">parents</span>
+    <ul>
+        <li>/WWTo2L2Nu_13TeV-powheg/RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/MINIAODSIM: show list of parent, grandparent, etc. dataset names</li>
+    </ul>
+    <span class="highlight">lhe</span>
+    <ul>
+        <li>/WWTo2L2Nu_13TeV-powheg/RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/MINIAODSIM: show LHE file information for dataset</li>
+    </ul>
+    <span class="highlight">snt</span>
+    <ul>
+        <li>/WWTo2L2Nu_13TeV-powheg/RunIIFall*/MINIAODSIM: show Twiki entries matching this dataset pattern</li>
+    </ul>
+    <span class="highlight">modifiers</span>
+    <ul>
+        <li>grep</li>
+        <li>selectors</li>
+        <li>this</li>
+    </ul>
+</div>
 
 <div id="query_container">
     <!-- <center>this is your query</center> -->

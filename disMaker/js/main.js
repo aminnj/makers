@@ -14,7 +14,6 @@ function doSubmit(data) {
     $("#result_container").hide();
     t0 = new Date().getTime();
     $.get("handler.py", data)
-    // $.get("http://uaf-8.t2.ucsd.edu:8080/dis", data)
         .done(function(response) {})
         .always(function(response){
             console.log(response);
@@ -25,9 +24,21 @@ function doSubmit(data) {
             }
             $("#loading_animation").hide();
             $("#result_container").show();
-            console.log(response);
             $(".timing").html("loaded in " + (new Date().getTime()-t0)/1000 + " seconds");
     });
+}
+
+var examplesVisible = false;
+function toggleExamples() {
+    $("#examples_container").slideToggle();
+    if(examplesVisible) {
+        $("#toggle_examples").text("show examples");
+        examplesVisible = false;
+    } else {
+        $("#toggle_examples").text("hide examples");
+        examplesVisible = true;
+    }
+
 }
 
 $(function(){
@@ -36,7 +47,6 @@ $(function(){
     $("#result_container").hide();
     $("#loading_animation").hide();
 
-
     $(".submit_button").click(function() {
         var data = {};
         $.each($("#main_form").serializeArray(), function (i, field) { data[field.name] = field.value || ""; });
@@ -44,10 +54,4 @@ $(function(){
         doSubmit(data);
     });
     
-    // var data = {"type":"basic", "short": "short", "dataset":"/TChi*/namin-TChi*miniAOD*/USER"};
-    // var data = {"type":"files", "short": true, "dataset":"/DYJetsToLL_M-50_Zpt-150toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/MINIAODSIM"};
-    // var data = {"type":"mcm", "dataset":"/DYJetsToLL_M-50_Zpt-150toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/MINIAODSIM"};
-    // doSubmit(data);
-
-
 });

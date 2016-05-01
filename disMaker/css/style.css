@@ -1,7 +1,7 @@
 @import url(http://fonts.googleapis.com/css?family=Open+Sans:300,400,900);
 
 .highlight {
-    color: #f00;
+    color: #06F;
 }
 .json {
    white-space: pre-wrap;
@@ -35,10 +35,10 @@ top: 8px;
 width: 20px;
 height: 20px;
 /* border-width: 0; */
-transition: all .2s linear;
+transition: all .1s linear;
 }
 input[type="checkbox"]:checked{
-  background-color: #f33;
+  background-color: #06F;
 }
 input[type="checkbox"]:focus{
   outline: 0 none;
@@ -66,7 +66,7 @@ input[type="checkbox"]:focus{
 }
 
 .inputbar:focus {
-  border: 1px solid #FF3333;
+  border: 1px solid #06F;
   transition: 0.2s ease;
   color: #000;
 }
@@ -88,8 +88,8 @@ button {
     text-decoration: none;
 }
 button:hover {
-    color: #FF3333; 
+    color: #06F; 
 }
 button:active {
-    color: #FF8080; 
+    color: #0AF; 
 }
