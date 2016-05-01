@@ -5,15 +5,19 @@ import twiki
 import pickle
 from db import DBInterface
 
+import urllib2 
+from multiprocessing.dummy import Pool as ThreadPool 
+
 def remove_unicode(x):
     return x.decode('unicode_escape').encode('ascii','ignore')
 
-db = DBInterface(fname="allsamples.db")
-db.drop_table()
-db.make_table()
+def get_samples(site):
+    print "Getting %s" % site
+    return twiki.get_samples(assigned_to="all", username="namin", get_unmade=False, page=site)
 
 sites = [
 "Run2Samples25ns80X",
+"Run2Samples25ns80XPrivate",
 "Run2SamplesPrivateSMSFastSim25ns",
 "Run2Samples25ns76XminiAODv2",
 "Run2SamplesSMSFastSim_25ns",
@@ -24,11 +28,17 @@ sites = [
 "SMS_T5ttcc_74X",
 ]
 
-isample = 0
-for site in sites:
-    print site
-    samples = twiki.get_samples(assigned_to="all", username="namin", get_unmade=False, page=site)
+db = DBInterface(fname="allsamples.db")
+db.drop_table()
+db.make_table()
 
+pool = ThreadPool(4)
+site_samples = pool.map(get_samples, sites)
+pool.close()
+pool.join()
+
+isample = 0
+for site,samples in zip(sites,site_samples):
     for sample in samples:
         s = {}
 
