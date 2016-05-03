@@ -7,7 +7,9 @@ import urllib2
 import json
 import traceback
 import commands
+import datetime
 
+from multiprocessing.dummy import Pool as ThreadPool 
 
 def get(cmd, returnStatus=False):
     status, out = commands.getstatusoutput(cmd)
@@ -72,14 +74,22 @@ def list_of_datasets(wildcardeddataset, short=False):
     ret = get_url_with_cert(url)
     if len(ret) > 0:
             vals = []
-            for d in ret:
-                dataset = d["dataset"]
-                if short:
-                    vals.append(dataset)
-                else:
-                    info = dataset_event_count(dataset)
-                    info["dataset"] = dataset
-                    vals.append(info)
+
+            def get_info(d):
+                info = dataset_event_count(d["dataset"])
+                info["dataset"] = d["dataset"]
+                return info
+
+            if short: vals = [d["dataset"] for d in ret]
+            else: 
+                if len(ret) > 150:
+                    raise RuntimeError("Getting detailed information for all these datasets (%i) will take too long" % len(ret))
+
+                pool = ThreadPool(8)
+                vals = pool.map(get_info, ret)
+                pool.close()
+                pool.join()
+
             return vals
     return []
 
@@ -91,6 +101,14 @@ def get_dataset_files(dataset):
     for f in ret:
         files.append( [f['logical_file_name'], f['event_count'], f['file_size']/1.0e9] )
     return files
+
+def get_dataset_config(dataset):
+    url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/outputconfigs?dataset=%s" % (get_dbs_instance(dataset),dataset)
+    ret = get_url_with_cert(url)
+    info = ret[0]
+    if "creation_date" in info:
+        info["creation_date"] = str(datetime.datetime.fromtimestamp(info["creation_date"]))
+    return ret[0]
 
 def get_dataset_parent(dataset):
     # get parent of a given dataset
@@ -235,6 +253,10 @@ def handle_query(arg_dict):
         elif query_type == "files":
             files = get_dataset_files(entity)
             payload["files"] = filelist_to_dict(files, short)
+
+        elif query_type == "config":
+            config_info = get_dataset_config(entity)
+            payload = config_info
 
         elif query_type == "mcm":
             gen_sim = get_specified_parent(entity, typ="GEN-SIM", fallback="AODSIM")
