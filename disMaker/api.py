@@ -173,6 +173,9 @@ def get_slim_mcm_json(dataset):
     try: out['mcdb_id'] = mcm_json['results']['mcdb_id']
     except: pass
 
+    try: out['status'] = mcm_json['results']['status']
+    except: pass
+
     try: out['fragment'] = mcm_json['results']['fragment']
     except: pass
 
@@ -259,12 +262,17 @@ def handle_query(arg_dict):
             payload = config_info
 
         elif query_type == "mcm":
-            gen_sim = get_specified_parent(entity, typ="GEN-SIM", fallback="AODSIM")
+            if selectors:
+                if "this" == selectors[0].lower():
+                    gen_sim = entity
+            else:
+                gen_sim = get_specified_parent(entity, typ="GEN-SIM", fallback="AODSIM")
+
             if short:
                 info = get_slim_mcm_json(gen_sim)
             else:
                 info = get_mcm_json(gen_sim)["results"]
-            info["gensim"] = gen_sim
+            info["sample"] = gen_sim
             payload = info
 
         elif query_type == "parents":
