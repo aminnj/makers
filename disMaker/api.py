@@ -334,6 +334,19 @@ def handle_query(arg_dict):
 
             payload = samples
 
+        elif query_type == "update_snt":
+            from db import DBInterface
+            db = DBInterface(fname="allsamples.db")
+            s = {}
+            for keyval in query.split(","):
+                key,val = keyval.strip().split("=")
+                s[key] = val
+            payload = s
+            did_update = db.update_sample(s)
+            db.close()
+
+            payload["updated"] = did_update
+
         else:
             failed = True
             fail_reason = "Query type not found"
@@ -345,22 +358,44 @@ def handle_query(arg_dict):
         for pipe in pipes:
             pipe = pipe.strip()
             parts = pipe.split(" ",1)
-            if len(parts) == 2:
+            if len(parts) == 1:
+                verb = parts[0].strip()
+            elif len(parts) == 2:
                 verb, keys = parts
                 keys = map(lambda x: x.strip(), keys.split(","))
             else:
                 verb = parts[0]
 
             if verb == "grep":
-                for ipay in range(len(payload)):
-                    if type(payload[ipay]) is not dict: continue
+                if type(payload) == list:
+                    for ipay in range(len(payload)):
+                        if type(payload[ipay]) is not dict: continue
 
-                    if len(keys) > 1:
+                        if len(keys) > 1:
+                            d = {}
+                            for key in keys: d[key] = payload[ipay].get(key,None)
+                            payload[ipay] = d
+                        else:
+                            payload[ipay] = payload[ipay].get(keys[0],None)
+                elif type(payload) == dict:
+                    if len(keys) > 0:
                         d = {}
-                        for key in keys: d[key] = payload[ipay].get(key,None)
-                        payload[ipay] = d
-                    else:
-                        payload[ipay] = payload[ipay].get(keys[0],None)
+                        for key in keys: d[key] = payload.get(key,None)
+                        payload = d
+            elif verb == "stats":
+                if type(payload) == list:
+                    nums = []
+                    for elem in payload:
+                        try: nums.append(float(elem))
+                        except: pass
+
+                    payload = {
+                            "N": len(nums),
+                            "total": sum(nums),
+                            "minimum": min(nums),
+                            "maximum": max(nums),
+                            }
+
 
     return make_response(arg_dict, payload, failed, fail_reason)
 
@@ -381,6 +416,10 @@ if __name__=='__main__':
     # arg_dict = {"type": "lhe", "query": "/SMS-T5qqqqWW_mGl-600to800_mLSP-0to725_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-FastAsympt25ns_74X_mcRun2_asymptotic_v2-v1/MINIAODSIM"}
     # arg_dict = {"type": "driver", "query": "/SMS-T5qqqqWW_mGl-600to800_mLSP-0to725_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15MiniAODv2-FastAsympt25ns_74X_mcRun2_asymptotic_v2-v1/MINIAODSIM"}
     # arg_dict = {"type": "parents", "query": "/SMS-T1tttt_mGluino-1500_mLSP-100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16MiniAODv1-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/MINIAODSIM"}
+    # arg_dict = {"type": "mcm", "query": "/QCD_Pt-80to120_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM | grep cross_section", "short":"short"}
+    # arg_dict = {"type": "mcm", "query": "/QCD_Pt-80to120_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM", "short":"short"}
+    # arg_dict = {"type": "update_snt", "query": "dataset_name=test,cms3tag=CMS3_V07-06-03_MC,sample_type=CMS3,gtag=test,location=/hadoop/crap/crap/", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "test", "short":"short"}
 
 
     if not arg_dict:

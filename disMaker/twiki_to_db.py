@@ -16,6 +16,8 @@ def get_samples(site):
     return twiki.get_samples(assigned_to="all", username="namin", get_unmade=False, page=site)
 
 sites = [
+"Run2_Data",
+"Run2_Data2016",
 "Run2Samples25ns80X",
 "Run2Samples25ns80XPrivate",
 "Run2SamplesPrivateSMSFastSim25ns",
@@ -42,20 +44,22 @@ for site,samples in zip(sites,site_samples):
     for sample in samples:
         s = {}
 
+        if "dataset" not in sample: continue
+
         s["sample_type"] = "CMS3"
         s["twiki_name"] = site
         s["dataset_name"] = sample["dataset"]
-        s["location"] = sample["location"]
-        s["filter_type"] = sample["filter_type"]
-        s["nevents_in"] = sample["nevents_in"]
-        s["nevents_out"] = sample["nevents_out"]
-        s["filter_eff"] = sample["efact"]
-        s["xsec"] = sample["xsec"]
-        s["kfactor"] = sample["kfact"]
-        s["gtag"] = sample["gtag"]
-        s["cms3tag"] = sample["cms3tag"]
-        s["assigned_to"] = sample["assigned"]
-        s["comments"] = remove_unicode(sample["comments"])
+        s["location"] = sample.get("location","")
+        s["filter_type"] = sample.get("filter_type","")
+        s["nevents_in"] = sample.get("nevents_in",-1)
+        s["nevents_out"] = sample.get("nevents_out",-1)
+        s["filter_eff"] = sample.get("efact",-1)
+        s["xsec"] = sample.get("xsec",-1)
+        s["kfactor"] = sample.get("kfact",-1)
+        s["gtag"] = sample.get("gtag","")
+        s["cms3tag"] = sample.get("cms3tag","")
+        s["assigned_to"] = sample.get("assigned","")
+        s["comments"] = remove_unicode(sample.get("comments",""))
 
         db.update_sample(s)
         isample += 1
