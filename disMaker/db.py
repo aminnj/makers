@@ -56,9 +56,9 @@ class DBInterface():
     def is_already_in_table(self, d):
         # provide a dict and this will use appropriate keys to see if it's already in the database
         # this returns an ID (non-zero int) corresponding to the row matching the dict
-        dataset_name, sample_type, cms3tag, location = d.get("dataset_name",""), d.get("sample_type",""), d.get("cms3tag",""), d.get("location","")
-        sql_cmd = "select sample_id from sample where dataset_name=? and sample_type=? and cms3tag=? and location=? limit 1"
-        self.cursor.execute(sql_cmd, (dataset_name, sample_type, cms3tag, location))
+        dataset_name, sample_type, cms3tag = d.get("dataset_name",""), d.get("sample_type",""), d.get("cms3tag","")
+        sql_cmd = "select sample_id from sample where dataset_name=? and sample_type=? and cms3tag=? limit 1"
+        self.cursor.execute(sql_cmd, (dataset_name, sample_type, cms3tag))
         return self.cursor.fetchone()
 
     def read_to_dict_list(self, query):

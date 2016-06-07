@@ -19,15 +19,16 @@ sites = [
 "Run2_Data",
 "Run2_Data2016",
 "Run2Samples25ns80X",
+"Run2Samples25ns80XminiAODv2",
 "Run2Samples25ns80XPrivate",
 "Run2SamplesPrivateSMSFastSim25ns",
 "Run2Samples25ns76XminiAODv2",
 "Run2SamplesSMSFastSim_25ns",
 "Run2SamplesReMINIAOD_25ns",
 "Run2Samples_25ns",
-"SMS_T5ttttDM175_74X",
-"SMS_T5qqqqWW_74X",
-"SMS_T5ttcc_74X",
+# "SMS_T5ttttDM175_74X",
+# "SMS_T5qqqqWW_74X",
+# "SMS_T5ttcc_74X",
 ]
 
 db = DBInterface(fname="allsamples.db")

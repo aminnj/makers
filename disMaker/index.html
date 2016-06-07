@@ -32,6 +32,7 @@
         <option value="parents">parents</option>
         <option value="lhe">lhe</option>
         <option value="snt">snt</option>
+        <option value="dbs">dbs</option>
         <option value="update_snt">update_snt</option>
     </select>
     <input type="checkbox" name="short" value="short" checked>short &ensp;
@@ -43,6 +44,7 @@
 
 <!-- <div id="examples_container"> -->
 <div id="examples_container" style='display:none;'>
+Grab the CLI via <pre>curl -O https://raw.githubusercontent.com/cmstas/NtupleTools/master/AutoTwopler/scripts/dis_client.py</pre>
     <span class="highlight">basic</span>
     <ul>
         <li>/WWTo2L2Nu_13TeV-powheg/RunIIFall*/MINIAODSIM: show dataset names matching wildcard</li>
@@ -88,6 +90,10 @@
 <div id="result_container">
     <!-- <center>this is my response</center> -->
     <pre> <div class="json" id="result"></div> </pre>
+    <center>
+        Equivalent CLI command:
+        <pre> <div id="clisyntax"></div> </pre>
+    </center>
     <center> <span class="timing"></span> </center>
 </div>
 

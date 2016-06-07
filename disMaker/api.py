@@ -230,7 +230,7 @@ def handle_query(arg_dict):
     if "*" in entity and query_type in ["basic","files"]:
         query_type = "listdatasets"
 
-    if query_type in ["basic", "files", "listdatasets", "mcm", "driver", "lhe", "parents"]:
+    if query_type in ["basic", "files", "listdatasets", "mcm", "driver", "lhe", "parents", "dbs"]:
         if proxy_hours_left() < 5: proxy_renew()
 
     if not entity:
@@ -255,7 +255,7 @@ def handle_query(arg_dict):
 
         elif query_type == "files":
             files = get_dataset_files(entity)
-            payload["files"] = filelist_to_dict(files, short)
+            payload = filelist_to_dict(files, short)
 
         elif query_type == "config":
             config_info = get_dataset_config(entity)
@@ -347,6 +347,10 @@ def handle_query(arg_dict):
 
             payload["updated"] = did_update
 
+        elif query_type == "dbs":
+            payload = get_url_with_cert(query)
+            # payload = "/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16MiniAODv1-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/MINIAODSIM"
+
         else:
             failed = True
             fail_reason = "Query type not found"
@@ -389,12 +393,15 @@ def handle_query(arg_dict):
                         try: nums.append(float(elem))
                         except: pass
 
-                    payload = {
-                            "N": len(nums),
-                            "total": sum(nums),
-                            "minimum": min(nums),
-                            "maximum": max(nums),
-                            }
+                    if len(nums) > 0:
+                        payload = {
+                                "N": len(nums),
+                                "total": sum(nums),
+                                "minimum": min(nums),
+                                "maximum": max(nums),
+                                }
+                    else:
+                        payload = {"N": len(payload)}
 
 
     return make_response(arg_dict, payload, failed, fail_reason)
@@ -420,6 +427,8 @@ if __name__=='__main__':
     # arg_dict = {"type": "mcm", "query": "/QCD_Pt-80to120_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM", "short":"short"}
     # arg_dict = {"type": "update_snt", "query": "dataset_name=test,cms3tag=CMS3_V07-06-03_MC,sample_type=CMS3,gtag=test,location=/hadoop/crap/crap/", "short":"short"}
     # arg_dict = {"type": "snt", "query": "test", "short":"short"}
+    # arg_dict = {"type": "basic", "query": "/SingleElectron/Run2016B-PromptReco-v1/MINIAOD"}
+    # arg_dict = {"type": "dbs", "query": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files?dataset=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16MiniAODv1-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/MINIAODSIM&detail=1&lumi_list=[134007]&run_num=1"}
 
 
     if not arg_dict:
