@@ -8,6 +8,7 @@ import json
 import traceback
 import commands
 import datetime
+import glob
 
 from multiprocessing.dummy import Pool as ThreadPool 
 
@@ -93,14 +94,77 @@ def list_of_datasets(wildcardeddataset, short=False):
             return vals
     return []
 
-def get_dataset_files(dataset):
+def get_dataset_files(dataset, run_num=None,lumi_list=[]):
     # return list of 3-tuples (LFN, nevents, size_in_GB) of files in a given dataset
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/files?dataset=%s&validFileOnly=1&detail=1" % (get_dbs_instance(dataset),dataset)
+    if run_num and lumi_list:
+        url += "&run_num=%i&lumi_list=[%s]" % (run_num, ",".join(map(str,lumi_list)))
     ret = get_url_with_cert(url)
     files = []
     for f in ret:
         files.append( [f['logical_file_name'], f['event_count'], f['file_size']/1.0e9] )
     return files
+
+def get_dataset_runs(dataset):
+    url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/runs?dataset=%s" % (get_dbs_instance(dataset),dataset)
+    return get_url_with_cert(url)[0]["run_num"]
+    
+def get_pick_events(dataset, runlumievts):
+    d_runs = {}
+    for rle in runlumievts:
+        if not rle: continue
+        run,lumi,evt = map(int,rle.split(":"))
+        if run not in d_runs: d_runs[run] = []
+        d_runs[run].append([lumi,evt])
+
+    for_map = [{"dataset":dataset, "run":run, "lumis":[lumi for lumi,evt in d_runs[run]]} for run in d_runs.keys()]
+
+    def get_info(info):
+        filesinfo = get_dataset_files(info["dataset"],run_num=info["run"],lumi_list=info["lumis"])
+        return {"filesinfo": filesinfo, "run": info["run"], "fail": len(filesinfo)==0}
+
+    pool = ThreadPool(8)
+    vals = pool.map(get_info, for_map)
+    pool.close()
+    pool.join()
+
+    files, runs_failed_to_find = [], []
+    for d_info in vals:
+        if d_info["fail"]: runs_failed_to_find.append(d_info["run"])
+        else: files.extend([f[0] for f in d_info["filesinfo"]])
+
+    payload = list(set(files))
+    warning = ("Failed to find run(s) %s." % (",".join(map(str,runs_failed_to_find)))) if runs_failed_to_find else ""
+
+    return payload, warning
+
+def get_cms3(miniaod):
+    try:
+        parts = miniaod.split("/")
+        era, pd, tier, reco = parts[3:7]
+        run = int(parts[8]+parts[9])
+        block = parts[-1].split(".",1)[0]
+
+        # which folder is it in?  ex: DataTuple-backup/nick/mergedLists/Run2016F_HTMHT_MINIAOD_PromptReco-v1
+        folder = glob.glob("DataTuple-backup/*/mergedLists/%s_%s_%s_%s" % (era, pd, tier, reco))[0]
+
+        # what to grep for
+        needle = "%s_%s_%s_000_%i_%i_00000_%s" % (pd, tier, reco, run//1e3,run%1e3, block)
+
+        stat, out = commands.getstatusoutput("/bin/grep %s %s/* | head -n 1" % (needle,folder))
+        sample, imerged = out.split(":")[0].split("/")[3:]
+        cms3tag = "V"+out.split("/V",1)[-1].split("/")[0]
+        imerged = int(imerged.split("_")[-1].split(".")[0])
+        return "/hadoop/cms/store/group/snt/run2_data/%s/merged/%s/merged_ntuple_%i.root" % (sample,cms3tag,imerged)
+    except: pass
+
+    return None
+
+def get_pick_cms3(dataset, runlumievts):
+    payload, warning = get_pick_events(dataset, runlumievts)
+    payload = map(get_cms3, payload)
+    return payload, warning
+
 
 def get_dataset_config(dataset):
     url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/outputconfigs?dataset=%s" % (get_dbs_instance(dataset),dataset)
@@ -188,11 +252,11 @@ def filelist_to_dict(files, short=False):
     if short: newfiles = newfiles[:5]
     return newfiles
 
-def make_response(query, payload, failed, fail_reason):
+def make_response(query, payload, failed, fail_reason, warning):
     status = "success"
     if failed: status = "failed"
 
-    return json.dumps( { "query": query, "response": { "status": status, "fail_reason": fail_reason, "payload": payload } } )
+    return json.dumps( { "query": query, "response": { "status": status, "fail_reason": fail_reason, "warning": warning, "payload": payload } } )
     # return { "query": query, "response": { "status": status, "fail_reason": fail_reason, "payload": payload } }
 
 
@@ -225,6 +289,7 @@ def handle_query(arg_dict):
 
     failed = False
     fail_reason = ""
+    warning = ""
     payload = {}
 
     if "*" in entity and query_type in ["basic","files"]:
@@ -256,6 +321,15 @@ def handle_query(arg_dict):
         elif query_type == "files":
             files = get_dataset_files(entity)
             payload = filelist_to_dict(files, short)
+
+        elif query_type == "runs":
+            payload = get_dataset_runs(entity)
+
+        elif query_type == "pick":
+            payload, warning = get_pick_events(entity, selectors)
+
+        elif query_type == "pick_cms3":
+            payload, warning = get_pick_cms3(entity, selectors)
 
         elif query_type == "config":
             config_info = get_dataset_config(entity)
@@ -326,7 +400,7 @@ def handle_query(arg_dict):
             if short:
                 new_samples = []
                 for sample in samples:
-                    for key in ["sample_id","filter_eff","filter_type","assigned_to", \
+                    for key in ["sample_id","filter_type","assigned_to", \
                                 "comments","twiki_name","sample_type"]:
                         del sample[key]
                     new_samples.append(sample)
@@ -404,7 +478,7 @@ def handle_query(arg_dict):
                         payload = {"N": len(payload)}
 
 
-    return make_response(arg_dict, payload, failed, fail_reason)
+    return make_response(arg_dict, payload, failed, fail_reason, warning)
 
 
 if __name__=='__main__':
@@ -429,7 +503,9 @@ if __name__=='__main__':
     # arg_dict = {"type": "snt", "query": "test", "short":"short"}
     # arg_dict = {"type": "basic", "query": "/SingleElectron/Run2016B-PromptReco-v1/MINIAOD"}
     # arg_dict = {"type": "dbs", "query": "https://cmsweb.cern.ch/dbs/prod/global/DBSReader/files?dataset=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16MiniAODv1-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/MINIAODSIM&detail=1&lumi_list=[134007]&run_num=1"}
-
+    # arg_dict = {"type": "runs", "query": "/SinglePhoton/Run2016E-PromptReco-v2/MINIAOD"}
+    # arg_dict = {"type": "pick", "query": "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:550862893,276525:2893:823485588,276318:300:234982340,276318:200:234982340"}
+    # arg_dict = {"type": "pick_cms3", "query": "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:550862893,276525:2893:823485588,276318:300:234982340,276318:200:234982340"}
 
     if not arg_dict:
         arg_dict_str = sys.argv[1]

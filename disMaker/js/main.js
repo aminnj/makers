@@ -22,7 +22,7 @@ function doSubmit(data) {
         .done(function(response) {})
         .always(function(response){
             console.log(response);
-            if(response["response"]["status"] == "success") {
+            if(response["response"]["status"] == "success" && response["response"]["warning"].length == 0) {
                 prettyJSON($("#result"), response["response"]["payload"]);
             } else {
                 prettyJSON($("#result"), response["response"]);

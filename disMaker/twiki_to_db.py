@@ -1,6 +1,6 @@
 import sys
 # sys.path.insert(0, "../dashboard/")
-sys.path.insert(0, "/home/users/namin/forFrank/NtupleTools/AutoTwopler/dashboard/")
+sys.path.insert(0, "/home/users/namin/old/forFrank/NtupleTools/AutoTwopler/dashboard/")
 import twiki
 import pickle
 from db import DBInterface
@@ -26,6 +26,8 @@ sites = [
 "Run2SamplesSMSFastSim_25ns",
 "Run2SamplesReMINIAOD_25ns",
 "Run2Samples_25ns",
+"Run2Samples25ns80XFS",
+"testTwiki", # used for testing various things
 # "SMS_T5ttttDM175_74X",
 # "SMS_T5qqqqWW_74X",
 # "SMS_T5ttcc_74X",
