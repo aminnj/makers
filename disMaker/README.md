@@ -9,15 +9,16 @@ A query has 3 parts: the query string, the query type, and the boolean "short" o
 ### General notes
 
 * Wildcards are accepted (`*`) for most queries. Just try it.
-* `dis_client.py` syntax will be used here, but of course they have obviousu 
-* `dis_client.py` is available from <https://raw.githubusercontent.com/cmstas/NtupleTools/master/AutoTwopler/scripts/dis_client.py>
+* `dis_client.py` syntax will be used here, but of course they have obvious mappings to use them on the website 
+* `dis_client.py` is available from <https://raw.githubusercontent.com/cmstas/NtupleTools/master/AutoTwopler/scripts/dis_client.py>. I recommend putting this in your PATH (and PYTHONPATH) somewhere.
+
 
 ### Query types
 
 #### _basic_
-```
+`
 dis_client.py -t basic /GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/MINIAODSIM
-```
+`
 * Here, you will see an output of the number of events in the dataset, the number of files, number of lumi blocks, and dataset file size.
 * Also note that the `-t basic` is default, so you don't need to do it for this basic query type.
 ```
@@ -114,7 +115,7 @@ dis_client.py -t pick_cms3 "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340
 dis_client.py -t snt "/gjet*,cms3tag=*V08*,gtag=*v3 | grep location,cms3tag,gtag,xsec"
 ```
 * This uses a selector and grepper to show all Gjet SNT samples that have a cms3tag containing V08 and global tag ending with v3. The "cms3tag" name comes from the return value when doing a normal query, so you can find all the values that are selectable by making an inclusive query. Same goes for the grep fields which limit what is shown to you in the return information.
-But Nick, this looks ugly and I can't copy and paste the output easily into other scripts. It would be nice if we could put the same information for each sample on the same line. Fear not. There is a `--table` option which puts the results into a pretty table with nice columns.
+* But Nick, this looks ugly and I can't copy and paste the output easily into other scripts. It would be nice if we could put the same information for each sample on the same line. Fear not. There is a `--table` option which puts the results into a pretty table with nice columns.
 ```
 dis_client.py -t snt "/gjet*,cms3tag=*V08*,gtag=*v3 | grep location,cms3tag,gtag,xsec" --table
 ```
@@ -129,9 +130,12 @@ dis_client.py -t snt "/gjet*ht-*/*/*,cms3tag=*V08* | grep nevents_out | stats"
 * Piping it into `stats`, we get the number of entries, the total, the minimum, and maximum for a list of numbers. More generally, any list of numbers can be piped into `stats`. Same with the run query type above (if we wanted to find the first or last run in a dataset, for example).
 
 ### API Usage
-The primary purpose of this was to provide programmatic access to DBS, MCM, DAS, etc, so the `--json` option can be passed to any `dis_client.py` query to output a json. Even better, if it's on your path, y
+The primary purpose of this was to provide programmatic access to DBS, MCM, DAS, etc, so the `--json` option can be passed to any `dis_client.py` query to output a json. Even better, if it's on your path, you can import it directly from python and get a dictionary back as the response
 
 ```python
 import dis_client
-print dis_client.query(q="..." [, typ="basic"] [, detail=False])
+response =  dis_client.query(q="..." [, typ="basic"] [, detail=False])
+data = response["response"]["payload"]
+print response
+print data
 ```
