@@ -46,17 +46,59 @@ function toggleExamples() {
 
 }
 
-$(function(){
-
+function initHide() {
     $("#query_container").hide();
     $("#result_container").hide();
     $("#loading_animation").hide();
+}
 
-    $(".submit_button").click(function() {
-        var data = {};
-        $.each($("#main_form").serializeArray(), function (i, field) { data[field.name] = field.value || ""; });
-        console.log(data);
-        doSubmit(data);
-    });
+function submitQuery() {
+    var data = {};
+    $.each($("#main_form").serializeArray(), function (i, field) { data[field.name] = field.value || ""; });
+    console.log(data);
+    doSubmit(data);
+}
+
+function copyToClipboard(text) {
+    var $temp = $("<input>");
+    $("body").append($temp);
+    $temp.val(text).select();
+    document.execCommand("copy");
+    $temp.remove();
+}
+
+function getQueryURL() {
+    var data = {};
+    $.each($("#main_form").serializeArray(), function (i, field) { data[field.name] = field.value || ""; });
+    var queryURL = "http://"+location.hostname+location.pathname+"?"+($.param(data));
+    queryURL = queryURL.replace("index.html","");
+    console.log(queryURL);
+    copyToClipboard(queryURL)
+}
+
+
+$(function(){
+
+    initHide();
+    $(".submit_button").click(submitQuery);
+
+    // if page was loaded with a parameter for search, then simulate a search
+    if(window.location.href.indexOf("?") != -1) {
+        // parse and sanitize
+        var search = location.search.substring(1);
+        var query_dict = search?JSON.parse('{"' + search.replace(/&/g, '","').replace(/=/g,'":"') + '"}', function(key, value) { return key===""?value:decodeURIComponent(value) }):{};
+
+        var query = query_dict["query"];
+        query_dict["type"] = query_dict["type"] || "basic";
+
+        // check or uncheck short box, pick dropdown item, and fill in query box
+        document.getElementById("short").checked = Boolean(query_dict["short"]);
+        $("#select_type").val(query_dict["type"])
+        $("#query").val(query);
+
+        // submit
+        console.log(query_dict);
+        submitQuery()
+    }
     
 });

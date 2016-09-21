@@ -22,7 +22,7 @@
 
 <form id="main_form" action="javascript:void(0)">
 <center>
-    <input type="text" class="inputbar" name="query" placeholder="dataset name/query" style="width:550px;"/>
+    <input type="text" class="inputbar" id="query" name="query" placeholder="dataset name/query" style="width:550px;"/>
     <select id="select_type" class="inputbar selectbar" name="type" style="width:120px;">
         <option value="basic">basic</option>
         <option value="files">files</option>
@@ -37,9 +37,11 @@
         <option value="pick">pick</option>
         <option value="pick_cms3">pick_cms3</option>
     </select>
-    <input type="checkbox" name="short" value="short" checked>short &ensp;
+    <input type="checkbox" id="short" name="short" value="short" checked>short &ensp;
     <button class="submit_button" value="submit">submit</button>
-    <a id="toggle_examples" href="#" onClick="toggleExamples()">show examples</a>
+    <a  href="#" onClick="getQueryURL();">Copy as URL</a>
+    &nbsp; &nbsp;
+    <a  href="https://github.com/aminnj/makers/tree/master/disMaker" >Examples/usage</a>
     <br>
 </center>
 </form>
