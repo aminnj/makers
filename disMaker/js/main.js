@@ -22,11 +22,13 @@ function doSubmit(data) {
     $("#loading_animation").show();
     // $("#query_container").show();
     // prettyJSON($('#query'), data);
-    var cli_str = "dis_client.py ";
-    if(data["type"] != "basic") cli_str += "-t " + data["type"] + " ";
-    if(data["short"] != "short") cli_str += "--detail ";
-    cli_str += '"' + data["query"] + '"';
-    $('#clisyntax').html(cli_str);
+
+    // var cli_str = "dis_client.py ";
+    // if(data["type"] != "basic") cli_str += "-t " + data["type"] + " ";
+    // if(data["short"] != "short") cli_str += "--detail ";
+    // cli_str += '"' + data["query"] + '"';
+    // $('#clisyntax').html(cli_str);
+
     $("#result_container").hide();
     t0 = new Date().getTime();
     $.get("handler.py", data)
@@ -77,6 +79,7 @@ $(function(){
         var query_dict = search?JSON.parse('{"' + search.replace(/&/g, '","').replace(/=/g,'":"') + '"}', function(key, value) { return key===""?value:decodeURIComponent(value) }):{};
 
         var query = query_dict["query"];
+        query = query.replace(/\+/g, ' ');
         query_dict["type"] = query_dict["type"] || "basic";
 
         // check or uncheck short box, pick dropdown item, and fill in query box
