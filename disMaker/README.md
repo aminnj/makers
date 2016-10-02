@@ -134,7 +134,7 @@ dis_client.py -t pick "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:234092834
 #### _pick\_cms3_
 
 `
-dis_client.py -t pick_cms3 "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:550862893,276525:2893:823485588,276318:300:234982340,276318:200:234982340"
+dis_client.py -t pick_cms3 "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:4845251498,276525:2893:823485588,276318:300:234982340,276318:200:234982340"
 `
 
 * This is a pickEvents implementation for CMS3 data which returns the merged files containing the specified events

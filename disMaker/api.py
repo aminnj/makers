@@ -161,8 +161,12 @@ def get_cms3(miniaod):
     return None
 
 def get_pick_cms3(dataset, runlumievts):
-    payload, warning = get_pick_events(dataset, runlumievts)
-    payload = map(get_cms3, payload)
+    fnames, warning = get_pick_events(dataset, runlumievts)
+    fnames = map(get_cms3, fnames)
+    cut_str = " || ".join(map(lambda x: "(evt_run==%s && evt_lumiBlock==%s && evt_event==%s)" % tuple(x.split(":")), runlumievts))
+    fnames_str = " ".join(fnames)
+    payload = {"files": fnames, "skim_command": "skim.py %s -t Events -c %s" % (fnames_str, cut_str)}
+
     return payload, warning
 
 
