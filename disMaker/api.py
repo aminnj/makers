@@ -149,7 +149,7 @@ def get_cms3(miniaod):
         folder = glob.glob("DataTuple-backup/*/mergedLists/%s_%s_%s_%s" % (era, pd, tier, reco))[0]
 
         # what to grep for
-        needle = "%s_%s_%s_000_%i_%i_00000_%s" % (pd, tier, reco, run//1e3,run%1e3, block)
+        needle = "%s_%s_%s_000_%s_%s_00000_%s" % (pd, tier, reco, str(int(run//1e3)).zfill(3),str(int(run%1e3)).zfill(3), block)
 
         stat, out = commands.getstatusoutput("/bin/grep %s %s/* | head -n 1" % (needle,folder))
         sample, imerged = out.split(":")[0].split("/")[3:]
