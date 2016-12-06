@@ -71,7 +71,12 @@ def dataset_event_count(dataset):
     return None
 
 def list_of_datasets(wildcardeddataset, short=False):
-    url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?dataset=%s&detail=0" % (get_dbs_instance(wildcardeddataset),wildcardeddataset)
+    if wildcardeddataset.count("/") != 3:
+        raise RuntimeError("You need three / in your dataset query")
+
+    _, pd, proc, tier = wildcardeddataset.split("/")
+    # url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?dataset=%s&detail=0" % (get_dbs_instance(wildcardeddataset),wildcardeddataset)
+    url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?primary_ds_name=%s&processed_ds_name=%s&data_tier_name=%s&detail=0" % (get_dbs_instance(wildcardeddataset),pd,proc,tier)
     ret = get_url_with_cert(url)
     if len(ret) > 0:
             vals = []
@@ -140,19 +145,30 @@ def get_pick_events(dataset, runlumievts):
 
 def get_cms3(miniaod):
     try:
-        parts = miniaod.split("/")
-        era, pd, tier, reco = parts[3:7]
-        run = int(parts[8]+parts[9])
-        block = parts[-1].split(".",1)[0]
+        is_prompt = "PromptReco" in miniaod
+
+        if is_prompt:
+            parts = miniaod.split("/")
+            era, pd, tier, reco = parts[3:7]
+            run = int(parts[8]+parts[9])
+            block = parts[-1].split(".",1)[0]
+        else:
+            parts = miniaod.split("/")
+            era, pd, tier, reco = parts[3:7]
+            run = int(parts[7])
+            block = parts[-1].split(".",1)[0]
 
         # which folder is it in?  ex: DataTuple-backup/nick/mergedLists/Run2016F_HTMHT_MINIAOD_PromptReco-v1
         folder = glob.glob("DataTuple-backup/*/mergedLists/%s_%s_%s_%s" % (era, pd, tier, reco))[0]
 
         # what to grep for
-        needle = "%s_%s_%s_000_%s_%s_00000_%s" % (pd, tier, reco, str(int(run//1e3)).zfill(3),str(int(run%1e3)).zfill(3), block)
+        if is_prompt:
+            needle = "%s_%s_%s_000_%s_%s_00000_%s" % (pd, tier, reco, str(int(run//1e3)).zfill(3),str(int(run%1e3)).zfill(3), block)
+        else:
+            needle = "%s_%s_%s_%s_%s" % (pd, tier, reco, str(run), block)
 
         stat, out = commands.getstatusoutput("/bin/grep %s %s/* | head -n 1" % (needle,folder))
-        sample, imerged = out.split(":")[0].split("/")[3:]
+        sample, imerged = out.split(":")[0].rsplit("/",2)[-2:]
         cms3tag = "V"+out.split("/V",1)[-1].split("/")[0]
         imerged = int(imerged.split("_")[-1].split(".")[0])
         return "/hadoop/cms/store/group/snt/run2_data/%s/merged/%s/merged_ntuple_%i.root" % (sample,cms3tag,imerged)
@@ -510,6 +526,7 @@ if __name__=='__main__':
     # arg_dict = {"type": "runs", "query": "/SinglePhoton/Run2016E-PromptReco-v2/MINIAOD"}
     # arg_dict = {"type": "pick", "query": "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:550862893,276525:2893:823485588,276318:300:234982340,276318:200:234982340"}
     # arg_dict = {"type": "pick_cms3", "query": "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:550862893,276525:2893:823485588,276318:300:234982340,276318:200:234982340"}
+    # arg_dict = {"type": "pick_cms3", "query": "/DoubleEG/Run2016C-23Sep2016-v1/MINIAOD,275912:91:164211755", "short":"short"}
 
     if not arg_dict:
         arg_dict_str = sys.argv[1]
