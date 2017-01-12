@@ -413,7 +413,10 @@ def handle_query(arg_dict):
 
             # if we didn't specify a sample_type, then assume we only want CMS3 and not BABY
             if not selectors or not any(map(lambda x: "sample_type" in x, selectors)):
-                selectors.append("sample_type=CMS3")
+
+                # but if user specified an analysis, then don't restrict to CMS3
+                if not any(map(lambda x: "analysis" in x, selectors)):
+                    selectors.append("sample_type=CMS3")
 
             if selectors:
                 for more in selectors:
