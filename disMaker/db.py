@@ -8,6 +8,7 @@ class DBInterface():
         self.cursor = self.connection.cursor()
         self.key_types = [
                 ("sample_id", "INTEGER PRIMARY KEY"),
+                ("timestamp", "INTEGER"),
                 ("sample_type", "VARCHAR(30)"),
                 ("twiki_name", "VARCHAR(60)"),
                 ("dataset_name", "VARCHAR(250)"),
@@ -20,6 +21,8 @@ class DBInterface():
                 ("kfactor", "FLOAT"),
                 ("gtag", "VARCHAR(40)"),
                 ("cms3tag", "VARCHAR(40)"),
+                ("baby_tag", "VARCHAR(40)"),
+                ("analysis", "VARCHAR(30)"),
                 ("assigned_to", "VARCHAR(30)"),
                 ("comments", "VARCHAR(600)"),
                 ]
@@ -57,8 +60,9 @@ class DBInterface():
         # provide a dict and this will use appropriate keys to see if it's already in the database
         # this returns an ID (non-zero int) corresponding to the row matching the dict
         dataset_name, sample_type, cms3tag = d.get("dataset_name",""), d.get("sample_type",""), d.get("cms3tag","")
-        sql_cmd = "select sample_id from sample where dataset_name=? and sample_type=? and cms3tag=? limit 1"
-        self.cursor.execute(sql_cmd, (dataset_name, sample_type, cms3tag))
+        baby_tag, analysis = d.get("baby_tag",""), d.get("analysis","")
+        sql_cmd = "select sample_id from sample where dataset_name=? and sample_type=? and cms3tag=? and baby_tag=? and analysis=? limit 1"
+        self.cursor.execute(sql_cmd, (dataset_name, sample_type, cms3tag, baby_tag, analysis))
         return self.cursor.fetchone()
 
     def read_to_dict_list(self, query):

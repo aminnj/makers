@@ -1,4 +1,5 @@
 from db import DBInterface
+import time
 
 
 def do_test():
@@ -12,6 +13,9 @@ def do_test():
                 "xsec": 18610,
                 "kfactor": 1.11,
                 "filter_eff": 1,
+                "baby_tag": "",
+                "analysis": "",
+                "timestamp": int(time.time()),
                 "gtag": "74X_mcRun2_asymptotic_v2",
                 "cms3tag": "CMS3_V07-04-11",
                 "location": "/hadoop/cms/store/group/snt/run2_25ns_MiniAODv2/DYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_RunIISpring15MiniAODv2-74X_mcRun2_asymptotic_v2-v1/V07-04-11/",

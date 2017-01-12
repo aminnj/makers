@@ -2,6 +2,7 @@ import sys
 # sys.path.insert(0, "../dashboard/")
 sys.path.insert(0, "/home/users/namin/old/forFrank/NtupleTools/AutoTwopler/dashboard/")
 import twiki
+import time
 import pickle
 from db import DBInterface
 
@@ -16,21 +17,19 @@ def get_samples(site):
     return twiki.get_samples(assigned_to="all", username="namin", get_unmade=False, page=site)
 
 sites = [
-"Run2_Data",
+# "Run2_Data",
 "Run2_Data2016",
 "Run2Samples25ns80X",
 "Run2Samples25ns80XminiAODv2",
 "Run2Samples25ns80XPrivate",
-"Run2SamplesPrivateSMSFastSim25ns",
-"Run2Samples25ns76XminiAODv2",
-"Run2SamplesSMSFastSim_25ns",
-"Run2SamplesReMINIAOD_25ns",
-"Run2Samples_25ns",
+# "Run2SamplesPrivateSMSFastSim25ns",
+# "Run2Samples25ns76XminiAODv2",
+# "Run2SamplesSMSFastSim_25ns",
+# "Run2SamplesReMINIAOD_25ns",
+# "Run2Samples_25ns",
 "Run2Samples25ns80XFS",
+"Run2Samples25nsMoriond17",
 "testTwiki", # used for testing various things
-# "SMS_T5ttttDM175_74X",
-# "SMS_T5qqqqWW_74X",
-# "SMS_T5ttcc_74X",
 ]
 
 db = DBInterface(fname="allsamples.db")
@@ -63,6 +62,7 @@ for site,samples in zip(sites,site_samples):
         s["cms3tag"] = sample.get("cms3tag","")
         s["assigned_to"] = sample.get("assigned","")
         s["comments"] = remove_unicode(sample.get("comments",""))
+        s["timestamp"] = int(time.time())
 
         db.update_sample(s)
         isample += 1

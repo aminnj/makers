@@ -9,6 +9,7 @@ import traceback
 import commands
 import datetime
 import glob
+import time
 
 from multiprocessing.dummy import Pool as ThreadPool 
 
@@ -276,7 +277,8 @@ def make_response(query, payload, failed, fail_reason, warning):
     status = "success"
     if failed: status = "failed"
 
-    return json.dumps( { "query": query, "response": { "status": status, "fail_reason": fail_reason, "warning": warning, "payload": payload } } )
+    timestamp = int(time.time())
+    return json.dumps( { "query": query, "timestamp": timestamp, "response": { "status": status, "fail_reason": fail_reason, "warning": warning, "payload": payload } } )
     # return { "query": query, "response": { "status": status, "fail_reason": fail_reason, "payload": payload } }
 
 
@@ -290,8 +292,8 @@ def handle_query(arg_dict):
     # parse extra information in query if it's not just the dataset
     # /Gjet*/*/*, cms3tag=*07*06* | grep location,dataset_name
     # ^^dataset^^ ^^^selectors^^^   ^^^^^^^^^^^pipes^^^^^^^^^^
-    selectors = None
-    pipes = None
+    selectors = []
+    pipes = []
     if "|" in query:
         first = query.split("|")[0].strip()
         pipes = query.split("|")[1:]
@@ -409,20 +411,30 @@ def handle_query(arg_dict):
 
             match_dict = {"dataset_name": entity}
 
+            # if we didn't specify a sample_type, then assume we only want CMS3 and not BABY
+            if not selectors or not any(map(lambda x: "sample_type" in x, selectors)):
+                selectors.append("sample_type=CMS3")
+
             if selectors:
                 for more in selectors:
                     key = more.split("=")[0].strip()
                     val = more.split("=")[1].strip()
                     match_dict[key] = val
 
+
             samples = db.fetch_samples_matching(match_dict)
 
             if short:
                 new_samples = []
                 for sample in samples:
-                    for key in ["sample_id","filter_type","assigned_to", \
-                                "comments","twiki_name","sample_type"]:
-                        del sample[key]
+                    if sample["sample_type"] == "CMS3":
+                        for key in ["sample_id","filter_type","assigned_to", \
+                                    "comments","twiki_name", "analysis", "baby_tag"]:
+                            del sample[key]
+                    elif sample["sample_type"] == "BABY":
+                        for key in ["sample_id","filter_type","assigned_to", \
+                                    "comments","twiki_name","xsec","gtag","nevents_in","nevents_out","kfactor","filter_eff"]:
+                            del sample[key]
                     new_samples.append(sample)
                 samples = new_samples
 
@@ -527,6 +539,7 @@ if __name__=='__main__':
     # arg_dict = {"type": "pick", "query": "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:550862893,276525:2893:823485588,276318:300:234982340,276318:200:234982340"}
     # arg_dict = {"type": "pick_cms3", "query": "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:550862893,276525:2893:823485588,276318:300:234982340,276318:200:234982340"}
     # arg_dict = {"type": "pick_cms3", "query": "/DoubleEG/Run2016C-23Sep2016-v1/MINIAOD,275912:91:164211755", "short":"short"}
+    # arg_dict = {"type": "snt", "query": "/WJetsToLNu_TuneCUETP8M1_13TeV-madgr*"}
 
     if not arg_dict:
         arg_dict_str = sys.argv[1]
