@@ -1,17 +1,15 @@
 import os
 import sys
-import pycurl 
-import StringIO 
 import ast
-import urllib2
 import json
 import traceback
-import commands
 import datetime
 import glob
 import time
 
-from multiprocessing.dummy import Pool as ThreadPool 
+import pycurl 
+import StringIO 
+import commands
 
 def get(cmd, returnStatus=False):
     status, out = commands.getstatusoutput(cmd)
@@ -91,6 +89,8 @@ def list_of_datasets(wildcardeddataset, short=False):
             else: 
                 if len(ret) > 150:
                     raise RuntimeError("Getting detailed information for all these datasets (%i) will take too long" % len(ret))
+
+                from multiprocessing.dummy import Pool as ThreadPool 
 
                 pool = ThreadPool(8)
                 vals = pool.map(get_info, ret)
@@ -229,13 +229,13 @@ def get_specified_parent(dataset, typ="LHE", fallback=None):
 def get_mcm_json(dataset):
     # get McM json for given dataset
     url = "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/produces/"+dataset
-    mcm_json = json.load(urllib2.urlopen(url))
+    mcm_json = json.loads(get_url_with_cert(url, return_raw=True))
     return mcm_json
 
 def get_mcm_setup(campaign):
     # get McM json for given dataset
     url = "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_setup/"+campaign
-    ret_data = urllib2.urlopen(url).read()
+    ret_data = json.loads(get_url_with_cert(url, return_raw=True))
     if "#!/bin/bash" in ret_data: ret_data = "\n" + ret_data
     return ret_data
 
@@ -415,7 +415,8 @@ def handle_query(arg_dict):
             if not selectors or not any(map(lambda x: "sample_type" in x, selectors)):
 
                 # but if user specified an analysis, then don't restrict to CMS3
-                if not any(map(lambda x: "analysis" in x, selectors)):
+                if not any(map(lambda x: "analysis" in x, selectors)) \
+                        and not any(map(lambda x: "baby_tag" in x, selectors)):
                     selectors.append("sample_type=CMS3")
 
             if selectors:
