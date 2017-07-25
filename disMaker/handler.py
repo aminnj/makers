@@ -8,7 +8,8 @@ def inputToDict(form):
         d[k] = form[k].value
     return d
 form = cgi.FieldStorage()
-print "Content-type: application/json\r\n"
+print "Content-type: application/json"
+print "Access-Control-Allow-Origin: *\n\n"
 inp = inputToDict(form)
 
 arg_str = str(inp)
