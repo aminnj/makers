@@ -3,12 +3,12 @@ import sys
 import ast
 import json
 import traceback
-import datetime
 import glob
 import time
-
 import pycurl 
 import StringIO 
+import datetime
+
 import commands
 
 def get(cmd, returnStatus=False):
@@ -129,6 +129,7 @@ def get_pick_events(dataset, runlumievts):
         filesinfo = get_dataset_files(info["dataset"],run_num=info["run"],lumi_list=info["lumis"])
         return {"filesinfo": filesinfo, "run": info["run"], "fail": len(filesinfo)==0}
 
+    from multiprocessing.dummy import Pool as ThreadPool 
     pool = ThreadPool(8)
     vals = pool.map(get_info, for_map)
     pool.close()
@@ -145,6 +146,7 @@ def get_pick_events(dataset, runlumievts):
     return payload, warning
 
 def get_cms3(miniaod):
+
     try:
         is_prompt = "PromptReco" in miniaod
 
@@ -226,6 +228,44 @@ def get_specified_parent(dataset, typ="LHE", fallback=None):
     else:
         raise LookupError("Could not find parent dataset")
 
+def get_file_replicas(filename):
+    payload = get_url_with_cert("https://cmsweb.cern.ch/phedex/datasvc/json/prod/fileReplicas?lfn=%s" % filename)
+    block = payload["phedex"]["block"][0]
+    return {"block": block}
+
+def get_replica_fractions(datasets):
+
+    vals = []
+
+    def get_info(dataset):
+        payload = get_url_with_cert("https://cmsweb.cern.ch/phedex/datasvc/json/prod/blockReplicas?dataset=%s" % dataset)
+        blocks = payload["phedex"]["block"]
+        d_sites = {}
+        ngbtot = 0.01
+        for block in blocks:
+            ngbtot += block["bytes"]/(1.e9)
+            for replica in block["replica"]:
+                if not replica["complete"]: continue
+                site = replica["node"]
+                ngb = replica["bytes"]/(1.e9)
+                if site not in d_sites: d_sites[site] = 0.01
+                d_sites[site] += ngb
+        sitepairs = [[s,round(d_sites[s]/ngbtot,3)] for s in d_sites]
+        return {"dataset": dataset, "site_fractions": sorted(sitepairs,key=lambda k: k[1], reverse=True)}
+
+
+    if len(datasets) > 150:
+        raise RuntimeError("Getting detailed information for all these datasets (%i) will take too long" % len(datasets))
+
+    from multiprocessing.dummy import Pool as ThreadPool 
+
+    pool = ThreadPool(8)
+    vals = pool.map(get_info, datasets)
+    pool.close()
+    pool.join()
+
+    return vals
+
 def get_mcm_json(dataset):
     # get McM json for given dataset
     url = "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/produces/"+dataset
@@ -235,7 +275,11 @@ def get_mcm_json(dataset):
 def get_mcm_setup(campaign):
     # get McM json for given dataset
     url = "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/get_setup/"+campaign
-    ret_data = json.loads(get_url_with_cert(url, return_raw=True))
+    # ret_data = json.loads(get_url_with_cert(url, return_raw=True))
+    ret_data = get_url_with_cert(url, return_raw=True)
+    try:
+        ret_data = json.loads(ret_data)
+    except: pass
     if "#!/bin/bash" in ret_data: ret_data = "\n" + ret_data
     return ret_data
 
@@ -266,11 +310,11 @@ def get_slim_mcm_json(dataset):
 
     return out
 
-def filelist_to_dict(files, short=False):
+def filelist_to_dict(files, short=False, num=10):
     newfiles = []
     for f in files:
         newfiles.append({"name": f[0], "nevents": f[1], "sizeGB": round(f[2],2)})
-    if short: newfiles = newfiles[:5]
+    if short: newfiles = newfiles[:num]
     return newfiles
 
 def make_response(query, payload, failed, fail_reason, warning):
@@ -340,9 +384,19 @@ def handle_query(arg_dict):
                 fail_reason = "No datasets found"
             payload = datasets
 
+        elif query_type == "sites":
+            if "/store/" in entity:
+                payload = get_file_replicas(entity)
+            else:
+                datasets = list_of_datasets(entity, short=True)
+                if not datasets:
+                    failed = True
+                    fail_reason = "No datasets found"
+                payload = get_replica_fractions(datasets)
+
         elif query_type == "files":
             files = get_dataset_files(entity)
-            payload = filelist_to_dict(files, short)
+            payload = filelist_to_dict(files, short, num=10)
 
         elif query_type == "runs":
             payload = get_dataset_runs(entity)
@@ -427,6 +481,7 @@ def handle_query(arg_dict):
 
 
             samples = db.fetch_samples_matching(match_dict)
+            samples = sorted(samples, key = lambda x: x.get("cms3tag","")+str(x.get("nevents_out","0")), reverse=True)
 
             if short:
                 new_samples = []
@@ -544,6 +599,8 @@ if __name__=='__main__':
     # arg_dict = {"type": "pick_cms3", "query": "/MET/Run2016D-PromptReco-v2/MINIAOD,276524:9999:2340928340,276525:2892:550862893,276525:2893:823485588,276318:300:234982340,276318:200:234982340"}
     # arg_dict = {"type": "pick_cms3", "query": "/DoubleEG/Run2016C-23Sep2016-v1/MINIAOD,275912:91:164211755", "short":"short"}
     # arg_dict = {"type": "snt", "query": "/WJetsToLNu_TuneCUETP8M1_13TeV-madgr*"}
+    # arg_dict = {"type": "sites", "query": "/SingleMuon/Run2016B-PromptReco-v2/MINIAOD"}
+    # arg_dict = {"type": "sites", "query": "/store/data/Run2017B/MET/MINIAOD/PromptReco-v1/000/297/562/00000/A456D6BA-BA5C-E711-A4F1-02163E0133C4.root"}
 
     if not arg_dict:
         arg_dict_str = sys.argv[1]
