@@ -61,8 +61,12 @@ class DBInterface():
         # this returns an ID (non-zero int) corresponding to the row matching the dict
         dataset_name, sample_type, cms3tag = d.get("dataset_name",""), d.get("sample_type",""), d.get("cms3tag","")
         baby_tag, analysis = d.get("baby_tag",""), d.get("analysis","")
-        sql_cmd = "select sample_id from sample where dataset_name=? and sample_type=? and cms3tag=? and baby_tag=? and analysis=? limit 1"
-        self.cursor.execute(sql_cmd, (dataset_name, sample_type, cms3tag, baby_tag, analysis))
+        if baby_tag or analysis:
+            sql_cmd = "select sample_id from sample where dataset_name=? and sample_type=? and cms3tag=? and baby_tag=? and analysis=? limit 1"
+            self.cursor.execute(sql_cmd, (dataset_name, sample_type, cms3tag, baby_tag, analysis))
+        else:
+            sql_cmd = "select sample_id from sample where dataset_name=? and sample_type=? and cms3tag=? limit 1"
+            self.cursor.execute(sql_cmd, (dataset_name, sample_type, cms3tag))
         return self.cursor.fetchone()
 
     def read_to_dict_list(self, query):
@@ -131,6 +135,13 @@ if __name__=='__main__':
         print "Calculations correct"
 
     # db = DBInterface(fname="allsamples.db")
+
+    # print db.is_already_in_table({
+    #     "dataset_name": "/VBF_HToZZTo4L_M125_14TeV_powheg2_JHUgenV702_pythia8/PhaseIITDRSpring17MiniAOD-noPU_91X_upgrade2023_realistic_v3-v1/MINIAODSIM",
+    #     "sample_type": "CMS3",
+    #     "cms3tag": "CMS4_V00-00-03",
+    #     })
+
     # tchi = db.fetch_samples_matching({"dataset_name":"/TChiNeu_mChi-300_mLSP-290_step1/namin-TChiNeu_mChi-300_mLSP-290_step2_miniAOD-eb69b0448a13fda070ca35fd76ab4e24/USER"})
     # tchi = db.fetch_samples_matching({"dataset_name":"/TChi%/namin-TChi%/USER"})
     # tchi = db.fetch_samples_matching({"dataset_name":"/GJets_HT-4*/*/*"})
