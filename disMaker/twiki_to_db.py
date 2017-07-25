@@ -1,6 +1,6 @@
 import sys
 # sys.path.insert(0, "../dashboard/")
-sys.path.insert(0, "/home/users/namin/old/forFrank/NtupleTools/AutoTwopler/dashboard/")
+sys.path.insert(0, "/home/users/namin/junk/old/forFrank/NtupleTools/AutoTwopler/dashboard/")
 import twiki
 import time
 import pickle
