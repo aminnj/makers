@@ -8,6 +8,7 @@ import time
 import pycurl 
 import StringIO 
 import datetime
+import base64
 
 import commands
 
@@ -50,7 +51,8 @@ def get_url_with_cert(url, return_raw=False):
     c.setopt(pycurl.URL, url) 
     c.perform() 
     s = b.getvalue()
-    if return_raw: return s
+    if return_raw: 
+        return s
     s = s.replace("null","None")
     ret = ast.literal_eval(s)
     return ret
@@ -69,13 +71,16 @@ def dataset_event_count(dataset):
             return { "nevents": ret[0]['num_event'], "filesizeGB": round(ret[0]['file_size']/1.9e9,2), "nfiles": ret[0]['num_file'], "nlumis": ret[0]['num_lumi'] }
     return None
 
-def list_of_datasets(wildcardeddataset, short=False):
+def list_of_datasets(wildcardeddataset, short=False, selectors=[]):
     if wildcardeddataset.count("/") != 3:
         raise RuntimeError("You need three / in your dataset query")
 
     _, pd, proc, tier = wildcardeddataset.split("/")
     # url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?dataset=%s&detail=0" % (get_dbs_instance(wildcardeddataset),wildcardeddataset)
-    url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?primary_ds_name=%s&processed_ds_name=%s&data_tier_name=%s&detail=0" % (get_dbs_instance(wildcardeddataset),pd,proc,tier)
+    extra = ""
+    if any(x in selectors for x in ["any","all","invalid","production"]):
+        extra += "&dataset_access_type=*"
+    url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/datasets?primary_ds_name=%s&processed_ds_name=%s&data_tier_name=%s&detail=0%s" % (get_dbs_instance(wildcardeddataset),pd,proc,tier,extra)
     ret = get_url_with_cert(url)
     if len(ret) > 0:
             vals = []
@@ -100,9 +105,12 @@ def list_of_datasets(wildcardeddataset, short=False):
             return vals
     return []
 
-def get_dataset_files(dataset, run_num=None,lumi_list=[]):
+def get_dataset_files(dataset, run_num=None,lumi_list=[],selectors=[]):
     # return list of 3-tuples (LFN, nevents, size_in_GB) of files in a given dataset
-    url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/files?dataset=%s&validFileOnly=1&detail=1" % (get_dbs_instance(dataset),dataset)
+    valid = "1"
+    if any(x in selectors for x in ["any","all","invalid","production"]):
+        valid = "0"
+    url = "https://cmsweb.cern.ch/dbs/prod/%s/DBSReader/files?dataset=%s&validFileOnly=%s&detail=1" % (get_dbs_instance(dataset),dataset,valid)
     if run_num and lumi_list:
         url += "&run_num=%i&lumi_list=[%s]" % (run_num, ",".join(map(str,lumi_list)))
     ret = get_url_with_cert(url)
@@ -268,7 +276,8 @@ def get_replica_fractions(datasets):
 
 def get_mcm_json(dataset):
     # get McM json for given dataset
-    url = "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/produces/"+dataset
+    # don't use first / in dataset name or else things break now  (As of ~Nov 2017, stupid MCM)
+    url = "https://cms-pdmv.cern.ch/mcm/public/restapi/requests/produces/"+dataset[1:]
     mcm_json = json.loads(get_url_with_cert(url, return_raw=True))
     return mcm_json
 
@@ -322,9 +331,18 @@ def make_response(query, payload, failed, fail_reason, warning):
     if failed: status = "failed"
 
     timestamp = int(time.time())
+    # print payload
     return json.dumps( { "query": query, "timestamp": timestamp, "response": { "status": status, "fail_reason": fail_reason, "warning": warning, "payload": payload } } )
     # return { "query": query, "response": { "status": status, "fail_reason": fail_reason, "payload": payload } }
 
+def get_derived_quantity(payload, key):
+    if key == "eff_lumi":
+        nevents = payload.get("nevents_out",-1)
+        xsec = payload.get("xsec",-1)
+        kfact = payload.get("kfact",-1)
+        efact = payload.get("efact",-1)
+        return round(nevents/(xsec*kfact*efact*1000.),5)
+    return -1
 
 def handle_query(arg_dict):
 
@@ -378,7 +396,7 @@ def handle_query(arg_dict):
             payload = info
 
         elif query_type == "listdatasets":
-            datasets = list_of_datasets(entity, short)
+            datasets = list_of_datasets(entity, short, selectors=selectors)
             if not datasets:
                 failed = True
                 fail_reason = "No datasets found"
@@ -395,7 +413,7 @@ def handle_query(arg_dict):
                 payload = get_replica_fractions(datasets)
 
         elif query_type == "files":
-            files = get_dataset_files(entity)
+            files = get_dataset_files(entity, selectors=selectors)
             payload = filelist_to_dict(files, short, num=10)
 
         elif query_type == "runs":
@@ -512,8 +530,25 @@ def handle_query(arg_dict):
 
             payload["updated"] = did_update
 
+        elif query_type == "delete_snt":
+            from db import DBInterface
+            db = DBInterface(fname="allsamples.db")
+            s = {}
+            for keyval in query.split(","):
+                key,val = keyval.strip().split("=")
+                s[key] = val
+            payload = s
+            did_delete = db.delete_sample(s)
+            db.close()
+
+            payload["deleted"] = did_delete
+
         elif query_type == "dbs":
-            payload = get_url_with_cert(query)
+            if "raw" in selectors:
+                payload = get_url_with_cert(query.rsplit(",",1)[0],return_raw=True)
+                payload = base64.b64encode(payload)
+            else:
+                payload = get_url_with_cert(query)
             # payload = "/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16MiniAODv1-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/MINIAODSIM"
 
         else:
@@ -542,7 +577,11 @@ def handle_query(arg_dict):
 
                         if len(keys) > 1:
                             d = {}
-                            for key in keys: d[key] = payload[ipay].get(key,None)
+                            for key in keys:
+                                if key in payload[ipay]:
+                                    d[key] = payload[ipay][key]
+                                else:
+                                    d[key] = get_derived_quantity(payload[ipay], key)
                             payload[ipay] = d
                         else:
                             payload[ipay] = payload[ipay].get(keys[0],None)
@@ -567,7 +606,6 @@ def handle_query(arg_dict):
                                 }
                     else:
                         payload = {"N": len(payload)}
-
 
     return make_response(arg_dict, payload, failed, fail_reason, warning)
 
@@ -601,6 +639,11 @@ if __name__=='__main__':
     # arg_dict = {"type": "snt", "query": "/WJetsToLNu_TuneCUETP8M1_13TeV-madgr*"}
     # arg_dict = {"type": "sites", "query": "/SingleMuon/Run2016B-PromptReco-v2/MINIAOD"}
     # arg_dict = {"type": "sites", "query": "/store/data/Run2017B/MET/MINIAOD/PromptReco-v1/000/297/562/00000/A456D6BA-BA5C-E711-A4F1-02163E0133C4.root"}
+    # arg_dict = {"type": "snt", "query": "/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v2/MINIAODSIM", "short": "short"}
+    # arg_dict = {"type": "update_snt", "query": "dataset_name=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v2/MINIAODSIM,cms3tag=v2", "short": "short"}
+    # arg_dict = {"type": "delete_snt", "query": "dataset_name=/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v2/MINIAODSIM,cms3tag=v2,sample_type=CMS3", "short": "short"}
+    # arg_dict = {"type": "dbs", "query": "https://cmsweb.cern.ch/dqm/online/plotfairy/archive/273158/Global/Online/ALL/DT/01-Digi/Wheel-2/Sector1/Station1/OccupancyAllHits_perCh_W-2_St1_Sec1?session=mSzCfZ;w=1426;h=718,raw"}
+    # arg_dict = {"type": "files", "query": "/TTWW_TuneCUETP8M2T4_13TeV-madgraph-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v2/MINIAODSIM,all"}
 
     if not arg_dict:
         arg_dict_str = sys.argv[1]

@@ -56,6 +56,11 @@ class DBInterface():
         sql_cmd = "update sample set %s where sample_id=%i" % (set_str, idx)
         self.cursor.execute(sql_cmd)
 
+    def do_delete_dict(self, d, idx):
+        # provide a dict and index to update
+        sql_cmd = "delete from sample where sample_id=%i" % (idx)
+        self.cursor.execute(sql_cmd)
+
     def is_already_in_table(self, d):
         # provide a dict and this will use appropriate keys to see if it's already in the database
         # this returns an ID (non-zero int) corresponding to the row matching the dict
@@ -92,6 +97,22 @@ class DBInterface():
         else: self.do_insert_dict(d)
         self.connection.commit()
         return True
+
+    def delete_sample(self, d):
+        # provide dictionary, and this will update sample if it already exists, or insert it
+
+        if not d: return False
+        if self.unknown_keys(d): return False
+
+        # totally ignore the sample_id
+        if "sample_id" in d: del d["sample_id"]
+        already_in = self.is_already_in_table(d)
+        if already_in:
+            self.do_delete_dict(d, already_in[0])
+            self.connection.commit()
+            return True
+        return False
+
 
     def fetch_samples_matching(self, d):
         # provide dictionary and this will find samples with matching key-value pairs
